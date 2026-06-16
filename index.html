@@ -2058,7 +2058,19 @@ const WIDGET_RENDERERS = {
       history.innerHTML = '';
       messages.forEach(m => {
         const b = el('div','ask-bubble ' + m.role);
-        b.textContent = m.text;
+        if (m.type === 'image') {
+          const img = document.createElement('img');
+          img.src = m.url;
+          img.alt = m.text || 'Bild';
+          img.style.cssText = 'max-width:100%;border-radius:8px;display:block;margin-top:4px;';
+          img.onerror = () => { img.replaceWith(Object.assign(document.createElement('span'), {textContent:'❌ Bild konnte nicht geladen werden'})); };
+          const label = document.createElement('div');
+          label.style.cssText = 'font-size:11px;opacity:0.55;margin-bottom:3px;';
+          label.textContent = '🖼 ' + (m.text || 'Generiertes Bild');
+          b.append(label, img);
+        } else {
+          b.textContent = m.text;
+        }
         history.appendChild(b);
       });
       setTimeout(() => { history.scrollTop = history.scrollHeight; }, 30);
@@ -2080,7 +2092,7 @@ const WIDGET_RENDERERS = {
     // ── Input row ──
     const inputRow = el('div','ask-input-row');
     const textarea = document.createElement('textarea');
-    textarea.placeholder = 'Frage stellen… z.B. "Was ist die Fotosynthese?"';
+    textarea.placeholder = 'Frage stellen oder "Zeige einen Apfel"…';
     textarea.addEventListener('click', e => e.stopPropagation());
     textarea.addEventListener('keydown', e => {
       e.stopPropagation();
@@ -2094,6 +2106,17 @@ const WIDGET_RENDERERS = {
     body.append(topRow, history, inputRow);
 
     // ── Send ──
+    // Detect image request from German keywords
+    function isImageRequest(q) {
+      return /^(zeig|zeige|mal|male|zeichne|generiere|erstell|bild von|bild:|foto von|zeig mir|zeige mir)/i.test(q.trim()) ||
+             /(als bild|als foto|als zeichnung|als illustration)/i.test(q);
+    }
+
+    function extractImagePrompt(q) {
+      // Strip leading command words, keep the subject
+      return q.replace(/^(zeig(e)?|mal(e)?|zeichne|generiere|erstell(e)?|bild von|bild:|foto von|zeig mir|zeige mir)\s*/i, '').trim() || q;
+    }
+
     sendBtn.addEventListener('click', async e => {
       e.stopPropagation();
       const q = textarea.value.trim();
@@ -2103,29 +2126,39 @@ const WIDGET_RENDERERS = {
       messages.push({ role:'user', text:q });
 
       const thinkingBubble = el('div','ask-bubble thinking');
-      thinkingBubble.textContent = '⏳ Denke nach…';
       history.appendChild(thinkingBubble);
       history.scrollTop = history.scrollHeight;
-
       sendBtn.disabled = true;
 
       try {
-        const { data, error } = await AUTH.client.functions.invoke('ai-generate', {
-          body: { type:'ask', question: q }
-        });
-        if (error) throw new Error(error.message || String(error));
-        const answer = data?.text || '(Keine Antwort)';
-        thinkingBubble.remove();
-        messages.push({ role:'ai', text:answer });
-        // keep last 20 messages to avoid bloat
-        if (messages.length > 20) messages.splice(0, messages.length - 20);
+        if (isImageRequest(q)) {
+          // ── Image generation via Pollinations.ai (free, no key) ──
+          thinkingBubble.textContent = '🎨 Generiere Bild…';
+          const subject = extractImagePrompt(q);
+          const w_px = Math.min(800, Math.max(400, w.w * 2));
+          const h_px = Math.min(600, Math.max(300, w.h * 1.5));
+          const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(subject + ', clean illustration, educational, colorful')}&width=${w_px}&height=${h_px}&nologo=true&seed=${Date.now()}`;
+          thinkingBubble.remove();
+          messages.push({ role:'ai', type:'image', url, text: subject });
+        } else {
+          // ── Text answer via Supabase Edge Function ──
+          thinkingBubble.textContent = '⏳ Denke nach…';
+          if (!AUTH.client) throw new Error('Nicht angemeldet');
+          const { data, error } = await AUTH.client.functions.invoke('ai-generate', {
+            body: { type:'ask', question: q }
+          });
+          if (error) throw new Error(error.message || String(error));
+          const answer = data?.text || '(Keine Antwort)';
+          thinkingBubble.remove();
+          messages.push({ role:'ai', text:answer });
+        }
+        if (messages.length > 30) messages.splice(0, messages.length - 30);
         w.config.messages = messages;
         APP.save();
         renderMessages();
       } catch(err) {
         thinkingBubble.textContent = '❌ ' + err.message;
         thinkingBubble.style.color = '#fca5a5';
-        sendBtn.disabled = false;
       } finally {
         sendBtn.disabled = false;
       }
