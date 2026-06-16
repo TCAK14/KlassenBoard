@@ -2178,24 +2178,40 @@ const WIDGET_RENDERERS = {
     const grps = [];
     for (let i=0; i<shuffled.length; i+=size) grps.push(shuffled.slice(i,i+size));
 
-    // Scale font based on widget size
-    const scale = Math.min(w.w / 320, w.h / 200);
-    const headSz = Math.max(11, Math.min(18, 13 * scale)) + 'px';
-    const nameSz = Math.max(10, Math.min(22, 14 * scale)) + 'px';
+    // Adaptive font: fill available space so names are readable from the back of the class
+    const numGroups = Math.max(1, grps.length);
+    const maxPerGroup = Math.max(1, Math.max(...grps.map(g => g.length)));
+    // Available height: subtract btn (~36px) and header row (~1.4em per group-header)
+    const headerPx = Math.max(14, w.h * 0.06);
+    const availH = w.h - 44; // subtract shuffle-btn row
+    // Each group card: header + names. Fit header + names into availH.
+    // nameSz: fill height → availH / (maxPerGroup + 1.2 for header)
+    const nameSzByH = availH / (maxPerGroup + 1.2);
+    // nameSz: don't overflow width → (w.w / numGroups - 24) / ~5 chars avg
+    const nameSzByW = (w.w / numGroups - 24) / 5.5;
+    const nameSz = Math.max(16, Math.min(nameSzByH, nameSzByW, 120));
+    const headSz = Math.max(12, nameSz * 0.42);
 
     const inner = el('div','groups-inner');
-    const btn = el('button','w-action-btn'); btn.textContent = '🔀 Neu mischen'; btn.style.cssText='margin:0 auto 4px;display:block';
+    const btn = el('button','w-action-btn'); btn.textContent = '🔀 Neu mischen'; btn.style.cssText='margin:0 auto 6px;display:block;flex-shrink:0';
     btn.addEventListener('click', () => renderWidgetContent(w, body));
 
     grps.forEach((g,i) => {
       const card = el('div','group-card');
+      card.style.flex = '1';
       const h4 = document.createElement('h4');
-      h4.style.fontSize = headSz;
+      h4.style.fontSize = headSz + 'px';
+      h4.style.marginBottom = Math.max(2, headSz * 0.3) + 'px';
       h4.textContent = 'Gruppe ' + (i+1);
       const ul = document.createElement('ul');
+      ul.style.listStyle = 'none';
+      ul.style.padding = '0';
       g.forEach(n => {
         const li=document.createElement('li');
-        li.style.fontSize = nameSz;
+        li.style.fontSize = nameSz + 'px';
+        li.style.lineHeight = '1.15';
+        li.style.fontWeight = '600';
+        li.style.padding = '0';
         li.textContent=n;
         ul.appendChild(li);
       });
