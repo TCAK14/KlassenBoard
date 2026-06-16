@@ -1,0 +1,3722 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>KlassenBoard v2</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root {
+  --brand: #6366f1;
+  --brand-dark: #4f46e5;
+  --toolbar-h: 56px;
+  --glass: rgba(255,255,255,0.08);
+  --glass-border: rgba(255,255,255,0.12);
+  --shadow: 0 8px 32px rgba(0,0,0,0.3);
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body { height:100%; overflow:hidden; font-family:'Segoe UI',system-ui,sans-serif; }
+body { background:#1e293b; color:#fff; touch-action:none; }
+/* Inputs/Textareas müssen immer tippbar sein – touch-action:none auf body überschreiben */
+input, textarea, select, [contenteditable] { touch-action:auto; user-select:text; -webkit-user-select:text; }
+.modal, .modal * { touch-action:auto; }
+.tab-input { touch-action:auto; user-select:text; -webkit-user-select:text; }
+
+/* ── Toolbar ── */
+#toolbar {
+  position:fixed; top:0; left:0; right:0; height:var(--toolbar-h);
+  background:rgba(0,0,0,0.4); backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--glass-border);
+  display:flex; align-items:center; gap:8px; padding:0 12px;
+  z-index:1000; user-select:none;
+}
+#logo { display:flex; align-items:center; gap:6px; margin-right:8px; flex-shrink:0; }
+#logo span:first-child { font-size:22px; }
+#logo-text { font-weight:700; font-size:15px; letter-spacing:-0.3px; }
+#board-tabs { display:flex; align-items:center; gap:4px; flex:1; min-width:0; overflow-x:auto; scrollbar-width:none; }
+#board-tabs::-webkit-scrollbar { display:none; }
+.tab-btn {
+  flex-shrink:0; padding:6px 14px; border-radius:var(--radius-sm); font-size:13px; font-weight:500;
+  border:none; cursor:pointer; transition:all .15s; white-space:nowrap;
+  background:transparent; color:rgba(255,255,255,0.5);
+}
+.tab-btn:hover { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.85); }
+.tab-btn.active { background:rgba(255,255,255,0.18); color:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.3); }
+.tab-input { background:transparent; border:none; outline:none; color:#fff; font:inherit; width:100px; }
+#add-board-btn {
+  flex-shrink:0; width:28px; height:28px; border-radius:var(--radius-sm);
+  background:rgba(255,255,255,0.1); border:none; color:rgba(255,255,255,0.6);
+  cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center;
+  transition:all .15s;
+}
+#add-board-btn:hover { background:rgba(255,255,255,0.2); color:#fff; }
+.toolbar-sep { width:1px; height:28px; background:rgba(255,255,255,0.1); flex-shrink:0; }
+.tb-btn {
+  flex-shrink:0; border:none; cursor:pointer; border-radius:var(--radius-sm);
+  padding:6px 10px; font-size:13px; font-weight:500; transition:all .15s;
+  display:flex; align-items:center; gap:5px; white-space:nowrap;
+}
+.tb-btn:active { transform:scale(0.95); }
+#btn-ai-board { background:linear-gradient(135deg,#7c3aed,#6366f1); color:#fff; }
+#btn-ai-board:hover { background:linear-gradient(135deg,#6d28d9,#4f46e5); }
+#btn-add-widget { background:var(--brand); color:#fff; }
+#btn-add-widget:hover { background:var(--brand-dark); }
+
+/* ── KI-Board Generator Modal ── */
+.ai-board-modal { max-width:480px; }
+.ai-board-modal h2 { font-size:18px; margin-bottom:4px; }
+.ai-board-modal .subtitle { font-size:12.5px; color:rgba(255,255,255,0.45); margin-bottom:16px; }
+.ai-board-row { display:flex; gap:10px; }
+.ai-board-row .form-group { flex:1; }
+.ai-board-gen-btn {
+  width:100%; padding:12px; border-radius:10px; border:none;
+  background:linear-gradient(135deg,#7c3aed,#6366f1); color:#fff;
+  font-size:14px; font-weight:700; cursor:pointer; margin-top:8px;
+  transition:all .2s; letter-spacing:.3px;
+}
+.ai-board-gen-btn:hover { background:linear-gradient(135deg,#6d28d9,#4f46e5); transform:translateY(-1px); }
+.ai-board-gen-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.ai-board-progress {
+  margin-top:14px; padding:12px; border-radius:10px;
+  background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.2);
+  font-size:12.5px; color:rgba(255,255,255,0.6); text-align:center; display:none;
+}
+.ai-board-progress.visible { display:block; }
+.tb-icon-btn {
+  flex-shrink:0; width:34px; height:34px; border-radius:var(--radius-sm);
+  background:rgba(255,255,255,0.08); border:none; color:rgba(255,255,255,0.7);
+  cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;
+  transition:all .15s;
+}
+.tb-icon-btn:hover { background:rgba(255,255,255,0.18); color:#fff; }
+.tb-icon-btn.active { background:rgba(253,224,71,0.25); color:#fde047; }
+#edit-mode-btn { padding:6px 10px; width:auto; font-size:12px; font-weight:600; letter-spacing:.3px; }
+
+/* ── Board Canvas ── */
+#board {
+  position:fixed; top:var(--toolbar-h); left:0; right:0; bottom:0;
+  overflow:hidden; background:#1e293b;
+}
+#board-bg {
+  position:absolute; inset:0;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  transition:background .3s;
+}
+#widgets-layer { position:absolute; inset:0; }
+
+/* ── Widget Shell ── */
+.widget {
+  position:absolute; border-radius:var(--radius);
+  background:var(--glass); backdrop-filter:blur(12px);
+  border:1px solid var(--glass-border);
+  box-shadow:var(--shadow);
+  overflow:hidden; user-select:none;
+  transition:box-shadow .15s;
+  min-width:120px; min-height:80px;
+}
+.widget.selected { border-color:rgba(99,102,241,0.8); box-shadow:0 0 0 2px rgba(99,102,241,0.4), var(--shadow); }
+.widget-header {
+  position:absolute; top:0; left:0; right:0; height:32px;
+  background:rgba(0,0,0,0.2);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 8px; cursor:grab; z-index:2;
+  opacity:0; transition:opacity .15s;
+}
+.widget:hover .widget-header, .widget.selected .widget-header { opacity:1; }
+.widget-header:active { cursor:grabbing; }
+.widget-title { font-size:11px; color:rgba(255,255,255,0.6); font-weight:600; letter-spacing:.5px; text-transform:uppercase; }
+.widget-actions { display:flex; gap:4px; }
+.w-btn {
+  width:22px; height:22px; border-radius:6px; border:none; cursor:pointer;
+  font-size:12px; display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.7);
+  transition:all .1s;
+}
+.w-btn:hover { background:rgba(255,255,255,0.25); color:#fff; }
+.w-btn.del:hover { background:rgba(239,68,68,0.4); color:#fca5a5; }
+.widget-body {
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.widget-body.with-header { top:32px; }
+.resize-handle {
+  position:absolute; right:0; bottom:0; width:20px; height:20px;
+  cursor:se-resize; opacity:0; transition:opacity .15s; z-index:3;
+}
+.resize-handle::after {
+  content:''; position:absolute; right:4px; bottom:4px;
+  width:10px; height:10px;
+  border-right:2px solid rgba(255,255,255,0.5);
+  border-bottom:2px solid rgba(255,255,255,0.5);
+  border-radius:0 0 3px 0;
+}
+.widget:hover .resize-handle { opacity:1; }
+
+/* ── Modal ── */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);
+  z-index:2000; display:flex; align-items:center; justify-content:center;
+  animation:fadeIn .15s;
+}
+.modal {
+  background:#1e293b; border:1px solid var(--glass-border); border-radius:20px;
+  box-shadow:0 24px 64px rgba(0,0,0,0.5); padding:24px;
+  width:min(520px,95vw); max-height:85vh; overflow-y:auto;
+  animation:slideUp .2s;
+}
+.modal-lg { width:min(720px,95vw); }
+.modal h2 { font-size:18px; font-weight:700; margin-bottom:16px; }
+.modal-close {
+  float:right; background:none; border:none; color:rgba(255,255,255,0.4);
+  font-size:20px; cursor:pointer; padding:0 4px; line-height:1;
+}
+.modal-close:hover { color:#fff; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes slideUp { from{transform:translateY(12px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+/* ── Form elements ── */
+input[type=text], input[type=url], input[type=number], textarea, select {
+  width:100%; padding:10px 12px; border-radius:var(--radius-sm);
+  background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+  color:#fff; font:inherit; font-size:14px; outline:none; transition:border .15s;
+}
+input:focus, textarea:focus, select:focus { border-color:var(--brand); }
+select option { background:#1e293b; }
+label { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-bottom:5px; font-weight:600; letter-spacing:.3px; }
+.form-group { margin-bottom:14px; }
+.btn-primary {
+  padding:10px 20px; background:var(--brand); color:#fff; border:none;
+  border-radius:var(--radius-sm); cursor:pointer; font:inherit; font-size:14px;
+  font-weight:600; transition:all .15s; width:100%;
+}
+.btn-primary:hover { background:var(--brand-dark); }
+.btn-secondary {
+  padding:8px 16px; background:rgba(255,255,255,0.08); color:#fff; border:1px solid rgba(255,255,255,0.12);
+  border-radius:var(--radius-sm); cursor:pointer; font:inherit; font-size:13px; transition:all .15s;
+}
+.btn-secondary:hover { background:rgba(255,255,255,0.15); }
+.btn-row { display:flex; gap:8px; margin-top:16px; }
+.btn-row .btn-primary { flex:1; }
+
+/* ── Widget Menu ── */
+#widget-menu {
+  position:fixed; background:#0f172a; border:1px solid var(--glass-border);
+  border-radius:18px; box-shadow:0 20px 56px rgba(0,0,0,0.6);
+  padding:14px 12px; z-index:1500; width:288px;
+  max-height:calc(100vh - 80px); overflow-y:auto; scrollbar-width:none;
+}
+#widget-menu::-webkit-scrollbar { display:none; }
+.wm-cat {
+  font-size:9.5px; color:rgba(255,255,255,0.32); font-weight:700;
+  letter-spacing:1px; text-transform:uppercase; padding:8px 6px 5px;
+}
+.wm-cat:first-child { padding-top:2px; }
+.wm-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:4px; }
+.wm-item {
+  display:flex; align-items:center; gap:7px; padding:8px 10px;
+  border-radius:10px; background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.07);
+  cursor:pointer; color:#fff; font:inherit; font-size:12.5px; font-weight:500;
+  transition:all .12s; text-align:left;
+  overflow:hidden; min-width:0; width:100%;
+}
+.wm-item:hover { background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.15); }
+.wm-item:active { transform:scale(0.97); }
+.wm-item .wm-emoji { font-size:15px; flex-shrink:0; line-height:1; }
+.wm-item .wm-label { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1; }
+
+/* ── Templates grid ── */
+.template-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.tpl-card {
+  border-radius:var(--radius-sm); border:1px solid rgba(255,255,255,0.1);
+  padding:14px; cursor:pointer; transition:all .15s; background:rgba(255,255,255,0.04);
+}
+.tpl-card:hover { background:rgba(255,255,255,0.1); border-color:var(--brand); transform:translateY(-1px); }
+.tpl-emoji { font-size:28px; margin-bottom:6px; }
+.tpl-name { font-size:13px; font-weight:700; }
+.tpl-desc { font-size:11px; color:rgba(255,255,255,0.45); margin-top:3px; }
+
+/* ── BG Picker ── */
+.bg-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px; }
+.bg-swatch { height:44px; border-radius:8px; border:2px solid transparent; cursor:pointer; transition:all .15s; }
+.bg-swatch:hover { transform:scale(1.05); }
+.bg-swatch.sel { border-color:#fff; }
+
+/* ── iCal modal ── */
+.ical-info { font-size:12px; color:rgba(255,255,255,0.4); line-height:1.6; margin-top:8px; }
+
+/* ── Toast ── */
+#toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+  background:rgba(30,41,59,0.95); border:1px solid rgba(255,255,255,0.15);
+  color:#fff; padding:10px 20px; border-radius:12px; font-size:14px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4); z-index:9999; transition:transform .3s ease;
+  pointer-events:none;
+}
+#toast.show { transform:translateX(-50%) translateY(0); }
+
+/* ── Widget content styles ── */
+.w-clock { font-size:clamp(2rem,5vw,4rem); font-weight:700; font-variant-numeric:tabular-nums; width:100%; text-align:center; }
+.w-date { font-size:14px; color:rgba(255,255,255,0.55); margin-top:4px; }
+.w-timer-display { font-size:clamp(2rem,4vw,3.5rem); font-weight:700; font-variant-numeric:tabular-nums; }
+.w-timer-display.urgent { color:#f87171; animation:pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+.w-btn-row { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; justify-content:center; }
+.w-action-btn {
+  padding:6px 14px; border-radius:10px; border:none; cursor:pointer;
+  background:rgba(255,255,255,0.15); color:#fff; font:inherit; font-size:13px;
+  font-weight:600; transition:all .12s; min-width:44px; min-height:36px;
+}
+.w-action-btn:hover { background:rgba(255,255,255,0.28); }
+.w-action-btn:active { transform:scale(0.95); }
+.w-traffic-circle {
+  width:min(80px,30%); aspect-ratio:1; border-radius:50%;
+  border:4px solid rgba(0,0,0,0.3); cursor:pointer; transition:all .2s;
+  box-shadow:inset 0 0 12px rgba(0,0,0,0.3);
+}
+.w-traffic-circle.active-r { background:#ef4444; box-shadow:0 0 20px rgba(239,68,68,0.6),inset 0 0 12px rgba(0,0,0,0.3); }
+.w-traffic-circle.active-y { background:#eab308; box-shadow:0 0 20px rgba(234,179,8,0.6),inset 0 0 12px rgba(0,0,0,0.3); }
+.w-traffic-circle.active-g { background:#22c55e; box-shadow:0 0 20px rgba(34,197,94,0.6),inset 0 0 12px rgba(0,0,0,0.3); }
+.w-traffic-circle.dim { background:rgba(255,255,255,0.08); }
+.w-text-display { line-height:1.6; padding:14px; overflow:auto; width:100%; height:100%; white-space:pre-wrap; word-break:break-word; }
+.w-names-list { list-style:none; width:100%; padding:6px; overflow-y:auto; max-height:100%; }
+.w-names-list li { padding:3px 8px; border-radius:6px; transition:background .1s; line-height:1.4; }
+.w-names-list li.highlighted { background:rgba(99,102,241,0.4); font-weight:700; }
+.w-homework { padding:12px; overflow-y:auto; width:100%; }
+.w-homework h3 { color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
+.w-homework ul { list-style:none; }
+.w-homework li { padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.07); }
+.w-goal-text { font-weight:700; text-align:center; padding:14px; line-height:1.4; width:100%; }
+.w-qr-container { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:12px; height:100%; }
+.w-qr-container canvas, .w-qr-container img { border-radius:8px; max-width:100%; max-height:calc(100% - 40px); }
+.w-qr-label { font-size:11px; color:rgba(255,255,255,0.5); text-align:center; word-break:break-all; }
+.timetable-inner { width:100%; padding:10px; overflow-y:auto; max-height:100%; }
+.tt-now { border-radius:10px; padding:10px 12px; background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); margin-bottom:8px; }
+.tt-label { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:rgba(255,255,255,0.4); font-weight:700; }
+.tt-subject { font-size:20px; font-weight:700; margin:2px 0; }
+.tt-meta { font-size:12px; color:rgba(255,255,255,0.5); }
+.tt-cancelled { text-decoration:line-through; color:rgba(255,100,100,0.7); }
+.tt-changed { color:#fbbf24; }
+.tt-next-list { list-style:none; }
+.tt-next-list li { display:flex; gap:10px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.06); font-size:13px; align-items:center; }
+.tt-time { color:rgba(255,255,255,0.4); font-size:11px; flex-shrink:0; width:80px; }
+.tt-no-data { font-size:13px; color:rgba(255,255,255,0.3); text-align:center; padding:20px; }
+.w-image-inner { width:100%; height:100%; object-fit:contain; }
+.w-youtube-iframe { width:100%; height:100%; border:none; }
+.w-dice { font-size:clamp(3rem,8vw,6rem); cursor:pointer; transition:transform .1s; }
+.w-dice:active { transform:scale(0.85); }
+.w-randnum { font-size:clamp(2.5rem,6vw,5rem); font-weight:700; cursor:pointer; }
+.w-randnum:active { transform:scale(0.9); }
+.groups-inner { padding:8px; overflow-y:auto; width:100%; display:flex; flex-wrap:wrap; gap:8px; align-content:flex-start; }
+.group-card { border-radius:10px; padding:8px 12px; background:rgba(255,255,255,0.08); flex:1 1 calc(50% - 4px); min-width:100px; }
+.group-card h4 { font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:4px; }
+.group-card ul { list-style:none; font-size:13px; }
+.group-card ul li { padding:2px 0; }
+.agenda-inner { padding:10px; overflow-y:auto; width:100%; }
+.agenda-item { display:flex; gap:10px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.07); align-items:flex-start; }
+.agenda-time { font-size:11px; color:rgba(255,255,255,0.4); flex-shrink:0; padding-top:2px; width:55px; }
+.agenda-text { font-size:13px; }
+.checklist-inner { padding:10px; overflow-y:auto; width:100%; }
+.checklist-item { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; }
+.checklist-item input[type=checkbox] { width:16px; height:16px; accent-color:var(--brand); flex-shrink:0; cursor:pointer; }
+.checklist-item span { font-size:13px; flex:1; }
+.checklist-item.done span { text-decoration:line-through; color:rgba(255,255,255,0.3); }
+.phases-inner { display:flex; flex-direction:column; gap:6px; padding:10px; overflow-y:auto; width:100%; }
+.phase-item { border-radius:10px; padding:8px 12px; display:flex; align-items:center; gap:10px; cursor:pointer; transition:all .15s; border:1px solid transparent; }
+.phase-item.active { border-color:rgba(255,255,255,0.3); }
+.phase-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.phase-name { font-size:14px; font-weight:600; }
+.phase-dur { font-size:11px; color:rgba(255,255,255,0.4); margin-left:auto; }
+.status-inner { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:8px; }
+.status-emoji { font-size:clamp(2.5rem,8vw,5rem); cursor:pointer; transition:transform .1s; }
+.status-emoji:active { transform:scale(0.85); }
+.status-label { font-size:14px; font-weight:600; color:rgba(255,255,255,0.7); }
+
+/* Fullscreen hide toolbar */
+body.fullscreen #toolbar { display:none; }
+body.fullscreen #board { top:0; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:4px; }
+
+/* ── Auth ── */
+#auth-area { display:flex; align-items:center; gap:6px; flex-shrink:0; margin-left:4px; }
+#auth-login-btn {
+  flex-shrink:0; border:none; cursor:pointer; border-radius:var(--radius-sm);
+  padding:6px 12px; font-size:12px; font-weight:600;
+  background:rgba(99,102,241,0.2); color:#a5b4fc;
+  border:1px solid rgba(99,102,241,0.3); transition:all .15s; white-space:nowrap;
+}
+#auth-login-btn:hover { background:rgba(99,102,241,0.4); color:#fff; }
+#user-badge {
+  display:none; align-items:center; gap:7px;
+  background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1);
+  border-radius:var(--radius-sm); padding:5px 10px;
+}
+#user-badge.visible { display:flex; }
+#user-avatar {
+  width:26px; height:26px; border-radius:50%;
+  background:linear-gradient(135deg,var(--brand),#a855f7);
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; color:#fff; flex-shrink:0;
+}
+#user-email { font-size:12px; color:rgba(255,255,255,0.7); max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#sync-dot { width:7px; height:7px; border-radius:50%; background:#22c55e; flex-shrink:0; transition:background .3s; }
+#sync-dot.syncing { background:#f59e0b; animation:pulse 1s infinite; }
+#auth-logout-btn {
+  border:none; cursor:pointer; background:transparent; color:rgba(255,255,255,0.35);
+  font-size:15px; padding:2px 0 2px 4px; line-height:1; transition:color .15s;
+}
+#auth-logout-btn:hover { color:#f87171; }
+/* Auth Modal */
+.auth-modal { max-width:360px; }
+.auth-tabs { display:flex; margin-bottom:20px; border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.05); }
+.auth-tab { flex:1; padding:9px; border:none; background:transparent; color:rgba(255,255,255,0.45); cursor:pointer; font-size:13px; font-weight:600; transition:all .15s; }
+.auth-tab.active { background:rgba(99,102,241,0.35); color:#fff; }
+.auth-field { margin-bottom:14px; }
+.auth-field label { display:block; font-size:11px; color:rgba(255,255,255,0.45); margin-bottom:6px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; }
+.auth-field input { width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.06); color:#fff; font-size:14px; outline:none; transition:border-color .15s; touch-action:auto; user-select:text; }
+.auth-field input:focus { border-color:rgba(99,102,241,0.6); background:rgba(99,102,241,0.08); }
+.auth-submit { width:100%; padding:11px; border-radius:10px; border:none; background:var(--brand); color:#fff; font-size:14px; font-weight:600; cursor:pointer; transition:all .15s; margin-top:4px; }
+.auth-submit:hover { background:var(--brand-dark); }
+.auth-submit:disabled { opacity:0.5; cursor:not-allowed; }
+.auth-msg { font-size:12px; text-align:center; margin-top:12px; min-height:18px; }
+.auth-msg.error { color:#f87171; }
+.auth-msg.success { color:#4ade80; }
+.auth-info { font-size:11px; color:rgba(255,255,255,0.3); text-align:center; margin-top:14px; line-height:1.5; }
+
+/* ── Poll Widget ── */
+.poll-question { font-size:13px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:10px; }
+.poll-bar-row { display:flex;align-items:center;gap:8px;margin-bottom:6px; }
+.poll-bar-label { font-size:11px;color:rgba(255,255,255,0.75);min-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0; }
+.poll-bar-bg { flex:1;height:18px;background:rgba(255,255,255,0.1);border-radius:20px;overflow:hidden; }
+.poll-bar-fill { height:100%;border-radius:20px;transition:width .4s ease; }
+.poll-bar-count { font-size:11px;color:rgba(255,255,255,0.5);min-width:18px;text-align:right;flex-shrink:0; }
+.poll-total { font-size:10px;color:rgba(255,255,255,0.35);text-align:center;margin-top:4px; }
+.poll-ctrl { display:flex;gap:6px;justify-content:center;margin-top:8px; }
+.poll-ctrl button { padding:4px 12px;border-radius:8px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s; }
+
+/* ── Voting Page (Schüler) ── */
+#voting-page { position:fixed;inset:0;background:linear-gradient(135deg,#1e293b,#0f172a);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;z-index:9999; }
+.voting-card { background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:32px 28px;max-width:460px;width:100%; }
+.voting-q { font-size:20px;font-weight:700;color:#fff;text-align:center;margin-bottom:24px;line-height:1.4; }
+.voting-opt { width:100%;padding:14px 20px;border-radius:14px;border:2px solid transparent;background:rgba(255,255,255,0.06);color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:all .18s;text-align:left;margin-bottom:10px;display:block; }
+.voting-opt:hover { transform:translateX(4px); }
+.voting-opt:disabled { opacity:.5;cursor:not-allowed;transform:none; }
+
+/* ── KI-Assistent Widget ── */
+.ai-ctrl-row { display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;margin-bottom:6px; }
+.ai-ctrl-row input, .ai-ctrl-row select {
+  padding:6px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.07);color:#fff;font-size:12px;touch-action:auto;user-select:text;
+}
+.ai-ctrl-row input { flex:1;min-width:100px; }
+.ai-ctrl-row input::placeholder { color:rgba(255,255,255,0.3); }
+.ai-ctrl-row select { cursor:pointer; }
+.ai-ctrl-row select option { background:#1e293b; }
+.ai-gen-btn {
+  padding:6px 14px;border-radius:8px;border:none;background:var(--brand);color:#fff;
+  font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0;
+}
+.ai-gen-btn:hover { background:var(--brand-dark); }
+.ai-gen-btn:disabled { opacity:.5;cursor:not-allowed; }
+.ai-output {
+  flex:1;overflow-y:auto;background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);border-radius:10px;
+  padding:10px 12px;font-size:12.5px;color:rgba(255,255,255,0.85);
+  line-height:1.65;white-space:pre-wrap;word-break:break-word;scrollbar-width:thin;
+}
+.ai-bottom-row { display:flex;gap:5px;justify-content:flex-end;flex-shrink:0;margin-top:5px; }
+.ai-bottom-row button {
+  padding:4px 12px;border-radius:8px;border:none;
+  font-size:11px;cursor:pointer;transition:all .15s;
+}
+
+/* ── Frag die KI Widget ── */
+.ask-input-row { display:flex;gap:6px;flex-shrink:0; }
+.ask-input-row textarea {
+  flex:1;resize:none;padding:8px 10px;border-radius:10px;
+  border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);
+  color:#fff;font-size:12.5px;line-height:1.5;font-family:inherit;
+  touch-action:auto;user-select:text;-webkit-user-select:text;
+  min-height:52px;max-height:90px;
+}
+.ask-input-row textarea::placeholder { color:rgba(255,255,255,0.3); }
+.ask-send-btn {
+  padding:8px 14px;border-radius:10px;border:none;background:var(--brand);
+  color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;align-self:flex-end;
+  transition:all .15s;line-height:1;
+}
+.ask-send-btn:hover { background:var(--brand-dark); }
+.ask-send-btn:disabled { opacity:.4;cursor:not-allowed; }
+.ask-history {
+  flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;
+  scrollbar-width:thin;padding-right:2px;
+}
+.ask-bubble {
+  border-radius:10px;padding:8px 11px;font-size:12px;line-height:1.6;
+  white-space:pre-wrap;word-break:break-word;max-width:100%;
+}
+.ask-bubble.user {
+  background:var(--brand);color:#fff;align-self:flex-end;
+  border-bottom-right-radius:3px;font-weight:500;
+}
+.ask-bubble.ai {
+  background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.88);
+  border:1px solid rgba(255,255,255,0.08);border-bottom-left-radius:3px;
+}
+.ask-bubble.thinking {
+  background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.35);
+  font-style:italic;border:1px dashed rgba(255,255,255,0.1);
+}
+.ask-clear-btn {
+  background:none;border:none;color:rgba(255,255,255,0.25);
+  font-size:11px;cursor:pointer;padding:2px 4px;align-self:flex-end;flex-shrink:0;
+  transition:color .15s;
+}
+.ask-clear-btn:hover { color:rgba(255,255,255,0.5); }
+
+/* ── Sprachsteuerung ── */
+#btn-voice { position:relative; transition:all .2s; }
+#btn-voice.listening { background:rgba(239,68,68,0.3) !important; color:#f87171 !important; animation:pulse 1s infinite; }
+#btn-voice.listening::after { content:''; position:absolute; inset:-3px; border-radius:50%; border:2px solid #f87171; animation:ripple 1s infinite; }
+@keyframes ripple { 0%{transform:scale(1);opacity:1} 100%{transform:scale(1.5);opacity:0} }
+.voice-toast {
+  position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+  background:rgba(15,23,42,0.95); border:1px solid rgba(239,68,68,0.4);
+  color:#f1f5f9; padding:10px 20px; border-radius:12px; font-size:13px;
+  z-index:9999; display:flex; align-items:center; gap:8px; pointer-events:none;
+}
+.voice-transcript { color:#fde047; font-style:italic; }
+
+/* ── Skalierbare Widget-Schrift ── */
+.w-clock, .w-timer-display { transition:font-size .1s; }
+.groups-inner { overflow-y:auto; flex:1; }
+.group-card h4 { font-size:clamp(0.7rem, 2vw, 1.1rem); }
+.group-card li { font-size:clamp(0.65rem, 1.8vw, 1rem); }
+</style>
+</head>
+<body>
+
+<!-- Toolbar -->
+<div id="toolbar">
+  <div id="logo">
+    <span>🏫</span>
+    <span id="logo-text">KlassenBoard</span>
+  </div>
+  <div id="board-tabs"></div>
+  <button id="add-board-btn" title="Neue Tafel">+</button>
+  <div class="toolbar-sep"></div>
+  <button class="tb-btn" id="btn-ai-board" title="KI erstellt Board automatisch">🪄 KI-Board</button>
+  <button class="tb-btn" id="btn-add-widget" title="Widget hinzufügen (W)">＋ Widget</button>
+  <button class="tb-icon-btn" id="btn-template" title="Vorlage laden">📋</button>
+  <button class="tb-icon-btn" id="btn-bg" title="Hintergrund">🎨</button>
+  <button class="tb-icon-btn" id="btn-ical" title="Stundenplan (iCal)">📅</button>
+  <button class="tb-icon-btn" id="btn-export" title="Export/Import">💾</button>
+  <div class="toolbar-sep"></div>
+  <button class="tb-icon-btn" id="btn-voice" title="Sprachsteuerung (Mikrofon)">🎙️</button>
+  <button class="tb-icon-btn tb-btn" id="edit-mode-btn" title="Bearbeiten/Ansicht (E)">✏️ Edit</button>
+  <button class="tb-icon-btn" id="btn-fullscreen" title="Vollbild (F)">⤢</button>
+  <div class="toolbar-sep"></div>
+  <div id="auth-area">
+    <button id="auth-login-btn">🔑 Anmelden</button>
+    <div id="user-badge">
+      <div id="user-avatar">?</div>
+      <span id="user-email"></span>
+      <div id="sync-dot" title="Cloud-Sync aktiv"></div>
+      <button id="auth-logout-btn" title="Abmelden">✕</button>
+    </div>
+  </div>
+</div>
+
+<!-- Board -->
+<div id="board">
+  <div id="board-bg"></div>
+  <div id="widgets-layer"></div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════════════════════
+// SUPABASE KONFIGURATION
+// Nach Supabase-Projekt anlegen hier eintragen:
+//   1. Gehe auf https://supabase.com → Neues Projekt
+//   2. Project Settings → API → Project URL + anon key kopieren
+//   3. Führe das SQL-Setup im Supabase SQL-Editor aus (siehe unten)
+// ══════════════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://ubroujkwoizghiiustri.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_WbCKbSDkacYqUHxi0E6Qhg_-Lkau-i9';
+
+/* SQL für Supabase SQL-Editor (einmalig ausführen):
+──────────────────────────────────────────────────────
+create table if not exists public.boards (
+  user_id uuid primary key references auth.users on delete cascade,
+  data    jsonb not null default '{}'::jsonb,
+  updated_at timestamptz default now()
+);
+alter table public.boards enable row level security;
+create policy "own" on public.boards for all using (auth.uid() = user_id);
+──────────────────────────────────────────────────────
+*/
+
+// ══════════════════════════════════════════════════════════════
+// AUTH MODULE
+// ══════════════════════════════════════════════════════════════
+const AUTH = {
+  client: null,
+  user: null,
+  _syncTimer: null,
+  _configured: false,
+
+  init() {
+    if (!window.supabase || SUPABASE_URL.includes('DEINE')) {
+      console.info('KlassenBoard: Supabase nicht konfiguriert — lokaler Modus aktiv.');
+      return;
+    }
+    try {
+      this._configured = true;
+      this.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      // Bestehende Session wiederherstellen
+      this.client.auth.getSession().then(({ data }) => {
+        if (data?.session) {
+          this.user = data.session.user;
+          this._updateUI();
+          this.loadFromCloud();
+        }
+      });
+      this.client.auth.onAuthStateChange((event, session) => {
+        this.user = session?.user || null;
+        this._updateUI();
+        if (event === 'SIGNED_IN')  this.loadFromCloud();
+        if (event === 'SIGNED_OUT') { APP.load(); renderAll(); toast('👋 Abgemeldet'); }
+      });
+    } catch(e) { console.warn('Supabase init error:', e); }
+  },
+
+  async login(email, password) {
+    const { error } = await this.client.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  },
+
+  async register(email, password) {
+    const { error } = await this.client.auth.signUp({ email, password });
+    if (error) throw error;
+  },
+
+  async logout() {
+    if (this.client) await this.client.auth.signOut();
+  },
+
+  syncToCloud() {
+    if (!this.client || !this.user) return;
+    clearTimeout(this._syncTimer);
+    this._setSyncDot('syncing');
+    this._syncTimer = setTimeout(() => this._doSync(), 1500);
+  },
+
+  async _doSync() {
+    if (!this.client || !this.user) return;
+    try {
+      const data = {
+        boards: APP.state.boards,
+        activeBoardId: APP.state.activeBoardId,
+        icalCache: APP.icalCache,
+      };
+      const { error } = await this.client
+        .from('boards')
+        .upsert({ user_id: this.user.id, data, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      this._setSyncDot('ok');
+    } catch(e) {
+      console.warn('Cloud-Sync fehlgeschlagen:', e);
+      this._setSyncDot('error');
+    }
+  },
+
+  async loadFromCloud() {
+    if (!this.client || !this.user) return;
+    try {
+      const { data, error } = await this.client
+        .from('boards')
+        .select('data')
+        .eq('user_id', this.user.id)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return; // Erster Login – localStorage bleibt
+      APP.state.boards      = data.data.boards || [];
+      APP.state.activeBoardId = data.data.activeBoardId || null;
+      APP.icalCache          = data.data.icalCache || {};
+      if (!APP.state.boards.find(b => b.id === APP.state.activeBoardId)) {
+        APP.state.activeBoardId = APP.state.boards[0]?.id || null;
+      }
+      if (APP.state.boards.length === 0) createBoard('Meine Tafel');
+      else renderAll();
+      toast('☁️ Boards aus der Cloud geladen');
+    } catch(e) { console.warn('Cloud-Load fehlgeschlagen:', e); }
+  },
+
+  _updateUI() {
+    const badge    = document.getElementById('user-badge');
+    const loginBtn = document.getElementById('auth-login-btn');
+    const emailEl  = document.getElementById('user-email');
+    const avatarEl = document.getElementById('user-avatar');
+    if (this.user) {
+      const email = this.user.email || '';
+      emailEl.textContent  = email;
+      avatarEl.textContent = email[0]?.toUpperCase() || '?';
+      badge.classList.add('visible');
+      loginBtn.style.display = 'none';
+    } else {
+      badge.classList.remove('visible');
+      loginBtn.style.display = '';
+    }
+  },
+
+  _setSyncDot(state) {
+    const dot = document.getElementById('sync-dot');
+    if (!dot) return;
+    dot.classList.toggle('syncing', state === 'syncing');
+    if (state !== 'syncing') {
+      dot.style.background = state === 'ok' ? '#22c55e' : '#f87171';
+    }
+  },
+};
+
+// ══════════════════════════════════════════════════════════════
+// WIDGET REGISTRY
+// ══════════════════════════════════════════════════════════════
+const REGISTRY = {
+  clock:        { label:'Uhr',           emoji:'🕐', w:300, h:150 },
+  timer:        { label:'Timer',         emoji:'⏱', w:280, h:200 },
+  stopwatch:    { label:'Stoppuhr',      emoji:'⏲', w:280, h:200 },
+  text:         { label:'Text',          emoji:'📝', w:320, h:200 },
+  traffic:      { label:'Ampel',         emoji:'🚦', w:220, h:160 },
+  qr:           { label:'QR-Code',       emoji:'📱', w:220, h:240 },
+  names:        { label:'Namensrad',     emoji:'🎯', w:260, h:300 },
+  homework:     { label:'Hausaufgaben',  emoji:'📚', w:300, h:240 },
+  goal:         { label:'Stundenziel',   emoji:'🎯', w:400, h:140 },
+  timetable:    { label:'Stundenplan',   emoji:'📅', w:320, h:300 },
+  image:        { label:'Bild',          emoji:'🖼', w:300, h:220 },
+  youtube:      { label:'YouTube',       emoji:'▶️', w:360, h:220 },
+  dice:         { label:'Würfel',        emoji:'🎲', w:200, h:200 },
+  randomnum:    { label:'Zufallszahl',   emoji:'🔢', w:260, h:200 },
+  groups:       { label:'Gruppen',       emoji:'👥', w:340, h:280 },
+  agenda:       { label:'Agenda',        emoji:'📋', w:300, h:260 },
+  checklist:    { label:'Checkliste',    emoji:'✅', w:300, h:260 },
+  phases:       { label:'Arbeitsphasen', emoji:'⏳', w:300, h:260 },
+  status:       { label:'Klassenstatus', emoji:'😊', w:240, h:200 },
+  noise:        { label:'Lautstärke',    emoji:'🎤', w:260, h:220 },
+  poll:         { label:'Live-Umfrage',  emoji:'📊', w:340, h:280 },
+  ai:           { label:'KI-Assistent', emoji:'🤖', w:360, h:300 },
+  ask:          { label:'Frag die KI',  emoji:'💬', w:360, h:320 },
+};
+
+const WIDGET_CATS = [
+  { label:'Zeit',        types:['clock','timer','stopwatch'] },
+  { label:'Unterricht',  types:['text','goal','homework','traffic','names'] },
+  { label:'Tools',       types:['qr','dice','randomnum','groups','noise','poll','ai','ask'] },
+  { label:'Planung',     types:['agenda','checklist','phases','status'] },
+  { label:'Medien',      types:['image','youtube'] },
+  { label:'Stundenplan', types:['timetable'] },
+];
+
+// ══════════════════════════════════════════════════════════════
+// TEMPLATES
+// ══════════════════════════════════════════════════════════════
+const BUILT_IN_TEMPLATES = [
+  {
+    id:'tpl-morgen', name:'Morgenstart', emoji:'🌅',
+    desc:'Uhr, Tagesplan, Stundenziel',
+    bg:{ type:'gradient', value:'linear-gradient(135deg,#667eea,#764ba2)' },
+    widgets:[
+      { type:'clock',    x:20,  y:20,  w:220, h:130, config:{} },
+      { type:'goal',     x:260, y:20,  w:320, h:110, config:{ text:'Heutiges Lernziel…' } },
+      { type:'agenda',   x:20,  y:170, w:280, h:240, config:{ items:[{time:'08:00',text:'Begrüßung'},{time:'08:15',text:'Wiederholung'},{time:'08:30',text:'Neues Thema'}] } },
+      { type:'homework', x:320, y:150, w:280, h:200, config:{ subject:'Hausaufgaben', items:[] } },
+    ]
+  },
+  {
+    id:'tpl-still', name:'Stillarbeit', emoji:'🤫',
+    desc:'Timer, Ampel, Aufgabentext',
+    bg:{ type:'gradient', value:'linear-gradient(135deg,#0f0c29,#302b63,#24243e)' },
+    widgets:[
+      { type:'timer',    x:20,  y:20,  w:260, h:180, config:{ minutes:20 } },
+      { type:'traffic',  x:300, y:20,  w:180, h:120, config:{ state:'red' } },
+      { type:'text',     x:20,  y:220, w:460, h:160, config:{ text:'Bearbeite die Aufgaben still und selbstständig.' } },
+    ]
+  },
+  {
+    id:'tpl-gruppe', name:'Gruppenarbeit', emoji:'👥',
+    desc:'Timer, Gruppen, Phasen',
+    bg:{ type:'gradient', value:'linear-gradient(135deg,#43e97b,#38f9d7)' },
+    widgets:[
+      { type:'timer',   x:20,  y:20,  w:240, h:160, config:{ minutes:15 } },
+      { type:'groups',  x:280, y:20,  w:300, h:220, config:{ names:'Anna\nBen\nClara\nDavid\nEva\nFinn', size:3 } },
+      { type:'phases',  x:20,  y:200, w:240, h:200, config:{ phases:[{name:'Einführung',color:'#6366f1',minutes:5},{name:'Gruppenarbeit',color:'#22c55e',minutes:15},{name:'Präsentation',color:'#f59e0b',minutes:10},{name:'Reflexion',color:'#ec4899',minutes:5}] } },
+    ]
+  },
+  {
+    id:'tpl-klausur', name:'Klassenarbeit', emoji:'✍️',
+    desc:'Timer, Stoppuhr, Ampel',
+    bg:{ type:'color', value:'#0f172a' },
+    widgets:[
+      { type:'timer',     x:20,  y:20,  w:280, h:180, config:{ minutes:45 } },
+      { type:'traffic',   x:320, y:20,  w:180, h:120, config:{ state:'red' } },
+      { type:'stopwatch', x:320, y:160, w:220, h:160, config:{} },
+      { type:'text',      x:20,  y:220, w:280, h:120, config:{ text:'Klassenarbeit – Bitte keine Hilfsmittel.' } },
+    ]
+  },
+  {
+    id:'tpl-vertretung', name:'Vertretungsstunde', emoji:'👋',
+    desc:'Aufgabe, Namensrad, Würfel',
+    bg:{ type:'gradient', value:'linear-gradient(135deg,#f093fb,#f5576c)' },
+    widgets:[
+      { type:'text',      x:20,  y:20,  w:400, h:140, config:{ text:'Bearbeite die Aufgaben auf dem Arbeitsblatt.\nBei Fragen meldet euch ruhig.' } },
+      { type:'names',     x:440, y:20,  w:220, h:260, config:{ names:'Schüler 1\nSchüler 2\nSchüler 3\nSchüler 4\nSchüler 5' } },
+      { type:'dice',      x:20,  y:180, w:160, h:140, config:{} },
+    ]
+  },
+  {
+    id:'tpl-tagesplan', name:'Tagesplan', emoji:'📅',
+    desc:'Stundenplan, Uhr, Agenda',
+    bg:{ type:'gradient', value:'linear-gradient(135deg,#0093E9,#80D0C7)' },
+    widgets:[
+      { type:'timetable', x:20,  y:20,  w:320, h:320, config:{ icalUrl:'', entries:[] } },
+      { type:'clock',     x:360, y:20,  w:220, h:130, config:{} },
+      { type:'agenda',    x:360, y:170, w:280, h:200, config:{ items:[] } },
+    ]
+  },
+  {
+    id:'tpl-hausaufgaben', name:'Hausaufgaben', emoji:'📚',
+    desc:'Hausaufgaben, Checkliste',
+    bg:{ type:'color', value:'#1e293b' },
+    widgets:[
+      { type:'homework',  x:20,  y:20,  w:300, h:280, config:{ subject:'Hausaufgaben', items:[] } },
+      { type:'checklist', x:340, y:20,  w:280, h:240, config:{ items:[] } },
+      { type:'text',      x:340, y:280, w:280, h:100, config:{ text:'Denk an dein Heft und die Materialien!' } },
+    ]
+  },
+  {
+    id:'tpl-reflexion', name:'Reflexion', emoji:'💬',
+    desc:'Klassenstatus, Checkliste, Text',
+    bg:{ type:'gradient', value:'linear-gradient(135deg,#a18cd1,#fbc2eb)' },
+    widgets:[
+      { type:'status',    x:20,  y:20,  w:220, h:180, config:{ statusIdx:2 } },
+      { type:'checklist', x:260, y:20,  w:280, h:200, config:{ items:[{text:'Lernziel erreicht?',done:false},{text:'Aufgaben fertig?',done:false},{text:'Fragen beantwortet?',done:false}] } },
+      { type:'text',      x:20,  y:220, w:520, h:120, config:{ text:'Was habe ich heute gelernt?' } },
+    ]
+  },
+];
+
+// ══════════════════════════════════════════════════════════════
+// APP STATE
+// ══════════════════════════════════════════════════════════════
+const APP = {
+  state: {
+    boards: [],
+    activeBoardId: null,
+    editMode: true,
+    undo: null,   // previous boards snapshot (1 level)
+  },
+  intervals: {},   // widgetId -> intervalId
+  selectedId: null,
+  saveTimer: null,
+  icalCache: {},   // boardId -> { url, entries, lastFetched }
+
+  // ── Persistence ──
+  save() {
+    clearTimeout(this.saveTimer);
+    this.saveTimer = setTimeout(() => this._persist(), 500);
+  },
+  _persist() {
+    try {
+      const data = {
+        boards: this.state.boards,
+        activeBoardId: this.state.activeBoardId,
+        icalCache: this.icalCache,
+      };
+      localStorage.setItem('klassenboard_v2', JSON.stringify(data));
+      AUTH.syncToCloud(); // Cloud-Sync wenn eingeloggt
+    } catch(e) { toast('⚠️ Speichern fehlgeschlagen'); }
+  },
+  load() {
+    try {
+      const raw = localStorage.getItem('klassenboard_v2');
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      this.state.boards = data.boards || [];
+      this.state.activeBoardId = data.activeBoardId || null;
+      this.icalCache = data.icalCache || {};
+      return true;
+    } catch(e) { return false; }
+  },
+  exportAll() {
+    const data = {
+      version:2,
+      exported: new Date().toISOString(),
+      boards: this.state.boards,
+      icalCache: this.icalCache,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'KlassenBoard_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    toast('✅ Exportiert');
+  },
+  importAll(json) {
+    try {
+      const data = JSON.parse(json);
+      if (!data.boards) throw new Error('Ungültiges Format');
+      this.snapshotUndo();
+      this.state.boards = data.boards;
+      this.icalCache = data.icalCache || {};
+      if (!this.state.boards.find(b => b.id === this.state.activeBoardId)) {
+        this.state.activeBoardId = this.state.boards[0]?.id || null;
+      }
+      this.save();
+      renderAll();
+      toast('✅ Importiert: ' + data.boards.length + ' Tafel(n)');
+    } catch(e) { toast('❌ Import fehlgeschlagen: ' + e.message); }
+  },
+  deleteAllData() {
+    localStorage.removeItem('klassenboard_v2');
+    this.state.boards = [];
+    this.state.activeBoardId = null;
+    this.icalCache = {};
+    this.intervals = {};
+    createBoard('Tafel 1');
+  },
+
+  // ── Undo ──
+  snapshotUndo() {
+    this.state.undo = JSON.stringify(this.state.boards);
+  },
+  undo() {
+    if (!this.state.undo) { toast('Kein Rückgängig verfügbar'); return; }
+    const prev = JSON.parse(this.state.undo);
+    this.state.undo = null;
+    this.state.boards = prev;
+    if (!this.state.boards.find(b => b.id === this.state.activeBoardId)) {
+      this.state.activeBoardId = this.state.boards[0]?.id || null;
+    }
+    this.save();
+    renderAll();
+    toast('↩ Rückgängig');
+  },
+
+  // ── Board helpers ──
+  activeBoard() { return this.state.boards.find(b => b.id === this.state.activeBoardId); },
+};
+
+// ══════════════════════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════════════════════
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function toast(msg, dur=2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), dur);
+}
+
+function safeText(str) {
+  const el = document.createElement('span');
+  el.textContent = str || '';
+  return el.innerHTML;
+}
+
+function el(tag, cls, attrs={}) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  for (const [k,v] of Object.entries(attrs)) e.setAttribute(k, v);
+  return e;
+}
+
+function openModal(html, onClose) {
+  const overlay = el('div','modal-overlay');
+  overlay.innerHTML = html;
+  document.body.appendChild(overlay);
+  const close = () => { overlay.remove(); onClose && onClose(); };
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  const closeBtns = overlay.querySelectorAll('[data-close]');
+  closeBtns.forEach(b => b.addEventListener('click', close));
+  return { overlay, close };
+}
+
+// ══════════════════════════════════════════════════════════════
+// BOARD CRUD
+// ══════════════════════════════════════════════════════════════
+function createBoard(name, bg, widgets=[]) {
+  const board = {
+    id: uid(),
+    name: name || 'Neue Tafel',
+    background: bg || { type:'gradient', value:'linear-gradient(135deg,#667eea,#764ba2)' },
+    widgets: widgets.map(w => ({ ...w, id: uid(), createdAt: new Date().toISOString() })),
+    createdAt: new Date().toISOString(),
+  };
+  APP.state.boards.push(board);
+  APP.state.activeBoardId = board.id;
+  APP.save();
+  renderAll();
+  return board;
+}
+
+function switchBoard(id) {
+  APP.state.activeBoardId = id;
+  APP.selectedId = null;
+  stopAllIntervals();
+  APP.save();
+  renderBoardTabs();
+  renderBoardBg();
+  renderWidgets();
+}
+
+function deleteBoard(id) {
+  if (APP.state.boards.length <= 1) { toast('Mindestens eine Tafel erforderlich'); return; }
+  APP.snapshotUndo();
+  APP.state.boards = APP.state.boards.filter(b => b.id !== id);
+  if (APP.state.activeBoardId === id) {
+    APP.state.activeBoardId = APP.state.boards[0].id;
+  }
+  APP.save();
+  renderAll();
+}
+
+function renameBoard(id, name) {
+  const b = APP.state.boards.find(b => b.id === id);
+  if (b) { b.name = name; APP.save(); renderBoardTabs(); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// WIDGET CRUD
+// ══════════════════════════════════════════════════════════════
+function addWidget(type, extraConfig={}) {
+  const board = APP.activeBoard();
+  if (!board) return;
+  APP.snapshotUndo();
+  const def = REGISTRY[type];
+  const widget = {
+    id: uid(),
+    type,
+    x: 40 + Math.random() * 80 | 0,
+    y: 40 + Math.random() * 60 | 0,
+    w: def.w,
+    h: def.h,
+    zIndex: nextZ(board),
+    locked: false,
+    config: { ...getDefaultConfig(type), ...extraConfig },
+    createdAt: new Date().toISOString(),
+  };
+  board.widgets.push(widget);
+  APP.save();
+  renderWidgets();
+  // select new widget
+  APP.selectedId = widget.id;
+  const wEl = document.querySelector('[data-wid="'+widget.id+'"]');
+  if (wEl) wEl.classList.add('selected');
+  return widget;
+}
+
+function removeWidget(id) {
+  const board = APP.activeBoard();
+  if (!board) return;
+  APP.snapshotUndo();
+  board.widgets = board.widgets.filter(w => w.id !== id);
+  stopInterval(id);
+  APP.selectedId = null;
+  APP.save();
+  renderWidgets();
+}
+
+function updateWidget(id, patch) {
+  const board = APP.activeBoard();
+  if (!board) return;
+  const w = board.widgets.find(w => w.id === id);
+  if (!w) return;
+  Object.assign(w, patch);
+  APP.save();
+}
+
+function nextZ(board) {
+  return (board.widgets.reduce((m, w) => Math.max(m, w.zIndex || 0), 0)) + 1;
+}
+
+function getDefaultConfig(type) {
+  const defaults = {
+    clock:     {},
+    timer:     { minutes: 5, seconds: 0, running: false, endAt: null },
+    stopwatch: { running: false, elapsed: 0, laps: [] },
+    text:      { text: 'Doppelklick zum Bearbeiten' },
+    traffic:   { state: 'red' },
+    qr:        { url: 'https://klassenboard.de', label: '' },
+    names:     { names: 'Anna\nBen\nClara\nDavid\nEva\nFinn\nGreta\nHannes', highlighted: -1 },
+    homework:  { subject: 'Fach', items: [] },
+    goal:      { text: 'Heutiges Lernziel' },
+    timetable: { icalUrl: '', entries: [] },
+    image:     { src: '', alt: '' },
+    youtube:   { videoId: '', autoplay: false },
+    dice:      { value: 1 },
+    randomnum: { min: 1, max: 30, value: null },
+    groups:    { names: 'Anna\nBen\nClara\nDavid\nEva\nFinn', size: 3 },
+    agenda:    { items: [] },
+    checklist: { items: [] },
+    phases:    { phases: [
+      {name:'Einführung', color:'#6366f1', minutes:5},
+      {name:'Erarbeitung', color:'#22c55e', minutes:20},
+      {name:'Sicherung', color:'#f59e0b', minutes:10},
+      {name:'Reflexion', color:'#ec4899', minutes:5},
+    ], activeIdx: -1 },
+    status:    { statusIdx: 2 },
+  };
+  return defaults[type] || {};
+}
+
+// ══════════════════════════════════════════════════════════════
+// INTERVAL MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+function startInterval(wid, fn, ms) {
+  stopInterval(wid);
+  APP.intervals[wid] = setInterval(fn, ms);
+}
+function stopInterval(wid) {
+  clearInterval(APP.intervals[wid]);
+  delete APP.intervals[wid];
+}
+function stopAllIntervals() {
+  Object.keys(APP.intervals).forEach(stopInterval);
+}
+
+// ── Audio streams (Geräuschpegel-Widget) ──
+const AUDIO_STREAMS = {};
+// ── Supabase Realtime channels (Poll-Widget) ──
+const POLL_CHANNELS = {}; // widgetId -> { stream, ctx, raf }
+function stopAudioStream(wid) {
+  const a = AUDIO_STREAMS[wid];
+  if (!a) return;
+  cancelAnimationFrame(a.raf);
+  a.stream?.getTracks().forEach(t => t.stop());
+  a.ctx?.close().catch(()=>{});
+  delete AUDIO_STREAMS[wid];
+}
+function stopAllAudioStreams() {
+  Object.keys(AUDIO_STREAMS).forEach(stopAudioStream);
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER – BOARD
+// ══════════════════════════════════════════════════════════════
+function renderAll() {
+  renderBoardTabs();
+  renderBoardBg();
+  renderWidgets();
+}
+
+function renderBoardTabs() {
+  const container = document.getElementById('board-tabs');
+  container.innerHTML = '';
+  APP.state.boards.forEach(board => {
+    const btn = el('button','tab-btn' + (board.id === APP.state.activeBoardId ? ' active' : ''));
+    btn.textContent = board.name;
+    btn.dataset.bid = board.id;
+    btn.addEventListener('click', () => switchBoard(board.id));
+    btn.addEventListener('dblclick', () => startTabRename(btn, board));
+    container.appendChild(btn);
+  });
+}
+
+function startTabRename(btn, board) {
+  if (board.id !== APP.state.activeBoardId) return;
+  const inp = el('input','tab-input');
+  inp.value = board.name;
+  btn.innerHTML = '';
+  btn.appendChild(inp);
+  inp.focus(); inp.select();
+  const commit = () => {
+    const name = inp.value.trim() || board.name;
+    renameBoard(board.id, name);
+  };
+  inp.addEventListener('blur', commit);
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') inp.blur();
+    if (e.key === 'Escape') { inp.value = board.name; inp.blur(); }
+  });
+}
+
+function renderBoardBg() {
+  const board = APP.activeBoard();
+  const bgEl = document.getElementById('board-bg');
+  if (!board) return;
+  const bg = board.background;
+  if (bg.type === 'gradient') bgEl.style.background = bg.value;
+  else if (bg.type === 'color') bgEl.style.background = bg.value;
+  else if (bg.type === 'image') bgEl.style.cssText = `background:url(${bg.value}) center/cover no-repeat;`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER – WIDGETS
+// ══════════════════════════════════════════════════════════════
+function renderWidgets() {
+  stopAllIntervals();
+  stopAllAudioStreams();
+  const layer = document.getElementById('widgets-layer');
+  layer.innerHTML = '';
+  const board = APP.activeBoard();
+  if (!board) return;
+  board.widgets.forEach(w => layer.appendChild(buildWidgetEl(w)));
+  // restart timetable refresh
+  board.widgets.filter(w=>w.type==='timetable').forEach(w => startTimetableRefresh(w));
+}
+
+function buildWidgetEl(w) {
+  const shell = el('div','widget' + (w.id === APP.selectedId ? ' selected' : ''));
+  shell.dataset.wid = w.id;
+  shell.style.cssText = `left:${w.x}px;top:${w.y}px;width:${w.w}px;height:${w.h}px;z-index:${w.zIndex||1}`;
+
+  // Header (only in edit mode)
+  if (APP.state.editMode) {
+    const hdr = el('div','widget-header');
+    const titleEl = el('span','widget-title');
+    titleEl.textContent = REGISTRY[w.type]?.label || w.type;
+    const actions = el('div','widget-actions');
+    const settBtn = el('button','w-btn'); settBtn.textContent = '⚙'; settBtn.title = 'Einstellungen';
+    settBtn.addEventListener('click', e => { e.stopPropagation(); openWidgetSettings(w.id); });
+    const delBtn = el('button','w-btn del'); delBtn.textContent = '✕'; delBtn.title = 'Löschen';
+    delBtn.addEventListener('click', e => { e.stopPropagation(); removeWidget(w.id); });
+    actions.append(settBtn, delBtn);
+    hdr.append(titleEl, actions);
+    shell.appendChild(hdr);
+    // Resize handle
+    const rh = el('div','resize-handle');
+    shell.appendChild(rh);
+    initResize(shell, rh, w);
+    initDrag(shell, hdr, w);
+  }
+
+  // Body
+  const body = el('div','widget-body' + (APP.state.editMode ? ' with-header' : ''));
+  renderWidgetContent(w, body);
+  shell.appendChild(body);
+
+  // Click to select
+  shell.addEventListener('pointerdown', e => {
+    if (!APP.state.editMode) return;
+    APP.selectedId = w.id;
+    document.querySelectorAll('.widget').forEach(el => el.classList.remove('selected'));
+    shell.classList.add('selected');
+    // bring to front
+    const board = APP.activeBoard();
+    if (board) {
+      w.zIndex = nextZ(board);
+      shell.style.zIndex = w.zIndex;
+      APP.save();
+    }
+  });
+
+  return shell;
+}
+
+// ══════════════════════════════════════════════════════════════
+// DRAG & RESIZE (Pointer Events)
+// ══════════════════════════════════════════════════════════════
+function initDrag(shell, handle, w) {
+  let startX, startY, startLeft, startTop;
+  handle.addEventListener('pointerdown', e => {
+    if (!APP.state.editMode) return;
+    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+    e.preventDefault();
+    handle.setPointerCapture(e.pointerId);
+    startX = e.clientX; startY = e.clientY;
+    startLeft = w.x; startTop = w.y;
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp, {once:true});
+  });
+  function onMove(e) {
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    w.x = Math.max(0, startLeft + dx);
+    w.y = Math.max(0, startTop + dy);
+    shell.style.left = w.x + 'px';
+    shell.style.top  = w.y + 'px';
+  }
+  function onUp() {
+    handle.removeEventListener('pointermove', onMove);
+    APP.save();
+  }
+}
+
+function initResize(shell, handle, w) {
+  let startX, startY, startW, startH;
+  handle.addEventListener('pointerdown', e => {
+    e.preventDefault(); e.stopPropagation();
+    handle.setPointerCapture(e.pointerId);
+    startX = e.clientX; startY = e.clientY;
+    startW = w.w; startH = w.h;
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp, {once:true});
+  });
+  function onMove(e) {
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    w.w = Math.max(120, startW + dx);
+    w.h = Math.max(80, startH + dy);
+    shell.style.width  = w.w + 'px';
+    shell.style.height = w.h + 'px';
+  }
+  function onUp() {
+    handle.removeEventListener('pointermove', onMove);
+    APP.save();
+    // re-render content so QR etc. resizes
+    const body = shell.querySelector('.widget-body');
+    if (body) renderWidgetContent(w, body);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// WIDGET CONTENT RENDERERS
+// ══════════════════════════════════════════════════════════════
+function renderWidgetContent(w, body) {
+  body.innerHTML = '';
+  const fn = WIDGET_RENDERERS[w.type];
+  if (fn) fn(w, body);
+}
+
+const WIDGET_RENDERERS = {
+
+  // ── Clock ──
+  clock(w, body) {
+    body.style.flexDirection = 'column';
+    const time = el('div','w-clock');
+    const date = el('div','w-date');
+    const clockFs = Math.min(w.w * 0.38, w.h * 0.52);
+    time.style.fontSize = Math.max(24, clockFs) + 'px';
+    date.style.fontSize = Math.max(11, clockFs * 0.28) + 'px';
+    body.append(time, date);
+    function update() {
+      const now = new Date();
+      time.textContent = now.toLocaleTimeString('de-DE');
+      date.textContent = now.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+    }
+    update();
+    startInterval(w.id, update, 1000);
+  },
+
+  // ── Timer ──
+  timer(w, body) {
+    body.style.flexDirection = 'column';
+    const display = el('div','w-timer-display');
+    display.style.fontSize = Math.max(28, Math.min(w.w * 0.32, w.h * 0.42)) + 'px';
+    const row = el('div','w-btn-row');
+    const startBtn = el('button','w-action-btn');
+    const resetBtn = el('button','w-action-btn');
+    resetBtn.textContent = '↺';
+    row.append(startBtn, resetBtn);
+    body.append(display, row);
+
+    let remaining = (w.config.minutes||5)*60 + (w.config.seconds||0);
+    let running = false;
+    let endAt = null;
+
+    function fmt(s) {
+      const m = Math.floor(s/60), sec = s%60;
+      return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+    }
+    function updateDisplay() {
+      display.textContent = fmt(Math.max(0,remaining));
+      display.classList.toggle('urgent', remaining <= 30 && running);
+      startBtn.textContent = running ? '⏸ Pause' : (remaining < (w.config.minutes||5)*60+(w.config.seconds||0) ? '▶ Weiter' : '▶ Start');
+    }
+    function tick() {
+      if (!running) return;
+      remaining = Math.max(0, Math.round((endAt - Date.now())/1000));
+      updateDisplay();
+      if (remaining <= 0) {
+        running = false;
+        startInterval(w.id+'_', ()=>{}, 99999);
+        stopInterval(w.id);
+        toast('⏰ Zeit abgelaufen!', 5000);
+      }
+    }
+    startBtn.addEventListener('click', () => {
+      if (remaining <= 0) return;
+      running = !running;
+      if (running) {
+        endAt = Date.now() + remaining*1000;
+        startInterval(w.id, tick, 250);
+      } else {
+        stopInterval(w.id);
+      }
+      updateDisplay();
+    });
+    resetBtn.addEventListener('click', () => {
+      running = false; stopInterval(w.id);
+      remaining = (w.config.minutes||5)*60 + (w.config.seconds||0);
+      updateDisplay();
+    });
+    updateDisplay();
+  },
+
+  // ── Stopwatch ──
+  stopwatch(w, body) {
+    body.style.flexDirection = 'column';
+    const display = el('div','w-timer-display');
+    display.style.fontSize = Math.max(28, Math.min(w.w * 0.32, w.h * 0.42)) + 'px';
+    const row = el('div','w-btn-row');
+    const startBtn = el('button','w-action-btn');
+    const lapBtn = el('button','w-action-btn'); lapBtn.textContent = '⚑ Runde';
+    const resetBtn = el('button','w-action-btn'); resetBtn.textContent = '↺';
+    row.append(startBtn, lapBtn, resetBtn);
+    const lapsDiv = el('div'); lapsDiv.style.cssText='width:100%;overflow-y:auto;max-height:70px;margin-top:6px;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.5)';
+    body.append(display, row, lapsDiv);
+
+    let elapsed = 0, running = false, startedAt = null, laps = [];
+    function fmt(ms) {
+      const m=Math.floor(ms/60000), s=Math.floor((ms%60000)/1000), cs=Math.floor((ms%1000)/10);
+      return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(cs).padStart(2,'0')}`;
+    }
+    function update() {
+      if (running) elapsed = Date.now() - startedAt + (elapsed);
+      // handled via tick
+      display.textContent = fmt(elapsed);
+      startBtn.textContent = running ? '⏸ Pause' : '▶ Start';
+    }
+    startBtn.addEventListener('click', () => {
+      if (!running) {
+        const base = elapsed;
+        startedAt = Date.now() - base;
+        running = true;
+        startInterval(w.id, () => { elapsed = Date.now() - startedAt; display.textContent = fmt(elapsed); }, 50);
+      } else {
+        running = false; stopInterval(w.id);
+      }
+      startBtn.textContent = running ? '⏸ Pause' : '▶ Start';
+    });
+    lapBtn.addEventListener('click', () => {
+      if (!running) return;
+      laps.push(elapsed);
+      const d = el('div');
+      d.textContent = `Runde ${laps.length}: ${fmt(laps[laps.length-1])}`;
+      lapsDiv.prepend(d);
+    });
+    resetBtn.addEventListener('click', () => {
+      running = false; stopInterval(w.id);
+      elapsed = 0; laps = [];
+      display.textContent = fmt(0);
+      lapsDiv.innerHTML = '';
+      startBtn.textContent = '▶ Start';
+    });
+    display.textContent = fmt(0);
+  },
+
+  // ── Text ──
+  text(w, body) {
+    const div = el('div','w-text-display');
+    div.style.color = w.config.color || '#fff';
+    const text = w.config.text || '';
+    const charCount = Math.max(text.length, 1);
+    // If user set explicit font size respect it, otherwise auto-scale
+    const autoFs = Math.min(w.w * 0.07, w.h * 0.25) * Math.min(1, Math.pow(40 / charCount, 0.35));
+    div.style.fontSize = (w.config.fontSize || Math.max(14, Math.min(autoFs, 72))) + 'px';
+    div.textContent = text;
+    if (APP.state.editMode) {
+      div.addEventListener('dblclick', e => {
+        e.stopPropagation();
+        openTextEdit(w);
+      });
+    }
+    body.appendChild(div);
+  },
+
+  // ── Traffic Light ──
+  traffic(w, body) {
+    const states = ['red','yellow','green'];
+    const labels = ['🔴 Ruhe','🟡 Flüstern','🟢 Sprechen'];
+    body.style.flexDirection = 'column'; body.style.gap = '10px';
+    const circles = [];
+    const circleSize = Math.max(40, Math.min(w.w * 0.26, w.h * 0.32)) + 'px';
+    const labelFs = Math.max(12, Math.min(w.w * 0.07, 22)) + 'px';
+    const labelEl = el('div'); labelEl.style.cssText=`font-size:${labelFs};font-weight:600;color:rgba(255,255,255,0.9)`;
+
+    states.forEach((s,i) => {
+      const c = el('div','w-traffic-circle');
+      c.dataset.state = s;
+      c.style.width = circleSize; c.style.height = circleSize;
+      circles.push(c);
+      c.addEventListener('click', () => {
+        w.config.state = s;
+        updateCircles();
+        APP.save();
+      });
+    });
+
+    function updateCircles() {
+      circles.forEach((c,i) => {
+        c.className = 'w-traffic-circle';
+        if (states[i] === w.config.state) {
+          c.classList.add('active-' + states[i].charAt(0));
+        } else {
+          c.classList.add('dim');
+        }
+      });
+      const idx = states.indexOf(w.config.state);
+      labelEl.textContent = labels[idx] || '';
+    }
+    const circleRow = el('div'); circleRow.style.cssText='display:flex;gap:12px;align-items:center';
+    circleRow.append(...circles);
+    body.append(circleRow, labelEl);
+    updateCircles();
+  },
+
+  // ── QR Code ──
+  qr(w, body) {
+    const container = el('div','w-qr-container');
+    const qrDiv = el('div');
+    qrDiv.style.cssText='background:#fff;padding:6px;border-radius:8px;display:inline-flex';
+    const label = el('div','w-qr-label');
+    label.textContent = w.config.label || w.config.url || '';
+    container.append(qrDiv, label);
+    body.appendChild(container);
+    const url = w.config.url || 'https://klassenboard.de';
+    const size = Math.min(w.w - 40, w.h - 60, 160);
+    try {
+      new QRCode(qrDiv, { text: url, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
+    } catch(e) { qrDiv.textContent = 'QR-Fehler'; }
+  },
+
+  // ── Random Name ──
+  names(w, body) {
+    body.style.flexDirection = 'column';
+    const names = (w.config.names || '').split('\n').map(s=>s.trim()).filter(Boolean);
+    let highlighted = w.config.highlighted ?? -1;
+    const list = el('ul','w-names-list');
+    const btn = el('button','w-action-btn'); btn.style.margin='0 auto 8px'; btn.textContent = '🎲 Zufällig';
+
+    // Scale font: bigger when fewer names, smaller when many
+    const itemCount = Math.max(names.length, 1);
+    const itemFs = Math.max(13, Math.min(32, (w.h - 60) / itemCount * 0.7));
+    const highlightFs = Math.min(itemFs * 1.5, 42);
+
+    function render() {
+      list.innerHTML = '';
+      names.forEach((n,i) => {
+        const li = document.createElement('li');
+        li.textContent = n;
+        li.style.fontSize = (i === highlighted ? highlightFs : itemFs) + 'px';
+        if (i === highlighted) li.classList.add('highlighted');
+        list.appendChild(li);
+      });
+    }
+    btn.addEventListener('click', () => {
+      if (!names.length) return;
+      highlighted = Math.floor(Math.random() * names.length);
+      w.config.highlighted = highlighted;
+      APP.save();
+      render();
+    });
+    body.append(btn, list);
+    render();
+  },
+
+  // ── Homework ──
+  homework(w, body) {
+    const div = el('div','w-homework');
+    const items = w.config.items || [];
+    const itemFs = Math.max(13, Math.min(28, (w.h - 60) / Math.max(items.length, 1) * 0.65));
+    const h3 = document.createElement('h3');
+    h3.style.fontSize = Math.max(11, itemFs * 0.6) + 'px';
+    h3.textContent = w.config.subject || 'Hausaufgaben';
+    const ul = document.createElement('ul');
+    items.forEach(item => {
+      const li = document.createElement('li');
+      li.style.fontSize = itemFs + 'px';
+      li.style.paddingTop = Math.max(3, itemFs * 0.2) + 'px';
+      li.style.paddingBottom = Math.max(3, itemFs * 0.2) + 'px';
+      li.textContent = item;
+      ul.appendChild(li);
+    });
+    div.append(h3, ul);
+    if (APP.state.editMode) div.addEventListener('dblclick', () => openHomeworkEdit(w));
+    body.appendChild(div);
+  },
+
+  // ── Goal ──
+  goal(w, body) {
+    const div = el('div','w-goal-text');
+    const text = w.config.text || '';
+    const charCount = Math.max(text.length, 1);
+    const baseFontSize = Math.min(w.w * 0.085, w.h * 0.38);
+    // shrink if text is long
+    const scaledFs = baseFontSize * Math.min(1, Math.pow(30 / charCount, 0.4));
+    div.style.fontSize = Math.max(14, Math.min(scaledFs, 64)) + 'px';
+    div.textContent = text;
+    if (APP.state.editMode) div.addEventListener('dblclick', () => openGoalEdit(w));
+    body.appendChild(div);
+  },
+
+  // ── Timetable ──
+  timetable(w, body) {
+    const inner = el('div','timetable-inner');
+    const board = APP.activeBoard();
+    const cache = APP.icalCache[board?.id] || {};
+    const entries = cache.entries || [];
+
+    if (!cache.url && !w.config.icalUrl) {
+      const hint = el('div','tt-no-data');
+      hint.textContent = '📅 iCal-URL eintragen (⚙ Einstellungen)';
+      inner.appendChild(hint);
+    } else {
+      renderTimetableEntries(inner, entries);
+    }
+    body.appendChild(inner);
+  },
+
+  // ── Image ──
+  image(w, body) {
+    if (!w.config.src) {
+      const hint = el('div'); hint.style.cssText='color:rgba(255,255,255,0.3);font-size:13px;text-align:center;padding:16px';
+      hint.textContent = '🖼 Bild-URL oder Datei eintragen (⚙)';
+      body.appendChild(hint);
+    } else {
+      const img = el('img','w-image-inner');
+      img.alt = w.config.alt || '';
+      img.src = w.config.src;
+      body.appendChild(img);
+    }
+  },
+
+  // ── YouTube ──
+  youtube(w, body) {
+    if (!w.config.videoId) {
+      // Leerer Zustand: gesamte Fläche anklickbar
+      const wrap = el('div');
+      wrap.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;border:2px dashed rgba(255,255,255,0.2);border-radius:12px;transition:all .2s;';
+      const icon = el('div'); icon.style.cssText='font-size:40px;'; icon.textContent='▶️';
+      const txt = el('div');
+      txt.style.cssText='font-size:14px;color:rgba(255,255,255,0.6);text-align:center;padding:0 16px;line-height:1.6;font-weight:500;';
+      txt.textContent='YouTube-Link einfügen';
+      const sub = el('div');
+      sub.style.cssText='font-size:11px;color:rgba(255,255,255,0.35);text-align:center;';
+      sub.textContent='Hier klicken oder ⚙ oben rechts';
+      wrap.append(icon, txt, sub);
+      wrap.addEventListener('mouseenter', () => {
+        wrap.style.borderColor='rgba(255,255,255,0.45)';
+        wrap.style.background='rgba(255,255,255,0.06)';
+      });
+      wrap.addEventListener('mouseleave', () => {
+        wrap.style.borderColor='rgba(255,255,255,0.2)';
+        wrap.style.background='';
+      });
+      wrap.addEventListener('click', e => { e.stopPropagation(); openYoutubeSettings(w); });
+      body.appendChild(wrap);
+      return;
+    }
+
+    const vid = w.config.videoId;
+    const wrap = el('div');
+    wrap.style.cssText = 'width:100%;height:100%;position:relative;cursor:pointer;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;';
+
+    const thumb = el('img');
+    thumb.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;inset:0;opacity:0.85;transition:opacity .2s;';
+    thumb.src = `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
+    thumb.onerror = () => { thumb.style.display='none'; };
+
+    const play = el('div');
+    play.style.cssText = 'position:relative;z-index:1;width:64px;height:64px;background:rgba(255,0,0,0.92);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.5);transition:transform .15s;flex-shrink:0;';
+    play.innerHTML = '<span style="color:#fff;font-size:26px;margin-left:5px">▶</span>';
+
+    // "URL ändern"-Button erscheint beim Hover oben rechts
+    const editBtn = el('div');
+    editBtn.style.cssText = 'position:absolute;top:8px;right:8px;z-index:3;font-size:11px;color:#fff;background:rgba(0,0,0,0.65);padding:4px 10px;border-radius:20px;opacity:0;transition:opacity .2s;cursor:pointer;';
+    editBtn.textContent = '✏️ URL ändern';
+    editBtn.addEventListener('click', e => { e.stopPropagation(); openYoutubeSettings(w); });
+
+    wrap.append(thumb, play, editBtn);
+    wrap.addEventListener('mouseenter', () => { play.style.transform='scale(1.1)'; thumb.style.opacity='0.7'; editBtn.style.opacity='1'; });
+    wrap.addEventListener('mouseleave', () => { play.style.transform='scale(1)'; thumb.style.opacity='0.85'; editBtn.style.opacity='0'; });
+    wrap.addEventListener('click', () => openYoutubeOverlay(vid));
+    body.appendChild(wrap);
+  },
+
+  // ── Lautstärke / Noise Meter ──
+  noise(w, body) {
+    stopAudioStream(w.id);
+    body.style.cssText += 'flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px;';
+
+    // Emoji + Label
+    const emojiEl = el('div');
+    emojiEl.style.cssText = 'font-size:42px;line-height:1;transition:all .2s;';
+    emojiEl.textContent = '😴';
+
+    const labelEl = el('div');
+    labelEl.style.cssText = 'font-size:13px;font-weight:700;letter-spacing:.5px;color:#fff;transition:color .3s;';
+    labelEl.textContent = 'LEISE';
+
+    // Balken-Meter (5 Balken)
+    const bars = el('div');
+    bars.style.cssText = 'display:flex;align-items:flex-end;gap:4px;height:48px;';
+    const barEls = [];
+    const barHeights = [20, 30, 45, 35, 25];
+    barHeights.forEach((h, i) => {
+      const b = el('div');
+      b.style.cssText = `width:10px;border-radius:4px;background:rgba(255,255,255,0.15);height:${h}%;transition:height .1s,background .3s;`;
+      bars.appendChild(b);
+      barEls.push(b);
+    });
+
+    // Mikrofon-Button
+    const micBtn = el('button');
+    micBtn.style.cssText = 'margin-top:4px;padding:6px 14px;border-radius:20px;border:none;background:rgba(99,102,241,0.3);color:#a5b4fc;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;';
+    micBtn.textContent = '🎤 Mikrofon starten';
+
+    body.append(emojiEl, bars, labelEl, micBtn);
+
+    let running = false;
+
+    function getColor(level) {
+      const low  = (w.config.lowThreshold  ?? 25) / 100;
+      const high = (w.config.highThreshold ?? 55) / 100;
+      if (level < low)  return { bg:'#22c55e', label:'LEISE',  emoji:'😴' };
+      if (level < high) return { bg:'#f59e0b', label:'MITTEL', emoji:'🤫' };
+      return                   { bg:'#ef4444', label:'LAUT',   emoji:'🔊' };
+    }
+
+    function startMic() {
+      if (running) return;
+      running = true;
+      micBtn.textContent = '⏹ Stoppen';
+      micBtn.style.background = 'rgba(239,68,68,0.25)';
+      micBtn.style.color = '#fca5a5';
+
+      navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        .then(stream => {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const source = ctx.createMediaStreamSource(stream);
+          const analyser = ctx.createAnalyser();
+          analyser.fftSize = 128;
+          analyser.smoothingTimeConstant = 0.6;
+          source.connect(analyser);
+          const data = new Uint8Array(analyser.frequencyBinCount);
+
+          function tick() {
+            analyser.getByteFrequencyData(data);
+            const avg = data.reduce((a,b) => a+b, 0) / data.length / 128;
+            const multiplier = (w.config.sensitivity ?? 3) / 3 * 2.5;
+            const level = Math.min(avg * multiplier, 1);
+
+            // Update bars
+            barEls.forEach((b, i) => {
+              const threshold = (i + 1) / barEls.length;
+              const active = level >= threshold * 0.8;
+              const col = getColor(level);
+              b.style.height = active ? `${barHeights[i] + level * 40}%` : `${barHeights[i]}%`;
+              b.style.background = active ? col.bg : 'rgba(255,255,255,0.12)';
+            });
+
+            const col = getColor(level);
+            emojiEl.textContent = col.emoji;
+            labelEl.textContent = col.label;
+            labelEl.style.color = col.bg;
+
+            const raf = requestAnimationFrame(tick);
+            AUDIO_STREAMS[w.id] = { stream, ctx, raf };
+          }
+          tick();
+        })
+        .catch(err => {
+          running = false;
+          micBtn.textContent = '🎤 Mikrofon starten';
+          micBtn.style.background = 'rgba(99,102,241,0.3)';
+          micBtn.style.color = '#a5b4fc';
+          emojiEl.textContent = '❌';
+          labelEl.textContent = 'Kein Zugriff';
+          labelEl.style.color = '#f87171';
+        });
+    }
+
+    function stopMic() {
+      running = false;
+      stopAudioStream(w.id);
+      micBtn.textContent = '🎤 Mikrofon starten';
+      micBtn.style.background = 'rgba(99,102,241,0.3)';
+      micBtn.style.color = '#a5b4fc';
+      emojiEl.textContent = '😴';
+      labelEl.textContent = 'LEISE';
+      labelEl.style.color = '#fff';
+      barEls.forEach((b,i) => { b.style.height = `${barHeights[i]}%`; b.style.background = 'rgba(255,255,255,0.12)'; });
+    }
+
+    micBtn.addEventListener('click', () => running ? stopMic() : startMic());
+  },
+
+  // ── Live-Umfrage ──
+  poll(w, body) {
+    // Cleanup old subscription
+    if (POLL_CHANNELS[w.id]) {
+      try { AUTH.client?.removeChannel(POLL_CHANNELS[w.id]); } catch(e) {}
+      delete POLL_CHANNELS[w.id];
+    }
+
+    if (!w.config.question) {
+      // Leerer Zustand
+      const wrap = el('div');
+      wrap.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;border:2px dashed rgba(255,255,255,0.2);border-radius:12px;transition:all .2s;';
+      const icon = el('div'); icon.style.fontSize = '36px'; icon.textContent = '📊';
+      const txt = el('div'); txt.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.55);text-align:center;font-weight:500;';
+      txt.textContent = 'Live-Umfrage erstellen';
+      const sub = el('div'); sub.style.cssText = 'font-size:11px;color:rgba(255,255,255,0.3);';
+      sub.textContent = 'Hier klicken oder ⚙ oben rechts';
+      wrap.append(icon, txt, sub);
+      wrap.addEventListener('mouseenter', () => { wrap.style.borderColor='rgba(255,255,255,0.4)'; wrap.style.background='rgba(255,255,255,0.05)'; });
+      wrap.addEventListener('mouseleave', () => { wrap.style.borderColor='rgba(255,255,255,0.2)'; wrap.style.background=''; });
+      wrap.addEventListener('click', e => { e.stopPropagation(); openPollSettings(w); });
+      body.appendChild(wrap);
+      return;
+    }
+
+    const COLORS = ['#6366f1','#22c55e','#f59e0b','#ef4444'];
+    const options = (w.config.options || []).filter(o => o.trim());
+    const voteCounts = new Array(options.length).fill(0);
+    const pollId = w.config.pollId;
+    const votingUrl = window.location.origin + window.location.pathname + '?poll=' + pollId;
+
+    // Layout
+    const wrap = el('div');
+    wrap.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;padding:10px;gap:6px;overflow:hidden;';
+
+    // Top row: question + QR
+    const topRow = el('div');
+    topRow.style.cssText = 'display:flex;gap:10px;align-items:flex-start;flex-shrink:0;';
+    const qEl = el('div','poll-question'); qEl.textContent = w.config.question;
+    qEl.style.flex = '1';
+    const qrWrap = el('div'); qrWrap.id = 'poll-qr-'+w.id;
+    qrWrap.style.cssText = 'width:72px;height:72px;flex-shrink:0;background:#fff;border-radius:8px;padding:3px;cursor:pointer;';
+    qrWrap.title = 'Link kopieren';
+    qrWrap.addEventListener('click', e => { e.stopPropagation(); navigator.clipboard.writeText(votingUrl).then(()=>toast('📋 Link kopiert!')); });
+    topRow.append(qEl, qrWrap);
+
+    // Bars
+    const barsWrap = el('div'); barsWrap.style.cssText = 'flex:1;display:flex;flex-direction:column;justify-content:center;';
+    const barFills = [], countEls = [];
+    options.forEach((opt, i) => {
+      const row = el('div','poll-bar-row');
+      const lbl = el('div','poll-bar-label'); lbl.textContent = opt;
+      const bg  = el('div','poll-bar-bg');
+      const fill= el('div','poll-bar-fill'); fill.style.cssText = `width:0%;background:${COLORS[i%4]};`;
+      const cnt = el('div','poll-bar-count'); cnt.textContent = '0';
+      bg.appendChild(fill); row.append(lbl, bg, cnt);
+      barsWrap.appendChild(row);
+      barFills.push(fill); countEls.push(cnt);
+    });
+
+    const totalEl = el('div','poll-total'); totalEl.textContent = '0 Stimmen';
+
+    // Controls
+    const ctrl = el('div','poll-ctrl');
+    const revealBtn = el('button');
+    const revealed = w.config.showResults !== false; // default: sichtbar
+    revealBtn.style.cssText = revealed
+      ? 'background:rgba(34,197,94,0.2);color:#86efac;'
+      : 'background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);';
+    revealBtn.textContent = revealed ? '👁 Ergebnis sichtbar' : '🙈 Ergebnis versteckt';
+    const resetBtn = el('button');
+    resetBtn.style.cssText = 'background:rgba(239,68,68,0.2);color:#fca5a5;';
+    resetBtn.textContent = '🗑 Reset';
+    const copyBtn = el('button');
+    copyBtn.style.cssText = 'background:rgba(99,102,241,0.2);color:#a5b4fc;';
+    copyBtn.textContent = '📋 Link';
+    const editBtn2 = el('button');
+    editBtn2.style.cssText = 'background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);';
+    editBtn2.textContent = '✏️';
+    ctrl.append(revealBtn, resetBtn, copyBtn, editBtn2);
+
+    // Ergebnis-Sichtbarkeit anwenden
+    function applyVisibility() {
+      const show = w.config.showResults !== false;
+      barsWrap.style.filter  = show ? '' : 'blur(6px)';
+      barsWrap.style.opacity = show ? '1' : '0.25';
+      totalEl.style.filter   = show ? '' : 'blur(4px)';
+      totalEl.style.opacity  = show ? '1' : '0.25';
+      revealBtn.textContent  = show ? '👁 Ergebnis sichtbar' : '🙈 Ergebnis versteckt';
+      revealBtn.style.cssText = show
+        ? 'background:rgba(34,197,94,0.2);color:#86efac;'
+        : 'background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);';
+    }
+    applyVisibility();
+
+    revealBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      w.config.showResults = w.config.showResults === false ? true : false;
+      applyVisibility();
+      APP.save();
+    });
+
+    wrap.append(topRow, barsWrap, totalEl, ctrl);
+    body.appendChild(wrap);
+
+    // QR Code generieren
+    setTimeout(() => {
+      const qrEl = document.getElementById('poll-qr-'+w.id);
+      if (qrEl && window.QRCode) {
+        try { new QRCode(qrEl, { text:votingUrl, width:66, height:66, correctLevel:QRCode.CorrectLevel.M }); }
+        catch(e) {}
+      }
+    }, 80);
+
+    function updateBars() {
+      const total = voteCounts.reduce((a,b)=>a+b,0);
+      totalEl.textContent = total + (total===1?' Stimme':' Stimmen');
+      barFills.forEach((f,i) => {
+        const pct = total>0 ? (voteCounts[i]/total*100) : 0;
+        f.style.width = pct+'%';
+        countEls[i].textContent = voteCounts[i];
+      });
+    }
+
+    async function loadVotes() {
+      if (!AUTH.client || !pollId) return;
+      const { data } = await AUTH.client.from('poll_votes').select('option_index').eq('poll_id', pollId);
+      if (data) { voteCounts.fill(0); data.forEach(v=>{ if(v.option_index<voteCounts.length) voteCounts[v.option_index]++; }); updateBars(); }
+    }
+
+    resetBtn.addEventListener('click', async e => {
+      e.stopPropagation();
+      if (!AUTH.client) { toast('Supabase nicht verbunden'); return; }
+      await AUTH.client.from('poll_votes').delete().eq('poll_id', pollId);
+      voteCounts.fill(0); updateBars(); toast('🗑 Stimmen zurückgesetzt');
+    });
+    copyBtn.addEventListener('click', e => { e.stopPropagation(); navigator.clipboard.writeText(votingUrl).then(()=>toast('📋 Link kopiert!')); });
+    editBtn2.addEventListener('click', e => { e.stopPropagation(); openPollSettings(w); });
+
+    if (AUTH.client && pollId) {
+      loadVotes();
+      const ch = AUTH.client.channel('poll-'+w.id)
+        .on('postgres_changes', { event:'INSERT', schema:'public', table:'poll_votes', filter:'poll_id=eq.'+pollId },
+          payload => { const i=payload.new.option_index; if(i>=0&&i<voteCounts.length){ voteCounts[i]++; updateBars(); } })
+        .on('postgres_changes', { event:'DELETE', schema:'public', table:'poll_votes', filter:'poll_id=eq.'+pollId },
+          () => loadVotes())
+        .subscribe();
+      POLL_CHANNELS[w.id] = ch;
+    } else if (!AUTH.client) {
+      totalEl.textContent = '⚠️ Anmelden für Live-Ergebnisse';
+    }
+  },
+
+  // ── KI-Assistent ──
+  ai(w, body) {
+    body.style.cssText += 'flex-direction:column;gap:6px;padding:10px;overflow:hidden;';
+
+    // ── Not logged in banner ──
+    if (!AUTH.user) {
+      const banner = el('div');
+      banner.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%;text-align:center;';
+      const ico = el('div'); ico.style.cssText = 'font-size:36px;'; ico.textContent = '🤖';
+      const msg = el('div'); msg.style.cssText = 'font-size:12.5px;color:rgba(255,255,255,0.6);max-width:220px;line-height:1.5;';
+      msg.textContent = 'Bitte zuerst anmelden um den KI-Assistenten zu nutzen.';
+      banner.append(ico, msg);
+      body.appendChild(banner);
+      return;
+    }
+
+    // ── Controls row ──
+    const ctrlRow = el('div','ai-ctrl-row');
+    const topicInput = document.createElement('input');
+    topicInput.type = 'text'; topicInput.placeholder = 'Thema eingeben…';
+    topicInput.value = w.config.lastTopic || '';
+    topicInput.addEventListener('click', e => e.stopPropagation());
+
+    const typeSelect = document.createElement('select');
+    [['quiz','🧩 Quiz-Fragen'],['goal','🎯 Stundenziel'],['tasks','📝 Aufgaben'],['summary','📖 Zusammenfassung'],['explain','💡 Erklärung']].forEach(([v,l]) => {
+      const o = document.createElement('option'); o.value=v; o.textContent=l;
+      if (w.config.lastType===v) o.selected=true;
+      typeSelect.appendChild(o);
+    });
+    typeSelect.addEventListener('click', e => e.stopPropagation());
+
+    const gradeSelect = document.createElement('select');
+    ['1','2','3','4','5','6','7','8','9','10','11','12','13'].forEach(g => {
+      const o = document.createElement('option'); o.value=g; o.textContent='Kl. '+g;
+      if ((w.config.lastGrade||'7')===g) o.selected=true;
+      gradeSelect.appendChild(o);
+    });
+    gradeSelect.addEventListener('click', e => e.stopPropagation());
+
+    const genBtn = el('button','ai-gen-btn'); genBtn.textContent = '✨ Generieren';
+
+    ctrlRow.append(topicInput, typeSelect, gradeSelect, genBtn);
+
+    // ── Output area ──
+    const output = el('div','ai-output');
+    output.style.cursor = 'text';
+    output.addEventListener('click', e => e.stopPropagation());
+    if (w.config.lastOutput) {
+      output.textContent = w.config.lastOutput;
+    } else {
+      output.style.color = 'rgba(255,255,255,0.2)';
+      output.textContent = 'Hier erscheint der generierte Inhalt…';
+    }
+
+    // ── Bottom row ──
+    const bottomRow = el('div','ai-bottom-row');
+    const copyBtn2 = el('button'); copyBtn2.textContent='📋 Kopieren'; copyBtn2.style.cssText='background:rgba(255,255,255,0.1);color:#fff;';
+    const clearBtn = el('button'); clearBtn.textContent='🗑 Löschen'; clearBtn.style.cssText='background:rgba(239,68,68,0.2);color:#fca5a5;';
+    copyBtn2.addEventListener('click', e => { e.stopPropagation(); navigator.clipboard.writeText(output.textContent).then(()=>toast('📋 Kopiert!')); });
+    clearBtn.addEventListener('click', e => { e.stopPropagation(); output.textContent=''; output.style.color='rgba(255,255,255,0.2)'; w.config.lastOutput=''; APP.save(); });
+    bottomRow.append(copyBtn2, clearBtn);
+
+    body.append(ctrlRow, output, bottomRow);
+
+    // ── Generate via Supabase Edge Function ──
+    genBtn.addEventListener('click', async e => {
+      e.stopPropagation();
+      const topic = topicInput.value.trim();
+      if (!topic) { toast('⚠️ Bitte ein Thema eingeben'); topicInput.focus(); return; }
+      const type = typeSelect.value;
+      const grade = gradeSelect.value;
+
+      genBtn.disabled = true; genBtn.textContent = '⏳ Lädt…';
+      output.style.color = 'rgba(255,255,255,0.4)';
+      output.textContent = '⏳ KI generiert Inhalt…';
+
+      try {
+        const { data, error } = await AUTH.client.functions.invoke('ai-generate', {
+          body: { topic, type, grade }
+        });
+        if (error) throw new Error(error.message || String(error));
+        const text = data?.text || '(Keine Antwort)';
+        output.textContent = text;
+        output.style.color = 'rgba(255,255,255,0.85)';
+        w.config.lastOutput = text;
+        w.config.lastTopic  = topic;
+        w.config.lastType   = type;
+        w.config.lastGrade  = grade;
+        APP.save();
+      } catch(err) {
+        output.textContent = '❌ Fehler: ' + err.message;
+        output.style.color = '#fca5a5';
+        toast('❌ KI-Fehler: ' + err.message);
+      } finally {
+        genBtn.disabled = false; genBtn.textContent = '✨ Generieren';
+      }
+    });
+  },
+
+  // ── Frag die KI ──
+  ask(w, body) {
+    body.style.cssText += 'flex-direction:column;gap:7px;padding:10px;overflow:hidden;';
+
+    if (!AUTH.user) {
+      const banner = el('div');
+      banner.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%;text-align:center;';
+      const ico = el('div'); ico.style.cssText='font-size:32px;'; ico.textContent='💬';
+      const msg = el('div'); msg.style.cssText='font-size:12px;color:rgba(255,255,255,0.5);max-width:200px;line-height:1.5;';
+      msg.textContent='Bitte anmelden um die KI zu befragen.';
+      banner.append(ico, msg); body.appendChild(banner); return;
+    }
+
+    // ── Chat history ──
+    const history = el('div','ask-history');
+    const messages = w.config.messages || [];
+
+    function renderMessages() {
+      history.innerHTML = '';
+      messages.forEach(m => {
+        const b = el('div','ask-bubble ' + m.role);
+        b.textContent = m.text;
+        history.appendChild(b);
+      });
+      setTimeout(() => { history.scrollTop = history.scrollHeight; }, 30);
+    }
+    renderMessages();
+
+    // ── Top row (clear button) ──
+    const topRow = el('div'); topRow.style.cssText='display:flex;justify-content:flex-end;flex-shrink:0;';
+    const clearBtn = el('button','ask-clear-btn'); clearBtn.textContent='🗑 Verlauf löschen';
+    clearBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      w.config.messages = [];
+      messages.length = 0;
+      renderMessages();
+      APP.save();
+    });
+    topRow.appendChild(clearBtn);
+
+    // ── Input row ──
+    const inputRow = el('div','ask-input-row');
+    const textarea = document.createElement('textarea');
+    textarea.placeholder = 'Frage stellen… z.B. "Was ist die Fotosynthese?"';
+    textarea.addEventListener('click', e => e.stopPropagation());
+    textarea.addEventListener('keydown', e => {
+      e.stopPropagation();
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendBtn.click(); }
+    });
+
+    const sendBtn = el('button','ask-send-btn'); sendBtn.textContent = '➤';
+    sendBtn.title = 'Frage stellen (Enter)';
+    inputRow.append(textarea, sendBtn);
+
+    body.append(topRow, history, inputRow);
+
+    // ── Send ──
+    sendBtn.addEventListener('click', async e => {
+      e.stopPropagation();
+      const q = textarea.value.trim();
+      if (!q) return;
+
+      textarea.value = '';
+      messages.push({ role:'user', text:q });
+
+      const thinkingBubble = el('div','ask-bubble thinking');
+      thinkingBubble.textContent = '⏳ Denke nach…';
+      history.appendChild(thinkingBubble);
+      history.scrollTop = history.scrollHeight;
+
+      sendBtn.disabled = true;
+
+      try {
+        const { data, error } = await AUTH.client.functions.invoke('ai-generate', {
+          body: { type:'ask', question: q }
+        });
+        if (error) throw new Error(error.message || String(error));
+        const answer = data?.text || '(Keine Antwort)';
+        thinkingBubble.remove();
+        messages.push({ role:'ai', text:answer });
+        // keep last 20 messages to avoid bloat
+        if (messages.length > 20) messages.splice(0, messages.length - 20);
+        w.config.messages = messages;
+        APP.save();
+        renderMessages();
+      } catch(err) {
+        thinkingBubble.textContent = '❌ ' + err.message;
+        thinkingBubble.style.color = '#fca5a5';
+        sendBtn.disabled = false;
+      } finally {
+        sendBtn.disabled = false;
+      }
+    });
+  },
+
+  // ── Dice ──
+  dice(w, body) {
+    const FACES = ['','⚀','⚁','⚂','⚃','⚄','⚅'];
+    body.style.flexDirection = 'column'; body.style.gap = '8px';
+    const d = el('div','w-dice');
+    d.style.fontSize = Math.max(40, Math.min(w.w * 0.65, w.h * 0.68)) + 'px';
+    d.textContent = FACES[w.config.value || 1];
+    d.title = 'Klicken zum Würfeln';
+    const hint = el('div'); hint.style.cssText='font-size:11px;color:rgba(255,255,255,0.35)';
+    hint.textContent = 'Klicken zum Würfeln';
+    d.addEventListener('click', () => {
+      let count = 0;
+      const roll = setInterval(() => {
+        const v = Math.ceil(Math.random()*6);
+        d.textContent = FACES[v];
+        if (++count >= 10) { clearInterval(roll); w.config.value = v; APP.save(); }
+      }, 60);
+    });
+    body.append(d, hint);
+  },
+
+  // ── Random Number ──
+  randomnum(w, body) {
+    body.style.flexDirection = 'column'; body.style.gap = '8px';
+    const display = el('div','w-randnum');
+    display.style.fontSize = Math.max(32, Math.min(w.w * 0.52, w.h * 0.58)) + 'px';
+    display.textContent = w.config.value ?? '?';
+    const info = el('div'); info.style.cssText='font-size:11px;color:rgba(255,255,255,0.35)';
+    info.textContent = `${w.config.min||1} – ${w.config.max||30}`;
+    display.addEventListener('click', () => {
+      const v = Math.floor(Math.random()*(((w.config.max||30)-(w.config.min||1))+1)) + (w.config.min||1);
+      display.textContent = v;
+      w.config.value = v;
+      APP.save();
+    });
+    body.append(display, info);
+  },
+
+  // ── Groups ──
+  groups(w, body) {
+    const names = (w.config.names||'').split('\n').map(s=>s.trim()).filter(Boolean);
+    const size = Math.max(1, w.config.size || 3);
+    const shuffled = [...names].sort(()=>Math.random()-0.5);
+    const grps = [];
+    for (let i=0; i<shuffled.length; i+=size) grps.push(shuffled.slice(i,i+size));
+
+    // Scale font based on widget size
+    const scale = Math.min(w.w / 320, w.h / 200);
+    const headSz = Math.max(11, Math.min(18, 13 * scale)) + 'px';
+    const nameSz = Math.max(10, Math.min(22, 14 * scale)) + 'px';
+
+    const inner = el('div','groups-inner');
+    const btn = el('button','w-action-btn'); btn.textContent = '🔀 Neu mischen'; btn.style.cssText='margin:0 auto 4px;display:block';
+    btn.addEventListener('click', () => renderWidgetContent(w, body));
+
+    grps.forEach((g,i) => {
+      const card = el('div','group-card');
+      const h4 = document.createElement('h4');
+      h4.style.fontSize = headSz;
+      h4.textContent = 'Gruppe ' + (i+1);
+      const ul = document.createElement('ul');
+      g.forEach(n => {
+        const li=document.createElement('li');
+        li.style.fontSize = nameSz;
+        li.textContent=n;
+        ul.appendChild(li);
+      });
+      card.append(h4, ul);
+      inner.appendChild(card);
+    });
+    body.append(btn, inner);
+  },
+
+  // ── Agenda ──
+  agenda(w, body) {
+    const inner = el('div','agenda-inner');
+    (w.config.items || []).forEach(item => {
+      const row = el('div','agenda-item');
+      const time = el('div','agenda-time'); time.textContent = item.time || '';
+      const text = el('div','agenda-text'); text.textContent = item.text || '';
+      row.append(time, text);
+      inner.appendChild(row);
+    });
+    if (!(w.config.items||[]).length) {
+      const hint = el('div'); hint.style.cssText='font-size:12px;color:rgba(255,255,255,0.3);padding:12px';
+      hint.textContent = 'Agenda eintragen (⚙ Einstellungen)';
+      inner.appendChild(hint);
+    }
+    if (APP.state.editMode) inner.addEventListener('dblclick', () => openAgendaEdit(w));
+    body.appendChild(inner);
+  },
+
+  // ── Checklist ──
+  checklist(w, body) {
+    const inner = el('div','checklist-inner');
+    const items = w.config.items || [];
+    function renderItems() {
+      inner.innerHTML = '';
+      items.forEach((item, i) => {
+        const row = el('div','checklist-item' + (item.done?' done':''));
+        const cb = el('input'); cb.type='checkbox'; cb.checked=!!item.done;
+        cb.addEventListener('change', () => {
+          item.done = cb.checked;
+          row.classList.toggle('done', item.done);
+          APP.save();
+        });
+        const span = el('span'); span.textContent = item.text || '';
+        row.append(cb, span);
+        inner.appendChild(row);
+      });
+    }
+    renderItems();
+    if (APP.state.editMode) inner.addEventListener('dblclick', e => {
+      if (e.target.tagName !== 'INPUT') openChecklistEdit(w, renderItems);
+    });
+    body.appendChild(inner);
+  },
+
+  // ── Phases ──
+  phases(w, body) {
+    const phases = w.config.phases || [];
+    let activeIdx = w.config.activeIdx ?? -1;
+    const inner = el('div','phases-inner');
+    const items = [];
+
+    phases.forEach((p, i) => {
+      const row = el('div','phase-item');
+      if (i === activeIdx) row.classList.add('active');
+      row.style.background = p.color + '22';
+      const dot = el('div','phase-dot'); dot.style.background = p.color;
+      const name = el('div','phase-name'); name.textContent = p.name;
+      const dur = el('div','phase-dur'); dur.textContent = p.minutes + ' min';
+      row.append(dot, name, dur);
+      row.addEventListener('click', () => {
+        activeIdx = i;
+        w.config.activeIdx = i;
+        APP.save();
+        items.forEach((r,j) => r.classList.toggle('active', j===i));
+      });
+      inner.appendChild(row);
+      items.push(row);
+    });
+    body.appendChild(inner);
+  },
+
+  // ── Status ──
+  status(w, body) {
+    const STATUSES = [
+      { emoji:'😕', label:'Ich brauche Hilfe', color:'#ef4444' },
+      { emoji:'🤔', label:'Ich denke nach', color:'#f59e0b' },
+      { emoji:'🙂', label:'Alles okay', color:'#22c55e' },
+      { emoji:'😄', label:'Ich bin fertig!', color:'#6366f1' },
+    ];
+    let idx = w.config.statusIdx ?? 2;
+    const inner = el('div','status-inner');
+    const emojiEl = el('div','status-emoji');
+    const labelEl = el('div','status-label');
+
+    function update() {
+      const s = STATUSES[idx];
+      emojiEl.textContent = s.emoji;
+      labelEl.textContent = s.label;
+      inner.style.background = s.color + '22';
+    }
+    emojiEl.addEventListener('click', () => {
+      idx = (idx+1) % STATUSES.length;
+      w.config.statusIdx = idx;
+      APP.save();
+      update();
+    });
+    inner.append(emojiEl, labelEl);
+    body.appendChild(inner);
+    update();
+  },
+};
+
+// ══════════════════════════════════════════════════════════════
+// TIMETABLE / iCal
+// ══════════════════════════════════════════════════════════════
+function renderTimetableEntries(inner, entries) {
+  inner.innerHTML = '';
+  const now = new Date();
+
+  let current = null, upcoming = [];
+  entries.forEach(e => {
+    if (e.start <= now && e.end > now) { current = e; return; }
+    if (e.start > now) upcoming.push(e);
+  });
+  upcoming = upcoming.slice(0,4);
+
+  if (current) {
+    const box = el('div','tt-now');
+    const lbl = el('div','tt-label'); lbl.textContent = 'Jetzt';
+    const subj = el('div','tt-subject');
+    subj.classList.toggle('tt-cancelled', !!current.cancelled);
+    subj.classList.toggle('tt-changed', !!current.changed);
+    subj.textContent = current.subject;
+    const meta = el('div','tt-meta');
+    meta.textContent = fmtTime(current.start) + '–' + fmtTime(current.end) + (current.room ? ' · ' + current.room : '');
+    box.append(lbl, subj, meta);
+    if (current.changeNote) { const n=el('div','tt-meta'); n.style.color='#fbbf24'; n.textContent=current.changeNote; box.appendChild(n); }
+    inner.appendChild(box);
+  }
+
+  if (upcoming.length) {
+    const lbl = el('div','tt-label'); lbl.textContent = 'Als nächstes'; lbl.style.padding='4px 0 4px';
+    inner.appendChild(lbl);
+    const ul = el('ul','tt-next-list');
+    upcoming.forEach(e => {
+      const li = document.createElement('li');
+      const time = el('span','tt-time'); time.textContent = fmtTime(e.start) + ' Uhr';
+      const subj = el('span'); subj.textContent = e.subject;
+      if (e.cancelled) subj.classList.add('tt-cancelled');
+      if (e.changed) subj.classList.add('tt-changed');
+      li.append(time, subj);
+      ul.appendChild(li);
+    });
+    inner.appendChild(ul);
+  }
+
+  if (!current && !upcoming.length) {
+    const d = el('div','tt-no-data'); d.textContent = 'Kein Unterricht gefunden';
+    inner.appendChild(d);
+  }
+}
+
+function fmtTime(dt) {
+  return dt.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+}
+
+function startTimetableRefresh(w) {
+  const board = APP.activeBoard();
+  if (!board) return;
+  const cache = APP.icalCache[board.id];
+  if (!cache?.url) return;
+  // refresh every 5 min
+  startInterval('ical_' + w.id, () => {
+    fetchIcal(cache.url, board.id);
+  }, 5*60*1000);
+}
+
+async function fetchIcal(url, boardId) {
+  // Use a CORS proxy — for production, replace with your own /api/ical endpoint
+  const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+  try {
+    const resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+    const entries = parseIcal(text);
+    APP.icalCache[boardId] = { url, entries, lastFetched: new Date().toISOString() };
+    APP.save();
+    // re-render timetable widgets on active board
+    if (boardId === APP.state.activeBoardId) renderWidgets();
+    toast('📅 Stundenplan aktualisiert (' + entries.length + ' Einträge)');
+  } catch(e) {
+    toast('⚠️ iCal-Fehler: ' + e.message);
+  }
+}
+
+function parseIcal(text) {
+  // Unfold lines (RFC 5545 §3.1)
+  const unfolded = text.replace(/\r\n[ \t]/g,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  const lines = unfolded.split('\n');
+  const events = [];
+  let inEvent = false, props = {};
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (line === 'BEGIN:VEVENT') { inEvent = true; props = {}; continue; }
+    if (line === 'END:VEVENT') {
+      inEvent = false;
+      const entry = parseEvent(props);
+      if (entry) events.push(entry);
+      continue;
+    }
+    if (!inEvent) continue;
+    const colon = line.indexOf(':');
+    if (colon < 0) continue;
+    const key = line.slice(0, colon).toUpperCase();
+    const val = line.slice(colon + 1);
+    props[key] = val;
+  }
+
+  // Sort by start time
+  events.sort((a,b) => a.start - b.start);
+  return events;
+}
+
+function parseEvent(props) {
+  const dtstart = props['DTSTART'] || props['DTSTART;VALUE=DATE'] || findProp(props, 'DTSTART');
+  const dtend   = props['DTEND']   || findProp(props, 'DTEND');
+  if (!dtstart) return null;
+
+  const start = parseIcalDate(dtstart);
+  const end   = dtend ? parseIcalDate(dtend) : new Date(start.getTime() + 3600000);
+  if (!start || isNaN(start)) return null;
+
+  const summary = props['SUMMARY'] || '';
+  const location = props['LOCATION'] || '';
+  const status = props['STATUS'] || '';
+  const desc = props['DESCRIPTION'] || '';
+  const cancelled = status === 'CANCELLED' || summary.startsWith('CANCELLED:');
+  const changed = desc.includes('Vertretung') || desc.includes('Geändert') || desc.includes('changed');
+
+  return {
+    uid: props['UID'] || '',
+    subject: summary.replace(/^CANCELLED:/,'').replace(/\\n/g,' ').trim(),
+    room: location.replace(/\\n/g,' ').trim(),
+    start, end,
+    cancelled,
+    changed,
+    changeNote: changed ? (desc.split('\\n')[0] || '').trim() : '',
+  };
+}
+
+function findProp(props, key) {
+  // Find a key that starts with key; e.g. DTSTART;TZID=...
+  const found = Object.keys(props).find(k => k.startsWith(key + ';'));
+  return found ? props[found] : undefined;
+}
+
+function parseIcalDate(str) {
+  if (!str) return null;
+  // Format: 20240101T080000Z or 20240101T080000 or 20240101
+  const s = str.trim();
+  if (s.length === 8) {
+    return new Date(s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8)+'T00:00:00');
+  }
+  // with time
+  const y=s.slice(0,4), mo=s.slice(4,6), d=s.slice(6,8);
+  const h=s.slice(9,11), mi=s.slice(11,13), sec=s.slice(13,15);
+  const utc = s.endsWith('Z');
+  if (utc) return new Date(`${y}-${mo}-${d}T${h}:${mi}:${sec}Z`);
+  return new Date(`${y}-${mo}-${d}T${h}:${mi}:${sec}`);
+}
+
+// ══════════════════════════════════════════════════════════════
+// WIDGET SETTINGS MODALS
+// ══════════════════════════════════════════════════════════════
+function openWidgetSettings(wid) {
+  const board = APP.activeBoard();
+  const w = board?.widgets.find(w=>w.id===wid);
+  if (!w) return;
+
+  const settingsFns = {
+    timer:   openTimerSettings,
+    text:    openTextEdit,
+    qr:      openQrSettings,
+    names:   openNamesEdit,
+    homework:openHomeworkEdit,
+    goal:    openGoalEdit,
+    timetable:openTimetableSettings,
+    image:   openImageSettings,
+    youtube: openYoutubeSettings,
+    noise:   openNoiseSettings,
+    poll:    openPollSettings,
+    randomnum:openRandNumSettings,
+    groups:  openGroupsSettings,
+    agenda:  openAgendaEdit,
+    checklist:openChecklistEdit,
+    phases:  openPhasesEdit,
+  };
+
+  const fn = settingsFns[w.type];
+  if (fn) fn(w);
+  else toast('Keine Einstellungen für dieses Widget');
+}
+
+function openPollSettings(w) {
+  const opts = w.config.options?.length ? w.config.options : ['','','',''];
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>📊 Live-Umfrage</h2>
+      <div class="form-group">
+        <label>Frage</label>
+        <input type="text" id="ps-q" placeholder="z.B. Was soll zuerst besprochen werden?" value="${safeText(w.config.question||'')}">
+      </div>
+      <div class="form-group">
+        <label>Antwortmöglichkeiten (min. 2, max. 4)</label>
+        ${opts.slice(0,4).map((o,i)=>`<input type="text" id="ps-o${i}" placeholder="Option ${i+1}" value="${safeText(o)}" style="margin-bottom:8px;">`).join('')}
+      </div>
+      <p style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:14px;">Schüler scannen den QR-Code und stimmen auf ihrem Gerät ab. Ergebnisse erscheinen live.</p>
+      <button class="btn-primary" id="ps-save">▶ Umfrage starten</button>
+    </div>
+  `);
+  overlay.querySelector('#ps-save').addEventListener('click', async () => {
+    const question = overlay.querySelector('#ps-q').value.trim();
+    const options = [0,1,2,3].map(i=>(overlay.querySelector('#ps-o'+i)?.value||'').trim()).filter(o=>o);
+    if (!question) { toast('Bitte Frage eingeben'); return; }
+    if (options.length < 2) { toast('Bitte mindestens 2 Optionen'); return; }
+
+    // Prüfen ob Supabase verfügbar
+    if (!AUTH.client) {
+      toast('⚠️ Bitte zuerst anmelden (🔑 Anmelden oben rechts) um Umfragen zu nutzen');
+      return;
+    }
+    if (!AUTH.user) {
+      toast('⚠️ Bitte zuerst anmelden (🔑 Anmelden oben rechts)');
+      return;
+    }
+
+    const btn = overlay.querySelector('#ps-save');
+    btn.textContent = '…'; btn.disabled = true;
+
+    const pollId = w.config.pollId || uid();
+    w.config.question     = question;
+    w.config.options      = options;
+    w.config.pollId       = pollId;
+    w.config.showResults  = false; // standardmäßig versteckt
+
+    const { error } = await AUTH.client.from('polls').upsert({
+      id: pollId, user_id: AUTH.user.id, question, options, active: true
+    });
+
+    if (error) {
+      toast('❌ Fehler: ' + error.message);
+      btn.textContent = '▶ Umfrage starten'; btn.disabled = false;
+      return;
+    }
+
+    APP.save();
+    const shell = document.querySelector('[data-wid="'+w.id+'"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+    toast('✅ Umfrage gestartet!');
+  });
+}
+
+function openNoiseSettings(w) {
+  const cfg = w.config;
+  const sens    = cfg.sensitivity    ?? 3;
+  const lowThr  = cfg.lowThreshold   ?? 25;
+  const highThr = cfg.highThreshold  ?? 55;
+
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>🎤 Lautstärke-Einstellungen</h2>
+      <div class="form-group">
+        <label>Empfindlichkeit des Mikrofons</label>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:6px;">
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Niedrig</span>
+          <input type="range" id="ns-sens" min="1" max="5" step="0.5" value="${sens}" style="flex:1">
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Hoch</span>
+        </div>
+        <div style="text-align:center;font-size:12px;color:#a5b4fc;margin-top:4px;" id="ns-sens-val">${sens}x</div>
+      </div>
+      <div class="form-group">
+        <label>Grenze Leise → Mittel (%)</label>
+        <input type="range" id="ns-low" min="5" max="50" value="${lowThr}">
+        <div style="text-align:center;font-size:12px;color:#4ade80;margin-top:2px;" id="ns-low-val">${lowThr}%</div>
+      </div>
+      <div class="form-group">
+        <label>Grenze Mittel → Laut (%)</label>
+        <input type="range" id="ns-high" min="20" max="90" value="${highThr}">
+        <div style="text-align:center;font-size:12px;color:#f87171;margin-top:2px;" id="ns-high-val">${highThr}%</div>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:12px;">
+        💡 Tipp: Bei ruhiger Klasse Empfindlichkeit erhöhen. Bei lautem Umfeld reduzieren.
+      </div>
+      <button class="btn-primary" id="ns-save">Speichern</button>
+    </div>
+  `);
+
+  const sensInput = overlay.querySelector('#ns-sens');
+  const lowInput  = overlay.querySelector('#ns-low');
+  const highInput = overlay.querySelector('#ns-high');
+  sensInput.addEventListener('input', () => { overlay.querySelector('#ns-sens-val').textContent = sensInput.value + 'x'; });
+  lowInput.addEventListener('input',  () => { overlay.querySelector('#ns-low-val').textContent  = lowInput.value  + '%'; });
+  highInput.addEventListener('input', () => { overlay.querySelector('#ns-high-val').textContent = highInput.value + '%'; });
+
+  overlay.querySelector('#ns-save').addEventListener('click', () => {
+    cfg.sensitivity   = parseFloat(sensInput.value);
+    cfg.lowThreshold  = parseInt(lowInput.value);
+    cfg.highThreshold = parseInt(highInput.value);
+    APP.save();
+    // Widget neu rendern damit Einstellungen sofort wirken
+    const shell = document.querySelector('[data-wid="'+w.id+'"]');
+    if (shell) { const body = shell.querySelector('.widget-body'); renderWidgetContent(w, body); }
+    close();
+    toast('✅ Einstellungen gespeichert');
+  });
+}
+
+function openTextEdit(w) {
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>📝 Text bearbeiten</h2>
+      <div class="form-group">
+        <label>Text (Markdown nicht unterstützt)</label>
+        <textarea id="te-text" rows="5" style="resize:vertical">${safeText(w.config.text||'')}</textarea>
+      </div>
+      <div class="form-group">
+        <label>Schriftgröße (px)</label>
+        <input type="number" id="te-size" value="${w.config.fontSize||16}" min="10" max="80">
+      </div>
+      <button class="btn-primary" id="te-save">Speichern</button>
+    </div>
+  `);
+  overlay.querySelector('#te-save').addEventListener('click', () => {
+    w.config.text = overlay.querySelector('#te-text').value;
+    w.config.fontSize = parseInt(overlay.querySelector('#te-size').value)||16;
+    APP.save();
+    const shell = document.querySelector('[data-wid="'+w.id+'"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+  });
+}
+
+function openTimerSettings(w) {
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>⏱ Timer einstellen</h2>
+      <div class="form-group">
+        <label>Minuten</label>
+        <input type="number" id="ts-min" value="${w.config.minutes||5}" min="0" max="180">
+      </div>
+      <div class="form-group">
+        <label>Sekunden</label>
+        <input type="number" id="ts-sec" value="${w.config.seconds||0}" min="0" max="59">
+      </div>
+      <button class="btn-primary" id="ts-save">Speichern & Zurücksetzen</button>
+    </div>
+  `);
+  overlay.querySelector('#ts-save').addEventListener('click', () => {
+    w.config.minutes = parseInt(overlay.querySelector('#ts-min').value)||0;
+    w.config.seconds = parseInt(overlay.querySelector('#ts-sec').value)||0;
+    APP.save();
+    const shell = document.querySelector('[data-wid="'+w.id+'"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+  });
+}
+
+function openQrSettings(w) {
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>📱 QR-Code</h2>
+      <div class="form-group">
+        <label>URL oder Text</label>
+        <input type="url" id="qr-url" value="${safeText(w.config.url||'')}" placeholder="https://…">
+      </div>
+      <div class="form-group">
+        <label>Beschriftung (optional)</label>
+        <input type="text" id="qr-label" value="${safeText(w.config.label||'')}">
+      </div>
+      <button class="btn-primary" id="qr-save">QR generieren</button>
+    </div>
+  `);
+  overlay.querySelector('#qr-save').addEventListener('click', () => {
+    w.config.url = overlay.querySelector('#qr-url').value.trim();
+    w.config.label = overlay.querySelector('#qr-label').value.trim();
+    APP.save();
+    const shell = document.querySelector('[data-wid="'+w.id+'"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+  });
+}
+
+function openNamesEdit(w) {
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>🎯 Namen bearbeiten</h2>
+      <div class="form-group">
+        <label>Namen (je eine pro Zeile)</label>
+        <textarea id="nm-names" rows="8" style="resize:vertical">${safeText(w.config.names||'')}</textarea>
+      </div>
+      <button class="btn-primary" id="nm-save">Speichern</button>
+    </div>
+  `);
+  overlay.querySelector('#nm-save').addEventListener('click', () => {
+    w.config.names = overlay.querySelector('#nm-names').value;
+    w.config.highlighted = -1;
+    APP.save();
+    const shell = document.querySelector('[data-wid="'+w.id+'"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+  });
+}
+
+function openHomeworkEdit(w) {
+  const items = (w.config.items||[]).join('\n');
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>📚 Hausaufgaben</h2>
+      <div class="form-group">
+        <label>Fach / Titel</label>
+        <input type="text" id="hw-subject" value="${safeText(w.config.subject||'')}">
+      </div>
+      <div class="form-group">
+        <label>Aufgaben (je eine pro Zeile)</label>
+        <textarea id="hw-items" rows="6" style="resize:vertical">${safeText(items)}</textarea>
+      </div>
+      <button class="btn-primary" id="hw-save">Speichern</button>
+    </div>
+  `);
+  overlay.querySelector('#hw-save').addEventListener('click', () => {
+    w.config.subject = overlay.querySelector('#hw-subject').value.trim();
+    w.config.items = overlay.querySelector('#hw-items').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    APP.save();
+    const shell = document.querySelector('[data-wid="'+w.id+'"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+  });
+}
+
+function openGoalEdit(w) {
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>🎯 Stundenziel</h2>
+      <div class="form-group">
+        <label>Ziel</label>
+        <textarea id="goal-text" rows="3">${safeText(w.config.text||'')}</textarea>
+      </div>
+      <button class="btn-primary" id="goal-save">Speichern</button>
+    </div>
+  `);
+  overlay.querySelector('#goal-save').addEventListener('click', () => {
+    w.config.text = overlay.querySelector('#goal-text').value;
+    APP.save();
+    const shell = document.querySelector('[data-wid="'+w.id+'"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+  });
+}
+
+function openTimetableSettings(w) {
+  const board = APP.activeBoard();
+  const cache = APP.icalCache[board?.id] || {};
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>📅 Stundenplan (iCal)</h2>
+      <div class="form-group">
+        <label>WebUntis / iCal-URL</label>
+        <input type="url" id="ical-url" value="${safeText(cache.url||w.config.icalUrl||'')}" placeholder="https://meine-schule.webuntis.com/…ical">
+      </div>
+      <p class="ical-info">
+        In WebUntis: Mein Untis → Kalender → Mein Kalender → iCal-Link kopieren.<br>
+        Der Link wird <strong>nur lokal</strong> in deinem Browser gespeichert.
+        ${cache.lastFetched ? '<br>Zuletzt abgerufen: ' + new Date(cache.lastFetched).toLocaleString('de-DE') : ''}
+      </p>
+      <div class="btn-row">
+        <button class="btn-secondary" id="ical-test">Jetzt abrufen</button>
+        <button class="btn-primary" id="ical-save">Speichern</button>
+      </div>
+    </div>
+  `);
+  overlay.querySelector('#ical-save').addEventListener('click', () => {
+    const url = overlay.querySelector('#ical-url').value.trim();
+    if (board) {
+      APP.icalCache[board.id] = { ...APP.icalCache[board.id], url };
+      w.config.icalUrl = url;
+    }
+    APP.save();
+    close();
+    if (url) fetchIcal(url, board.id);
+  });
+  overlay.querySelector('#ical-test').addEventListener('click', () => {
+    const url = overlay.querySelector('#ical-url').value.trim();
+    if (!url) { toast('Bitte URL eingeben'); return; }
+    if (board) { APP.icalCache[board.id] = { ...APP.icalCache[board.id], url }; }
+    fetchIcal(url, board?.id);
+    close();
+  });
+}
+
+function openImageSettings(w) {
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>🖼 Bild</h2>
+      <div class="form-group">
+        <label>Bild-URL</label>
+        <input type="url" id="img-url" value="${safeText(w.config.src||'')}" placeholder="https://…">
+      </div>
+      <div class="form-group">
+        <label>Oder Datei hochladen (max. 2 MB)</label>
+        <input type="file" id="img-file" accept="image/*" style="color:#fff">
+      </div>
+      <div class="form-group">
+        <label>Alt-Text</label>
+        <input type="text" id="img-alt" value="${safeText(w.config.alt||'')}">
+      </div>
+      <button class="btn-primary" id="img-save">Speichern</button>
+    </div>
+  `);
+  overlay.querySelector('#img-save').addEventListener('click', () => {
+    w.config.alt = overlay.querySelector('#img-alt').value.trim();
+    const file = overlay.querySelector('#img-file').files[0];
+    if (file) {
+      if (file.size > 2*1024*1024) { toast('❌ Datei zu groß (max. 2 MB)'); return; }
+      if (!file.type.startsWith('image/')) { toast('❌ Nur Bilddateien erlaubt'); return; }
+      const reader = new FileReader();
+      reader.onload = e => {
+        w.config.src = e.target.result;
+        APP.save();
+        const shell = document.querySelector('[data-wid="'+w.id+'"]');
+        if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+        close();
+      };
+      reader.readAsDataURL(file);
+    } else {
+      w.config.src = overlay.querySelector('#img-url').value.trim();
+      APP.save();
+      const shell = document.querySelector('[data-wid="'+w.id+'"]');
+      if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+      close();
+    }
+  });
+}
+
+function openYoutubeSettings(w) {
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>▶️ YouTube</h2>
+      <div class="form-group">
+        <label>YouTube-URL oder Video-ID</label>
+        <input type="text" id="yt-url" value="${safeText(w.config.videoId||'')}" placeholder="https://youtube.com/watch?v=… oder Video-ID">
+      </div>
+      <button class="btn-primary" id="yt-save">Einbetten</button>
+    </div>
+  `);
+  overlay.querySelector('#yt-save').addEventListener('click', () => {
+    let val = overlay.querySelector('#yt-url').value.trim();
+    // Extract video ID
+    const match = val.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+    w.config.videoId = match ? match[1] : val.slice(-11);
+    APP.save();
+    const shell = document.querySelector('[data-wid="'+w.id+'"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+  });
+}
+
+function openRandNumSettings(w) {
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>🔢 Zufallszahl</h2>
+      <div class="form-group">
+        <label>Minimum</label>
+        <input type="number" id="rn-min" value="${w.config.min||1}">
+      </div>
+      <div class="form-group">
+        <label>Maximum</label>
+        <input type="number" id="rn-max" value="${w.config.max||30}">
+      </div>
+      <button class="btn-primary" id="rn-save">Speichern</button>
+    </div>
+  `);
+  overlay.querySelector('#rn-save').addEventListener('click', () => {
+    w.config.min = parseInt(overlay.querySelector('#rn-min').value)||1;
+    w.config.max = parseInt(overlay.querySelector('#rn-max').value)||30;
+    w.config.value = null;
+    APP.save();
+    const shell = document.querySelector('[data-wid="'+w.id+'"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+  });
+}
+
+function openGroupsSettings(w) {
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>👥 Gruppen</h2>
+      <div class="form-group">
+        <label>Namen (je eine pro Zeile)</label>
+        <textarea id="gr-names" rows="8" style="resize:vertical">${safeText(w.config.names||'')}</textarea>
+      </div>
+      <div class="form-group">
+        <label>Gruppengröße</label>
+        <input type="number" id="gr-size" value="${w.config.size||3}" min="2" max="10">
+      </div>
+      <button class="btn-primary" id="gr-save">Speichern & Neu mischen</button>
+    </div>
+  `);
+  overlay.querySelector('#gr-save').addEventListener('click', () => {
+    w.config.names = overlay.querySelector('#gr-names').value;
+    w.config.size = parseInt(overlay.querySelector('#gr-size').value)||3;
+    APP.save();
+    const shell = document.querySelector('[data-wid="'+w.id+'"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+  });
+}
+
+function openAgendaEdit(w) {
+  const items = (w.config.items||[]).map(i=>`${i.time||''}|${i.text||''}`).join('\n');
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>📋 Agenda</h2>
+      <p style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:10px">Format: <code>08:00|Begrüßung</code> (Zeit|Text, je Zeile)</p>
+      <div class="form-group">
+        <textarea id="ag-items" rows="8" style="resize:vertical">${safeText(items)}</textarea>
+      </div>
+      <button class="btn-primary" id="ag-save">Speichern</button>
+    </div>
+  `);
+  overlay.querySelector('#ag-save').addEventListener('click', () => {
+    w.config.items = overlay.querySelector('#ag-items').value
+      .split('\n').map(s=>s.trim()).filter(Boolean)
+      .map(s=>{ const [time,...rest]=s.split('|'); return {time:time.trim(),text:rest.join('|').trim()}; });
+    APP.save();
+    const shell = document.querySelector('[data-wid="'+w.id+'"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+  });
+}
+
+function openChecklistEdit(w, onSave) {
+  const items = (w.config.items||[]).map(i=>i.text||'').join('\n');
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>✅ Checkliste</h2>
+      <div class="form-group">
+        <label>Einträge (je einer pro Zeile)</label>
+        <textarea id="cl-items" rows="8" style="resize:vertical">${safeText(items)}</textarea>
+      </div>
+      <button class="btn-primary" id="cl-save">Speichern</button>
+    </div>
+  `);
+  overlay.querySelector('#cl-save').addEventListener('click', () => {
+    w.config.items = overlay.querySelector('#cl-items').value
+      .split('\n').map(s=>s.trim()).filter(Boolean)
+      .map(t=>({text:t,done:false}));
+    APP.save();
+    const shell = document.querySelector('[data-wid="'+w.id+'"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    onSave && onSave();
+    close();
+  });
+}
+
+function openPhasesEdit(w) {
+  const lines = (w.config.phases||[]).map(p=>`${p.name}|${p.minutes}|${p.color}`).join('\n');
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>⏳ Arbeitsphasen</h2>
+      <p style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:10px">Format: <code>Einführung|5|#6366f1</code> (Name|Minuten|Farbe)</p>
+      <div class="form-group">
+        <textarea id="ph-items" rows="6" style="resize:vertical">${safeText(lines)}</textarea>
+      </div>
+      <button class="btn-primary" id="ph-save">Speichern</button>
+    </div>
+  `);
+  overlay.querySelector('#ph-save').addEventListener('click', () => {
+    w.config.phases = overlay.querySelector('#ph-items').value
+      .split('\n').map(s=>s.trim()).filter(Boolean)
+      .map(s=>{ const [name,min,color]=s.split('|'); return {name:(name||'Phase').trim(),minutes:parseInt(min)||5,color:(color||'#6366f1').trim()}; });
+    w.config.activeIdx = -1;
+    APP.save();
+    const shell = document.querySelector('[data-wid="'+w.id+'"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+  });
+}
+
+// ── YouTube Overlay (In-Page Fullscreen Player) ──
+// Nutzt blob:-URL als Wrapper, damit YouTube nicht file:// als Herkunft sieht
+function openYoutubeOverlay(videoId) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;animation:fadeIn .2s;';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'position:relative;width:min(94vw,1200px);aspect-ratio:16/9;border-radius:12px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.8);background:#000;';
+
+  // Direkt-iframe mit origin-Parameter — das ist der entscheidende Fix
+  const origin = encodeURIComponent(window.location.origin || 'https://klassenboard.de');
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;';
+  iframe.src = 'https://www.youtube-nocookie.com/embed/' + videoId
+    + '?autoplay=1&rel=0&modestbranding=1&playsinline=1&origin=' + origin;
+  iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen');
+  iframe.setAttribute('allowfullscreen', '');
+
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:10;background:rgba(0,0,0,0.7);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:20px;line-height:40px;text-align:center;transition:background .15s;';
+  closeBtn.onmouseenter = () => { closeBtn.style.background = 'rgba(220,30,30,0.9)'; };
+  closeBtn.onmouseleave = () => { closeBtn.style.background = 'rgba(0,0,0,0.7)'; };
+
+  const hint = document.createElement('div');
+  hint.style.cssText = 'font-size:12px;color:rgba(255,255,255,0.35);';
+  hint.textContent = 'ESC oder Klick außerhalb zum Schließen';
+
+  const close = () => {
+    iframe.src = '';
+    overlay.remove();
+  };
+  closeBtn.addEventListener('click', e => { e.stopPropagation(); close(); });
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); }, { once: true });
+
+  box.append(iframe, closeBtn);
+  overlay.append(box, hint);
+  document.body.appendChild(overlay);
+}
+
+// ══════════════════════════════════════════════════════════════
+// TOOLBAR ACTIONS
+// ══════════════════════════════════════════════════════════════
+function openWidgetMenu() {
+  const existing = document.getElementById('widget-menu');
+  if (existing) { existing.remove(); return; }
+  const menu = el('div'); menu.id = 'widget-menu';
+
+  WIDGET_CATS.forEach(cat => {
+    const label = el('div','wm-cat'); label.textContent = cat.label;
+    menu.appendChild(label);
+    const grid = el('div','wm-grid');
+    cat.types.forEach(type => {
+      const def = REGISTRY[type];
+      const btn = el('button','wm-item');
+      const icon = el('span','wm-emoji'); icon.textContent = def.emoji;
+      const lbl = el('span','wm-label'); lbl.textContent = def.label;
+      btn.append(icon, lbl);
+      btn.addEventListener('click', () => { addWidget(type); menu.remove(); });
+      grid.appendChild(btn);
+    });
+    menu.appendChild(grid);
+  });
+
+  // position near button
+  const btnRect = document.getElementById('btn-add-widget').getBoundingClientRect();
+  menu.style.cssText = `top:${btnRect.bottom+6}px;right:${window.innerWidth-btnRect.right}px`;
+  document.body.appendChild(menu);
+
+  setTimeout(() => {
+    document.addEventListener('pointerdown', function closeMenu(e) {
+      if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('pointerdown', closeMenu); }
+    });
+  }, 0);
+}
+
+function openTemplateModal() {
+  const { overlay, close } = openModal(`
+    <div class="modal modal-lg">
+      <button class="modal-close" data-close>✕</button>
+      <h2>📋 Vorlage laden</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:16px">Wähle eine Vorlage. Die aktuelle Tafel wird ersetzt.</p>
+      <div class="template-grid" id="tpl-grid"></div>
+    </div>
+  `);
+  const grid = overlay.querySelector('#tpl-grid');
+  BUILT_IN_TEMPLATES.forEach(tpl => {
+    const card = el('div','tpl-card');
+    const emoji = el('div','tpl-emoji'); emoji.textContent = tpl.emoji;
+    const name = el('div','tpl-name'); name.textContent = tpl.name;
+    const desc = el('div','tpl-desc'); desc.textContent = tpl.desc;
+    card.append(emoji, name, desc);
+    card.addEventListener('click', () => {
+      APP.snapshotUndo();
+      const board = APP.activeBoard();
+      if (board) {
+        board.background = tpl.bg;
+        board.widgets = tpl.widgets.map(w => ({...w, id:uid(), createdAt:new Date().toISOString()}));
+      }
+      APP.save();
+      renderAll();
+      close();
+      toast('✅ Vorlage "' + tpl.name + '" geladen');
+    });
+    grid.appendChild(card);
+  });
+}
+
+function openBgModal() {
+  const PRESETS = [
+    {label:'Indigo',    v:'linear-gradient(135deg,#667eea,#764ba2)'},
+    {label:'Ozean',     v:'linear-gradient(135deg,#0093E9,#80D0C7)'},
+    {label:'Sonnenuntergang', v:'linear-gradient(135deg,#f093fb,#f5576c)'},
+    {label:'Wald',      v:'linear-gradient(135deg,#43e97b,#38f9d7)'},
+    {label:'Mitternacht', v:'linear-gradient(135deg,#0f0c29,#302b63,#24243e)'},
+    {label:'Schiefer',  v:'#1e293b'},
+    {label:'Dunkelblau', v:'#1a1a2e'},
+    {label:'Nacht',     v:'#0f172a'},
+  ];
+  const board = APP.activeBoard();
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>🎨 Hintergrund</h2>
+      <div class="bg-grid" id="bg-grid"></div>
+      <div class="form-group" style="margin-top:8px">
+        <label>Eigene Farbe</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="color" id="bg-color" value="#1e293b" style="width:48px;height:36px;padding:2px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.2);background:transparent">
+          <button class="btn-secondary" id="bg-apply-color">Anwenden</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Bild-URL</label>
+        <div style="display:flex;gap:8px">
+          <input type="url" id="bg-img-url" placeholder="https://…" style="flex:1">
+          <button class="btn-secondary" id="bg-apply-img">Anwenden</button>
+        </div>
+      </div>
+    </div>
+  `);
+  const grid = overlay.querySelector('#bg-grid');
+  PRESETS.forEach(p => {
+    const sw = el('div','bg-swatch'); sw.title=p.label; sw.style.background=p.v;
+    sw.addEventListener('click', () => {
+      if (board) { board.background={type: p.v.startsWith('linear') ? 'gradient':'color', value:p.v}; APP.save(); renderBoardBg(); }
+      close();
+    });
+    grid.appendChild(sw);
+  });
+  overlay.querySelector('#bg-apply-color').addEventListener('click', () => {
+    const v = overlay.querySelector('#bg-color').value;
+    if (board) { board.background={type:'color',value:v}; APP.save(); renderBoardBg(); }
+    close();
+  });
+  overlay.querySelector('#bg-apply-img').addEventListener('click', () => {
+    const v = overlay.querySelector('#bg-img-url').value.trim();
+    if (!v) return;
+    if (board) { board.background={type:'image',value:v}; APP.save(); renderBoardBg(); }
+    close();
+  });
+}
+
+function openExportModal() {
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>💾 Export / Import / Datenschutz</h2>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn-primary" id="exp-export">⬇ Alle Tafeln exportieren (.json)</button>
+        <div class="form-group" style="margin:0">
+          <label>Import (JSON-Datei)</label>
+          <input type="file" id="exp-file" accept=".json" style="color:#fff">
+        </div>
+        <button class="btn-secondary" id="exp-import">⬆ Importieren</button>
+        <hr style="border-color:rgba(255,255,255,0.1);margin:4px 0">
+        <button class="btn-secondary" id="exp-delete" style="color:#f87171;border-color:rgba(239,68,68,0.3)">🗑 Alle Daten löschen</button>
+      </div>
+    </div>
+  `);
+  overlay.querySelector('#exp-export').addEventListener('click', () => { APP.exportAll(); close(); });
+  overlay.querySelector('#exp-import').addEventListener('click', () => {
+    const file = overlay.querySelector('#exp-file').files[0];
+    if (!file) { toast('Bitte Datei auswählen'); return; }
+    const reader = new FileReader();
+    reader.onload = e => { APP.importAll(e.target.result); close(); };
+    reader.readAsText(file);
+  });
+  overlay.querySelector('#exp-delete').addEventListener('click', () => {
+    if (confirm('Alle Tafeln und Daten wirklich löschen?')) { APP.deleteAllData(); close(); toast('🗑 Alle Daten gelöscht'); }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ══════════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+  if (e.key === 'e' || e.key === 'E') toggleEditMode();
+  if (e.key === 'w' || e.key === 'W') openWidgetMenu();
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); APP.undo(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); APP._persist(); toast('💾 Gespeichert'); }
+  if ((e.key === 'Delete' || e.key === 'Backspace') && APP.selectedId && e.target === document.body) {
+    removeWidget(APP.selectedId);
+  }
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay').forEach(m=>m.remove());
+    const wm = document.getElementById('widget-menu'); if (wm) wm.remove();
+    APP.selectedId = null;
+    document.querySelectorAll('.widget').forEach(w=>w.classList.remove('selected'));
+  }
+});
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen?.();
+    document.body.classList.add('fullscreen');
+    document.getElementById('btn-fullscreen').textContent = '⤡';
+  } else {
+    document.exitFullscreen?.();
+    document.body.classList.remove('fullscreen');
+    document.getElementById('btn-fullscreen').textContent = '⤢';
+  }
+}
+
+function toggleEditMode() {
+  APP.state.editMode = !APP.state.editMode;
+  const btn = document.getElementById('edit-mode-btn');
+  btn.textContent = APP.state.editMode ? '✏️ Edit' : '👁 Ansicht';
+  btn.classList.toggle('active', APP.state.editMode);
+  APP.selectedId = null;
+  renderWidgets();
+}
+
+// ══════════════════════════════════════════════════════════════
+// AUTH UI
+// ══════════════════════════════════════════════════════════════
+let _authMode = 'login';
+
+function openLoginModal() {
+  if (!AUTH._configured) {
+    toast('⚙️ Supabase noch nicht konfiguriert (SUPABASE_URL im Code eintragen)');
+    return;
+  }
+  const { overlay } = openModal(`
+    <div class="modal auth-modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2 style="margin-bottom:16px">🏫 KlassenBoard</h2>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login"     onclick="switchAuthTab('login')">Anmelden</button>
+        <button class="auth-tab"        id="tab-register"  onclick="switchAuthTab('register')">Registrieren</button>
+      </div>
+      <div class="auth-field">
+        <label>E-Mail</label>
+        <input type="email" id="auth-email" placeholder="lehrer@schule.at" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label>Passwort</label>
+        <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="auth-submit" id="auth-submit-btn" onclick="submitAuth()">Anmelden</button>
+      <div class="auth-msg" id="auth-msg"></div>
+      <div class="auth-info">Deine Boards werden automatisch in der<br>Cloud gespeichert und überall verfügbar.</div>
+    </div>
+  `);
+  const emailInput = overlay.querySelector('#auth-email');
+  const pwInput    = overlay.querySelector('#auth-password');
+  emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') pwInput.focus(); });
+  pwInput.addEventListener('keydown',    e => { if (e.key === 'Enter') submitAuth(); });
+  setTimeout(() => emailInput.focus(), 50);
+}
+
+function switchAuthTab(mode) {
+  _authMode = mode;
+  document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+  document.getElementById('tab-register').classList.toggle('active', mode === 'register');
+  document.getElementById('auth-submit-btn').textContent = mode === 'login' ? 'Anmelden' : 'Konto erstellen';
+  document.getElementById('auth-msg').textContent = '';
+  document.getElementById('auth-msg').className = 'auth-msg';
+}
+
+async function submitAuth() {
+  const email    = document.getElementById('auth-email')?.value.trim();
+  const password = document.getElementById('auth-password')?.value;
+  const btn      = document.getElementById('auth-submit-btn');
+  const msg      = document.getElementById('auth-msg');
+  if (!email || !password) {
+    msg.textContent = 'Bitte E-Mail und Passwort eingeben.';
+    msg.className = 'auth-msg error'; return;
+  }
+  if (password.length < 6) {
+    msg.textContent = 'Passwort muss mindestens 6 Zeichen haben.';
+    msg.className = 'auth-msg error'; return;
+  }
+  btn.disabled = true;
+  btn.textContent = '…';
+  msg.textContent = '';
+  try {
+    if (_authMode === 'login') {
+      await AUTH.login(email, password);
+      document.querySelector('.modal-overlay')?.remove();
+      toast('✅ Willkommen zurück!');
+    } else {
+      await AUTH.register(email, password);
+      msg.textContent = '✅ Bestätigungsmail gesendet! Bitte E-Mail prüfen.';
+      msg.className = 'auth-msg success';
+      btn.disabled = false;
+      btn.textContent = 'Konto erstellen';
+    }
+  } catch(e) {
+    const known = {
+      'Invalid login credentials': 'E-Mail oder Passwort falsch.',
+      'User already registered':   'Diese E-Mail ist bereits registriert.',
+      'Email not confirmed':        'Bitte zuerst die Bestätigungsmail bestätigen.',
+    };
+    msg.textContent = known[e.message] || e.message;
+    msg.className = 'auth-msg error';
+    btn.disabled = false;
+    btn.textContent = _authMode === 'login' ? 'Anmelden' : 'Konto erstellen';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// SPRACHSTEUERUNG
+// ══════════════════════════════════════════════════════════════
+const VOICE = {
+  recognition: null,
+  active: false,
+  toastEl: null,
+
+  init() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return false;
+    this.recognition = new SR();
+    this.recognition.lang = 'de-DE';
+    this.recognition.continuous = false;
+    this.recognition.interimResults = false;
+    this.recognition.onresult = (e) => this.handleResult(e);
+    this.recognition.onend = () => this.setInactive();
+    this.recognition.onerror = (e) => {
+      if (e.error !== 'no-speech') toast('🎙️ Fehler: ' + e.error);
+      this.setInactive();
+    };
+    return true;
+  },
+
+  toggle() {
+    if (!this.recognition && !this.init()) {
+      toast('❌ Spracherkennung wird von diesem Browser nicht unterstützt. Bitte Chrome verwenden.');
+      return;
+    }
+    if (this.active) { this.recognition.stop(); return; }
+    try { this.recognition.start(); this.setActive(); }
+    catch(e) { toast('🎙️ Mikrofon-Fehler: ' + e.message); }
+  },
+
+  setActive() {
+    this.active = true;
+    const btn = document.getElementById('btn-voice');
+    btn.classList.add('listening');
+    // show listening toast
+    if (!this.toastEl) {
+      this.toastEl = document.createElement('div');
+      this.toastEl.className = 'voice-toast';
+      document.body.appendChild(this.toastEl);
+    }
+    this.toastEl.innerHTML = '🎙️ Höre zu… <span style="color:rgba(255,255,255,0.4);font-size:11px">Sag z.B. "Öffne Stoppuhr" oder "Timer 5 Minuten"</span>';
+    this.toastEl.style.display = 'flex';
+  },
+
+  setInactive() {
+    this.active = false;
+    const btn = document.getElementById('btn-voice');
+    if (btn) btn.classList.remove('listening');
+    if (this.toastEl) this.toastEl.style.display = 'none';
+  },
+
+  async handleResult(e) {
+    const transcript = e.results[0][0].transcript.trim();
+    this.setInactive();
+    if (!transcript) return;
+
+    // Show what was heard
+    if (this.toastEl) {
+      this.toastEl.innerHTML = `🎙️ "<span class="voice-transcript">${transcript}</span>" — wird verarbeitet…`;
+      this.toastEl.style.display = 'flex';
+      setTimeout(() => { if (this.toastEl) this.toastEl.style.display = 'none'; }, 4000);
+    }
+
+    if (!AUTH.user || !AUTH.client) {
+      toast('⚠️ Bitte anmelden für Sprachsteuerung');
+      return;
+    }
+
+    try {
+      const { data, error } = await AUTH.client.functions.invoke('ai-generate', {
+        body: { type: 'voice-command', transcript }
+      });
+      if (error) throw new Error(error.message || String(error));
+      const raw = typeof data?.text === 'string' ? data.text : JSON.stringify(data?.text || '{}');
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('Kein Befehl erkannt');
+      const action = JSON.parse(match[0]);
+      this.executeAction(action, transcript);
+    } catch(err) {
+      toast('❌ Befehl nicht verstanden: ' + err.message);
+    }
+  },
+
+  executeAction(action, transcript) {
+    const board = APP.activeBoard();
+    if (!board) return;
+    const act = action.action;
+
+    if (act === 'add-widget' || act === 'add-and-configure') {
+      const type = action.widgetType;
+      if (!REGISTRY[type]) { toast('❌ Widget "' + type + '" nicht gefunden'); return; }
+      const widget = addWidget(type, action.config || {});
+      if (action.config && widget) {
+        Object.assign(widget.config, action.config);
+        APP.save(); renderWidgets();
+      }
+      toast('✅ ' + REGISTRY[type].emoji + ' ' + REGISTRY[type].label + ' hinzugefügt');
+
+    } else if (act === 'configure-widget') {
+      const type = action.widgetType;
+      let w = board.widgets.slice().reverse().find(w => w.type === type);
+      if (!w) { toast('⚠️ Kein ' + (REGISTRY[type]?.label || type) + '-Widget gefunden — wird hinzugefügt'); addWidget(type, action.config || {}); return; }
+      Object.assign(w.config, action.config || {});
+      APP.save(); renderWidgets();
+      toast('✅ ' + (REGISTRY[type]?.label || type) + ' aktualisiert');
+
+    } else if (act === 'new-board') {
+      createBoard(action.name || 'Neue Tafel');
+      toast('✅ Neue Tafel: ' + (action.name || 'Neue Tafel'));
+
+    } else if (act === 'ai-board') {
+      openAiBoardGenerator();
+
+    } else {
+      toast('❓ Befehl nicht erkannt: "' + transcript + '"');
+    }
+  }
+};
+
+// ══════════════════════════════════════════════════════════════
+// AUTO-BOARD GENERATOR
+// ══════════════════════════════════════════════════════════════
+function openAiBoardGenerator() {
+  if (!AUTH.user) {
+    toast('⚠️ Bitte zuerst anmelden um den KI-Board-Generator zu nutzen');
+    return;
+  }
+
+  const { overlay, close } = openModal(`
+    <div class="modal ai-board-modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>🪄 KI-Board-Generator</h2>
+      <p class="subtitle">Beschreibe deine Stunde — die KI erstellt automatisch ein passendes Board.</p>
+      <div class="form-group">
+        <label>Thema / Unterrichtsinhalt</label>
+        <input type="text" id="abg-topic" placeholder="z.B. Photosynthese, Bruchrechnen, Französische Revolution…">
+      </div>
+      <div class="ai-board-row">
+        <div class="form-group">
+          <label>Klasse</label>
+          <select id="abg-grade">
+            ${['1','2','3','4','5','6','7','8','9','10','11','12','13'].map(g=>`<option value="${g}"${g==='7'?' selected':''}>Klasse ${g}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Dauer</label>
+          <select id="abg-duration">
+            <option value="45" selected>45 Min</option>
+            <option value="50">50 Min</option>
+            <option value="60">60 Min</option>
+            <option value="90">90 Min</option>
+            <option value="30">30 Min</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Unterrichtsart</label>
+          <select id="abg-type">
+            <option value="Einführung">Einführung</option>
+            <option value="Übung" selected>Übung</option>
+            <option value="Wiederholung">Wiederholung</option>
+            <option value="Test/Prüfung">Test/Prüfung</option>
+            <option value="Projekt">Projekt</option>
+            <option value="Diskussion">Diskussion</option>
+          </select>
+        </div>
+      </div>
+      <button class="ai-board-gen-btn" id="abg-btn">🪄 Board generieren</button>
+      <div class="ai-board-progress" id="abg-progress">⏳ KI plant deine Stunde…</div>
+    </div>
+  `);
+
+  overlay.querySelector('#abg-topic').focus();
+
+  overlay.querySelector('#abg-btn').addEventListener('click', async () => {
+    const topic    = overlay.querySelector('#abg-topic').value.trim();
+    const grade    = overlay.querySelector('#abg-grade').value;
+    const duration = overlay.querySelector('#abg-duration').value;
+    const lessonType = overlay.querySelector('#abg-type').value;
+
+    if (!topic) { toast('⚠️ Bitte ein Thema eingeben'); overlay.querySelector('#abg-topic').focus(); return; }
+
+    const btn = overlay.querySelector('#abg-btn');
+    const progress = overlay.querySelector('#abg-progress');
+    btn.disabled = true;
+    btn.textContent = '⏳ Generiere…';
+    progress.classList.add('visible');
+    progress.textContent = '⏳ KI plant deine Stunde…';
+
+    try {
+      const { data, error } = await AUTH.client.functions.invoke('ai-generate', {
+        body: { type: 'board-generate', topic, grade, duration, lessonType }
+      });
+      if (error) throw new Error(error.message || String(error));
+
+      let parsed;
+      try {
+        // data.text contains the JSON string
+        const raw = typeof data.text === 'string' ? data.text : JSON.stringify(data.text);
+        // extract JSON from response (AI might add preamble)
+        const match = raw.match(/\{[\s\S]*\}/);
+        if (!match) throw new Error('Kein JSON gefunden');
+        parsed = JSON.parse(match[0]);
+      } catch(e) {
+        throw new Error('KI-Antwort konnte nicht verarbeitet werden: ' + e.message);
+      }
+
+      progress.textContent = '✅ Board wird erstellt…';
+
+      // Create new board
+      const boardName = parsed.boardName || `${topic} – Klasse ${grade}`;
+      createBoard(boardName);
+      const board = APP.activeBoard();
+
+      // ── Set AI-generated background via Pollinations.ai ──
+      const imagePrompt = parsed.imagePrompt || topic + ' educational dramatic cinematic';
+      const seed = Math.floor(Math.random() * 99999);
+      const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1920&height=1080&seed=${seed}&nologo=true&enhance=true`;
+      board.background = { type: 'image', value: pollinationsUrl };
+      // show progress while image generates
+      progress.textContent = '🎨 KI generiert Hintergrundbild… (kann 15–30 Sek. dauern)';
+
+      // ── Smart layout: clock top-right, title top-center, rest in flow ──
+      const widgets = (parsed.widgets || []).filter(d => REGISTRY[d.type]);
+      const margin = 12, gap = 12, startY = 72;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      // Separate special widgets
+      const clockDef   = widgets.find(d => d.type === 'clock');
+      const goalDef    = widgets.find(d => d.type === 'goal');
+      const rest       = widgets.filter(d => d.type !== 'clock' && d.type !== 'goal');
+
+      let zIdx = 1;
+      function placeWidget(def, x, y, wOverride, hOverride) {
+        const reg = REGISTRY[def.type];
+        const ww = wOverride || reg.w, hh = hOverride || reg.h;
+        board.widgets.push({
+          id: uid(), type: def.type,
+          x: Math.round(x), y: Math.round(y),
+          w: ww, h: hh,
+          config: def.config || {},
+          zIndex: zIdx++, locked: false,
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      // Clock: top-right
+      const clockW = 220, clockH = 100;
+      if (clockDef) placeWidget(clockDef, vw - clockW - margin, startY, clockW, clockH);
+
+      // Goal: top-center, prominent
+      const goalW = Math.min(560, vw - clockW - margin * 3), goalH = 90;
+      if (goalDef) placeWidget(goalDef, margin, startY, goalW, goalH);
+
+      // Rest: flow layout below
+      const flowStartY = startY + (goalDef ? goalH + gap : 0);
+      let cx = margin, cy = flowStartY, rowH = 0;
+      rest.forEach(def => {
+        const reg = REGISTRY[def.type];
+        const ww = reg.w, hh = reg.h;
+        if (cx + ww + margin > vw - (clockDef ? clockW + margin : 0) && cx > margin) {
+          cx = margin; cy += rowH + gap; rowH = 0;
+        }
+        placeWidget(def, cx, cy, ww, hh);
+        cx += ww + gap;
+        rowH = Math.max(rowH, hh);
+      });
+
+      APP._persist();
+      renderAll();
+      toast(`🪄 Board "${boardName}" mit ${widgets.length} Widgets erstellt!`);
+      close();
+
+    } catch(err) {
+      progress.textContent = '❌ Fehler: ' + err.message;
+      progress.style.background = 'rgba(239,68,68,0.1)';
+      progress.style.borderColor = 'rgba(239,68,68,0.3)';
+      progress.style.color = '#fca5a5';
+      btn.disabled = false;
+      btn.textContent = '🪄 Nochmal versuchen';
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// TOOLBAR WIRING
+// ══════════════════════════════════════════════════════════════
+document.getElementById('btn-voice').addEventListener('click', () => VOICE.toggle());
+document.getElementById('btn-ai-board').addEventListener('click', openAiBoardGenerator);
+document.getElementById('btn-add-widget').addEventListener('click', openWidgetMenu);
+document.getElementById('btn-template').addEventListener('click', openTemplateModal);
+document.getElementById('btn-bg').addEventListener('click', openBgModal);
+document.getElementById('btn-ical').addEventListener('click', () => {
+  const board = APP.activeBoard();
+  const w = board?.widgets.find(w=>w.type==='timetable');
+  if (w) openTimetableSettings(w);
+  else { toast('Füge zuerst ein Stundenplan-Widget hinzu'); }
+});
+document.getElementById('btn-export').addEventListener('click', openExportModal);
+document.getElementById('add-board-btn').addEventListener('click', () => {
+  createBoard('Tafel ' + (APP.state.boards.length + 1));
+  toast('✅ Neue Tafel erstellt');
+});
+document.getElementById('edit-mode-btn').addEventListener('click', toggleEditMode);
+document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
+document.getElementById('auth-login-btn').addEventListener('click', openLoginModal);
+document.getElementById('auth-logout-btn').addEventListener('click', () => AUTH.logout());
+
+// Deselect on board click
+document.getElementById('board').addEventListener('pointerdown', e => {
+  if (e.target === document.getElementById('board') || e.target === document.getElementById('board-bg') || e.target === document.getElementById('widgets-layer')) {
+    APP.selectedId = null;
+    document.querySelectorAll('.widget').forEach(w=>w.classList.remove('selected'));
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+function init() {
+  const loaded = APP.load();
+  if (!loaded || APP.state.boards.length === 0) {
+    // Create default board from Morgenstart template
+    const tpl = BUILT_IN_TEMPLATES[0];
+    createBoard('Tafel 1', tpl.bg, tpl.widgets);
+  } else {
+    if (!APP.state.activeBoardId) APP.state.activeBoardId = APP.state.boards[0].id;
+    renderAll();
+  }
+  // update edit mode button
+  const btn = document.getElementById('edit-mode-btn');
+  btn.textContent = APP.state.editMode ? '✏️ Edit' : '👁 Ansicht';
+  btn.classList.toggle('active', APP.state.editMode);
+}
+
+// ══════════════════════════════════════════════════════════════
+// STUDENT VOTING PAGE
+// ══════════════════════════════════════════════════════════════
+async function showVotingPage(pollId) {
+  // Supabase-Client ohne Auth initialisieren
+  if (!AUTH.client && !SUPABASE_URL.includes('DEINE')) {
+    AUTH.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+
+  const page = document.createElement('div'); page.id = 'voting-page';
+  const logo = document.createElement('div');
+  logo.style.cssText = 'font-size:22px;font-weight:800;color:#fff;margin-bottom:28px;letter-spacing:-0.5px;';
+  logo.innerHTML = '🏫 <span style="color:#818cf8">Klassen</span>Board';
+  const card = document.createElement('div'); card.className = 'voting-card';
+  card.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);padding:20px;">Lade Umfrage…</div>';
+  page.append(logo, card);
+  document.body.appendChild(page);
+
+  // Bereits abgestimmt?
+  if (sessionStorage.getItem('voted_'+pollId)) {
+    card.innerHTML = '<div style="text-align:center;padding:10px;"><div style="font-size:52px;margin-bottom:14px">✅</div><div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:8px">Danke für deine Stimme!</div><div style="font-size:13px;color:rgba(255,255,255,0.4)">Du hast bereits abgestimmt.</div></div>';
+    return;
+  }
+  if (!AUTH.client) {
+    card.innerHTML = '<div style="color:#f87171;text-align:center;padding:20px;">Umfrage nicht verfügbar.</div>';
+    return;
+  }
+
+  const { data: poll } = await AUTH.client.from('polls').select('*').eq('id', pollId).maybeSingle();
+  if (!poll) {
+    card.innerHTML = '<div style="color:#f87171;text-align:center;padding:20px;">Umfrage nicht gefunden oder bereits beendet.</div>';
+    return;
+  }
+
+  const COLORS = ['#6366f1','#22c55e','#f59e0b','#ef4444'];
+  const options = poll.options.filter(o => o.trim());
+  card.innerHTML = `<div class="voting-q">${safeText(poll.question)}</div><div id="v-opts"></div>`;
+  const optsEl = card.querySelector('#v-opts');
+
+  options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'voting-opt';
+    btn.style.borderColor = COLORS[i%4]+'55';
+    btn.style.background  = COLORS[i%4]+'18';
+    btn.textContent = opt;
+    btn.addEventListener('mouseover', () => { btn.style.background = COLORS[i%4]+'35'; });
+    btn.addEventListener('mouseout',  () => { btn.style.background = COLORS[i%4]+'18'; });
+    btn.addEventListener('click', async () => {
+      optsEl.querySelectorAll('button').forEach(b => b.disabled = true);
+      btn.style.borderColor = COLORS[i%4];
+      btn.style.background  = COLORS[i%4]+'40';
+      const { error } = await AUTH.client.from('poll_votes').insert({ poll_id: pollId, option_index: i });
+      if (error) {
+        card.innerHTML = '<div style="color:#f87171;text-align:center;padding:20px;">Fehler beim Abstimmen. Bitte Seite neu laden.</div>';
+        return;
+      }
+      sessionStorage.setItem('voted_'+pollId, '1');
+      card.innerHTML = `
+        <div style="text-align:center;padding:16px;">
+          <div style="font-size:56px;margin-bottom:14px">✅</div>
+          <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px">Danke!</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:16px">Deine Stimme wurde gezählt.</div>
+          <div style="display:inline-block;padding:8px 18px;background:${COLORS[i%4]}25;border:1px solid ${COLORS[i%4]}55;border-radius:10px;color:${COLORS[i%4]};font-weight:600;">${safeText(opt)}</div>
+        </div>`;
+    });
+    optsEl.appendChild(btn);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// STARTUP
+// ══════════════════════════════════════════════════════════════
+const _pollParam = new URLSearchParams(window.location.search).get('poll');
+if (_pollParam) {
+  // Schüler-Modus: nur Voting-Seite zeigen
+  showVotingPage(_pollParam);
+} else {
+  init();
+  AUTH.init();
+}
+</script>
+</body>
+</html>
