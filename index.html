@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>KlassenBoard v2</title>
+<title>KlassenBoard – Das digitale Klassenzimmer</title>
+<meta name="description" content="KlassenBoard ist das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer. Widgets, KI-Assistent, Live-Umfragen, Sprachsteuerung und mehr.">
+<meta name="theme-color" content="#6366f1">
+<meta property="og:title" content="KlassenBoard">
+<meta property="og:description" content="Das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏫</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
@@ -507,7 +513,7 @@ body.fullscreen #board { top:0; }
 <div id="toolbar">
   <div id="logo">
     <span>🏫</span>
-    <span id="logo-text">KlassenBoard</span>
+    <span id="logo-text">KlassenBoard</span><span style="font-size:9px;opacity:0.4;margin-left:2px;font-weight:400;letter-spacing:1px;text-transform:uppercase;align-self:flex-end;margin-bottom:1px">Beta</span>
   </div>
   <div id="board-tabs"></div>
   <button id="add-board-btn" title="Neue Tafel">+</button>
@@ -738,10 +744,10 @@ const BUILT_IN_TEMPLATES = [
     desc:'Uhr, Tagesplan, Stundenziel',
     bg:{ type:'gradient', value:'linear-gradient(135deg,#667eea,#764ba2)' },
     widgets:[
-      { type:'clock',    x:20,  y:20,  w:220, h:130, config:{} },
-      { type:'goal',     x:260, y:20,  w:320, h:110, config:{ text:'Heutiges Lernziel…' } },
-      { type:'agenda',   x:20,  y:170, w:280, h:240, config:{ items:[{time:'08:00',text:'Begrüßung'},{time:'08:15',text:'Wiederholung'},{time:'08:30',text:'Neues Thema'}] } },
-      { type:'homework', x:320, y:150, w:280, h:200, config:{ subject:'Hausaufgaben', items:[] } },
+      { type:'clock',    x:20,  y:20,  w:290, h:150, config:{} },
+      { type:'goal',     x:330, y:20,  w:380, h:110, config:{ text:'🎯 Heutiges Lernziel eintragen' } },
+      { type:'agenda',   x:20,  y:190, w:290, h:260, config:{ items:[{time:'08:00',text:'Begrüßung & Einstieg'},{time:'08:15',text:'Wiederholung'},{time:'08:30',text:'Neues Thema'},{time:'09:00',text:'Übung & Sicherung'}] } },
+      { type:'homework', x:330, y:150, w:380, h:200, config:{ subject:'Hausaufgaben', items:['Seite 47, Aufgabe 3', 'Vokabeln Lektion 5 lernen'] } },
     ]
   },
   {
@@ -1060,7 +1066,7 @@ function getDefaultConfig(type) {
     stopwatch: { running: false, elapsed: 0, laps: [] },
     text:      { text: 'Doppelklick zum Bearbeiten' },
     traffic:   { state: 'red' },
-    qr:        { url: 'https://klassenboard.de', label: '' },
+    qr:        { url: 'https://klassenboard.netlify.app', label: 'KlassenBoard' },
     names:     { names: 'Anna\nBen\nClara\nDavid\nEva\nFinn\nGreta\nHannes', highlighted: -1 },
     homework:  { subject: 'Fach', items: [] },
     goal:      { text: 'Heutiges Lernziel' },
@@ -1079,6 +1085,10 @@ function getDefaultConfig(type) {
       {name:'Reflexion', color:'#ec4899', minutes:5},
     ], activeIdx: -1 },
     status:    { statusIdx: 2 },
+    noise:     { lowThreshold: 25, highThreshold: 55, sensitivity: 3 },
+    poll:      { question: '', options: ['👍 Ja', '😐 Geht so', '👎 Nein'], votes: {}, open: true, showResults: true },
+    ai:        { lastTopic: '', lastType: 'explain', lastGrade: '7', lastOutput: '' },
+    ask:       { messages: [] },
   };
   return defaults[type] || {};
 }
@@ -1295,11 +1305,18 @@ const WIDGET_RENDERERS = {
   // ── Clock ──
   clock(w, body) {
     body.style.flexDirection = 'column';
+    body.style.gap = '4px';
     const time = el('div','w-clock');
     const date = el('div','w-date');
-    const clockFs = Math.min(w.w * 0.38, w.h * 0.52);
-    time.style.fontSize = Math.max(24, clockFs) + 'px';
-    date.style.fontSize = Math.max(11, clockFs * 0.28) + 'px';
+    // HH:MM:SS = 8 chars. Each char ≈ 0.62em wide with tabular-nums.
+    // Max font so 8 chars fit: (w.w - 16) / (8 * 0.62)
+    const maxByWidth = (w.w - 16) / 4.96;
+    const maxByHeight = w.h * 0.42;
+    const clockFs = Math.max(18, Math.min(maxByWidth, maxByHeight));
+    time.style.fontSize = clockFs + 'px';
+    time.style.letterSpacing = '-0.02em';
+    date.style.fontSize = Math.max(10, Math.min(clockFs * 0.27, 16)) + 'px';
+    time.style.whiteSpace = 'nowrap';
     body.append(time, date);
     function update() {
       const now = new Date();
@@ -1314,7 +1331,9 @@ const WIDGET_RENDERERS = {
   timer(w, body) {
     body.style.flexDirection = 'column';
     const display = el('div','w-timer-display');
-    display.style.fontSize = Math.max(28, Math.min(w.w * 0.32, w.h * 0.42)) + 'px';
+    // MM:SS = 5 chars; each ~0.62em wide
+    const timerFs = Math.max(28, Math.min((w.w - 16) / 3.1, w.h * 0.40));
+    display.style.fontSize = timerFs + 'px';
     const row = el('div','w-btn-row');
     const startBtn = el('button','w-action-btn');
     const resetBtn = el('button','w-action-btn');
@@ -1485,7 +1504,7 @@ const WIDGET_RENDERERS = {
     label.textContent = w.config.label || w.config.url || '';
     container.append(qrDiv, label);
     body.appendChild(container);
-    const url = w.config.url || 'https://klassenboard.de';
+    const url = w.config.url || 'https://klassenboard.netlify.app';
     const size = Math.min(w.w - 40, w.h - 60, 160);
     try {
       new QRCode(qrDiv, { text: url, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
@@ -1530,19 +1549,26 @@ const WIDGET_RENDERERS = {
   homework(w, body) {
     const div = el('div','w-homework');
     const items = w.config.items || [];
-    const itemFs = Math.max(13, Math.min(28, (w.h - 60) / Math.max(items.length, 1) * 0.65));
+    const itemFs = Math.max(14, Math.min(26, (w.h - 56) / Math.max(items.length, 3) * 0.75));
     const h3 = document.createElement('h3');
-    h3.style.fontSize = Math.max(11, itemFs * 0.6) + 'px';
+    h3.style.fontSize = Math.max(11, Math.min(itemFs * 0.65, 14)) + 'px';
     h3.textContent = w.config.subject || 'Hausaufgaben';
     const ul = document.createElement('ul');
-    items.forEach(item => {
+    if (items.length === 0) {
       const li = document.createElement('li');
-      li.style.fontSize = itemFs + 'px';
-      li.style.paddingTop = Math.max(3, itemFs * 0.2) + 'px';
-      li.style.paddingBottom = Math.max(3, itemFs * 0.2) + 'px';
-      li.textContent = item;
+      li.style.cssText = `font-size:${itemFs}px;color:rgba(255,255,255,0.3);font-style:italic;`;
+      li.textContent = 'Doppelklick zum Bearbeiten';
       ul.appendChild(li);
-    });
+    } else {
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.style.fontSize = itemFs + 'px';
+        li.style.paddingTop = Math.max(4, itemFs * 0.22) + 'px';
+        li.style.paddingBottom = Math.max(4, itemFs * 0.22) + 'px';
+        li.textContent = item;
+        ul.appendChild(li);
+      });
+    }
     div.append(h3, ul);
     if (APP.state.editMode) div.addEventListener('dblclick', () => openHomeworkEdit(w));
     body.appendChild(div);
@@ -1552,13 +1578,17 @@ const WIDGET_RENDERERS = {
   goal(w, body) {
     const div = el('div','w-goal-text');
     const text = w.config.text || '';
+    const isEmpty = !text || text.startsWith('🎯 Heutiges Lernziel');
     const charCount = Math.max(text.length, 1);
-    const baseFontSize = Math.min(w.w * 0.085, w.h * 0.38);
-    // shrink if text is long
-    const scaledFs = baseFontSize * Math.min(1, Math.pow(30 / charCount, 0.4));
-    div.style.fontSize = Math.max(14, Math.min(scaledFs, 64)) + 'px';
-    div.textContent = text;
-    if (APP.state.editMode) div.addEventListener('dblclick', () => openGoalEdit(w));
+    const baseFontSize = Math.min(w.w * 0.08, w.h * 0.35);
+    const scaledFs = baseFontSize * Math.min(1, Math.pow(32 / charCount, 0.4));
+    div.style.fontSize = Math.max(14, Math.min(scaledFs, 56)) + 'px';
+    div.style.color = isEmpty ? 'rgba(255,255,255,0.45)' : '#fff';
+    div.textContent = text || 'Doppelklick: Lernziel eintragen';
+    if (APP.state.editMode) {
+      div.style.cursor = 'pointer';
+      div.addEventListener('dblclick', () => openGoalEdit(w));
+    }
     body.appendChild(div);
   },
 
@@ -3678,45 +3708,4 @@ async function showVotingPage(pollId) {
 
   options.forEach((opt, i) => {
     const btn = document.createElement('button');
-    btn.className = 'voting-opt';
-    btn.style.borderColor = COLORS[i%4]+'55';
-    btn.style.background  = COLORS[i%4]+'18';
-    btn.textContent = opt;
-    btn.addEventListener('mouseover', () => { btn.style.background = COLORS[i%4]+'35'; });
-    btn.addEventListener('mouseout',  () => { btn.style.background = COLORS[i%4]+'18'; });
-    btn.addEventListener('click', async () => {
-      optsEl.querySelectorAll('button').forEach(b => b.disabled = true);
-      btn.style.borderColor = COLORS[i%4];
-      btn.style.background  = COLORS[i%4]+'40';
-      const { error } = await AUTH.client.from('poll_votes').insert({ poll_id: pollId, option_index: i });
-      if (error) {
-        card.innerHTML = '<div style="color:#f87171;text-align:center;padding:20px;">Fehler beim Abstimmen. Bitte Seite neu laden.</div>';
-        return;
-      }
-      sessionStorage.setItem('voted_'+pollId, '1');
-      card.innerHTML = `
-        <div style="text-align:center;padding:16px;">
-          <div style="font-size:56px;margin-bottom:14px">✅</div>
-          <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px">Danke!</div>
-          <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:16px">Deine Stimme wurde gezählt.</div>
-          <div style="display:inline-block;padding:8px 18px;background:${COLORS[i%4]}25;border:1px solid ${COLORS[i%4]}55;border-radius:10px;color:${COLORS[i%4]};font-weight:600;">${safeText(opt)}</div>
-        </div>`;
-    });
-    optsEl.appendChild(btn);
-  });
-}
-
-// ══════════════════════════════════════════════════════════════
-// STARTUP
-// ══════════════════════════════════════════════════════════════
-const _pollParam = new URLSearchParams(window.location.search).get('poll');
-if (_pollParam) {
-  // Schüler-Modus: nur Voting-Seite zeigen
-  showVotingPage(_pollParam);
-} else {
-  init();
-  AUTH.init();
-}
-</script>
-</body>
-</html>
+ 
