@@ -252,6 +252,54 @@ label { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-botto
 /* ── iCal modal ── */
 .ical-info { font-size:12px; color:rgba(255,255,255,0.4); line-height:1.6; margin-top:8px; }
 
+/* ── Floating KI-Chat ── */
+#ki-fab {
+  position:fixed; bottom:20px; left:20px; z-index:2000;
+  width:48px; height:48px; border-radius:50%;
+  background:linear-gradient(135deg,#7c3aed,#6366f1);
+  border:none; cursor:pointer; font-size:22px;
+  box-shadow:0 4px 20px rgba(99,102,241,0.5);
+  display:flex; align-items:center; justify-content:center;
+  transition:all .2s; color:#fff;
+}
+#ki-fab:hover { transform:scale(1.1); box-shadow:0 6px 28px rgba(99,102,241,0.7); }
+#ki-panel {
+  position:fixed; bottom:80px; left:20px; z-index:2000;
+  width:320px; height:420px;
+  background:rgba(15,15,25,0.95); backdrop-filter:blur(20px);
+  border:1px solid rgba(99,102,241,0.3); border-radius:16px;
+  box-shadow:0 16px 48px rgba(0,0,0,0.6);
+  display:flex; flex-direction:column; overflow:hidden;
+  transform:scale(0.9) translateY(10px); opacity:0;
+  transition:all .2s; pointer-events:none;
+}
+#ki-panel.open { transform:scale(1) translateY(0); opacity:1; pointer-events:all; }
+#ki-panel-header {
+  padding:12px 14px; background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(99,102,241,0.2));
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  display:flex; align-items:center; gap:8px; flex-shrink:0;
+}
+#ki-panel-header span:first-child { font-size:18px; }
+#ki-panel-header b { font-size:13px; flex:1; }
+#ki-panel-header small { font-size:10px; color:rgba(255,255,255,0.35); }
+#ki-history {
+  flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:8px;
+  scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.1) transparent;
+}
+.ki-bubble { padding:8px 11px; border-radius:10px; font-size:12.5px; line-height:1.45; max-width:90%; word-break:break-word; }
+.ki-bubble.user { background:rgba(99,102,241,0.3); align-self:flex-end; }
+.ki-bubble.ai { background:rgba(255,255,255,0.07); align-self:flex-start; }
+.ki-bubble.thinking { color:rgba(255,255,255,0.4); font-style:italic; }
+#ki-input-row { display:flex; gap:6px; padding:10px; border-top:1px solid rgba(255,255,255,0.07); flex-shrink:0; }
+#ki-textarea {
+  flex:1; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px; color:#fff; font-size:12px; padding:7px 10px;
+  resize:none; height:38px; font-family:inherit; touch-action:auto;
+}
+#ki-textarea:focus { outline:none; border-color:rgba(99,102,241,0.5); }
+#ki-send { background:var(--brand); border:none; border-radius:8px; color:#fff; 
+  width:36px; height:38px; cursor:pointer; font-size:14px; flex-shrink:0; transition:background .15s; }
+#ki-send:hover { background:var(--brand-dark); }
 /* ── Toast ── */
 #toast {
   position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
@@ -547,6 +595,21 @@ body.fullscreen #board { top:0; }
 
 <!-- Toast -->
 <div id="toast"></div>
+
+<!-- Floating KI-Chat -->
+<button id="ki-fab" title="KI-Assistent öffnen">🤖</button>
+<div id="ki-panel">
+  <div id="ki-panel-header">
+    <span>🤖</span>
+    <b>KI-Assistent</b>
+    <small>Zeige ein Bild oder stelle eine Frage</small>
+  </div>
+  <div id="ki-history"></div>
+  <div id="ki-input-row">
+    <textarea id="ki-textarea" placeholder='z.B. "Zeige einen Apfel"…' rows="1"></textarea>
+    <button id="ki-send">➤</button>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -2041,14 +2104,7 @@ const WIDGET_RENDERERS = {
   ask(w, body) {
     body.style.cssText += 'flex-direction:column;gap:7px;padding:10px;overflow:hidden;';
 
-    if (!AUTH.user) {
-      const banner = el('div');
-      banner.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%;text-align:center;';
-      const ico = el('div'); ico.style.cssText='font-size:32px;'; ico.textContent='💬';
-      const msg = el('div'); msg.style.cssText='font-size:12px;color:rgba(255,255,255,0.5);max-width:200px;line-height:1.5;';
-      msg.textContent='Bitte anmelden um die KI zu befragen.';
-      banner.append(ico, msg); body.appendChild(banner); return;
-    }
+    // Note: image generation works without login, text AI needs login
 
     // ── Chat history ──
     const history = el('div','ask-history');
@@ -2092,7 +2148,7 @@ const WIDGET_RENDERERS = {
     // ── Input row ──
     const inputRow = el('div','ask-input-row');
     const textarea = document.createElement('textarea');
-    textarea.placeholder = 'Frage stellen oder "Zeige einen Apfel"…';
+    textarea.placeholder = 'z.B. "Zeige einen Apfel" oder eine Frage stellen…';
     textarea.addEventListener('click', e => e.stopPropagation());
     textarea.addEventListener('keydown', e => {
       e.stopPropagation();
@@ -2137,13 +2193,13 @@ const WIDGET_RENDERERS = {
           const subject = extractImagePrompt(q);
           const w_px = Math.min(800, Math.max(400, w.w * 2));
           const h_px = Math.min(600, Math.max(300, w.h * 1.5));
-          const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(subject + ', clean illustration, educational, colorful')}&width=${w_px}&height=${h_px}&nologo=true&seed=${Date.now()}`;
+          const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(subject + ', clean illustration, educational, colorful')}?width=${w_px}&height=${h_px}&nologo=true&seed=${Date.now()}`;
           thinkingBubble.remove();
           messages.push({ role:'ai', type:'image', url, text: subject });
         } else {
           // ── Text answer via Supabase Edge Function ──
           thinkingBubble.textContent = '⏳ Denke nach…';
-          if (!AUTH.client) throw new Error('Nicht angemeldet');
+          if (!AUTH.user) throw new Error('Für Textfragen bitte zuerst anmelden (Konto-Icon oben rechts)');
           const { data, error } = await AUTH.client.functions.invoke('ai-generate', {
             body: { type:'ask', question: q }
           });
@@ -3782,6 +3838,92 @@ async function showVotingPage(pollId) {
     optsEl.appendChild(btn);
   });
 }
+
+// ══════════════════════════════════════════════════════════════
+// FLOATING KI-CHAT
+// ══════════════════════════════════════════════════════════════
+(function() {
+  const fab = document.getElementById('ki-fab');
+  const panel = document.getElementById('ki-panel');
+  const history = document.getElementById('ki-history');
+  const textarea = document.getElementById('ki-textarea');
+  const sendBtn = document.getElementById('ki-send');
+  if (!fab) return;
+
+  let open = false;
+  fab.addEventListener('click', () => {
+    open = !open;
+    panel.classList.toggle('open', open);
+    fab.textContent = open ? '✕' : '🤖';
+    if (open) textarea.focus();
+  });
+
+  function isImageRequest(q) {
+    return /^(zeig|zeige|mal|male|zeichne|generiere|erstell|bild von|bild:|foto von|zeig mir|zeige mir)/i.test(q.trim()) ||
+           /(als bild|als foto|als zeichnung)/i.test(q);
+  }
+  function extractImagePrompt(q) {
+    return q.replace(/^(zeig(e)?|mal(e)?|zeichne|generiere|erstell(e)?|bild von|bild:|foto von|zeig mir|zeige mir)\s*/i, '').trim() || q;
+  }
+
+  function addBubble(cls, content, isImage) {
+    const b = document.createElement('div');
+    b.className = 'ki-bubble ' + cls;
+    if (isImage) {
+      const lbl = document.createElement('div');
+      lbl.style.cssText = 'font-size:10px;opacity:0.5;margin-bottom:4px;';
+      lbl.textContent = '🖼 ' + (content.label || 'Bild');
+      const img = document.createElement('img');
+      img.src = content.url;
+      img.style.cssText = 'max-width:100%;border-radius:7px;display:block;';
+      img.onerror = () => img.replaceWith(Object.assign(document.createElement('span'), {textContent:'❌ Bild konnte nicht geladen werden'}));
+      b.append(lbl, img);
+    } else {
+      b.textContent = content;
+    }
+    history.appendChild(b);
+    history.scrollTop = history.scrollHeight;
+    return b;
+  }
+
+  async function send() {
+    const q = textarea.value.trim();
+    if (!q) return;
+    textarea.value = '';
+    addBubble('user', q);
+    sendBtn.disabled = true;
+
+    if (isImageRequest(q)) {
+      const thinking = addBubble('thinking', '🎨 Generiere Bild…');
+      const subject = extractImagePrompt(q);
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(subject + ', clean illustration, educational, colorful')}?width=600&height=400&nologo=true&seed=${Date.now()}`;
+      thinking.remove();
+      addBubble('ai', { url, label: subject }, true);
+    } else {
+      if (!AUTH.user) {
+        addBubble('ai', '💬 Für Textfragen bitte anmelden (Konto-Icon oben rechts). Bilder funktionieren ohne Login: "Zeige einen Apfel"');
+        sendBtn.disabled = false;
+        return;
+      }
+      const thinking = addBubble('thinking', '⏳ Denke nach…');
+      try {
+        const { data, error } = await AUTH.client.functions.invoke('ai-generate', { body: { type:'ask', question: q } });
+        if (error) throw new Error(error.message);
+        thinking.remove();
+        addBubble('ai', data?.text || '(Keine Antwort)');
+      } catch(e) {
+        thinking.textContent = '❌ ' + e.message;
+        thinking.style.color = '#fca5a5';
+      }
+    }
+    sendBtn.disabled = false;
+  }
+
+  sendBtn.addEventListener('click', send);
+  textarea.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+})();
 
 // ══════════════════════════════════════════════════════════════
 // STARTUP
