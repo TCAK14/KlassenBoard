@@ -1350,19 +1350,33 @@ function renderBoardTabs() {
 }
 
 function startTabRename(btn, board) {
+  // Stop any clicks inside the input from bubbling to the button (prevents switchBoard re-render)
   const inp = el('input','tab-input');
   inp.value = board.name;
+  inp.style.minWidth = '80px';
+  inp.addEventListener('click',       e => e.stopPropagation());
+  inp.addEventListener('mousedown',   e => e.stopPropagation());
+  inp.addEventListener('touchstart',  e => e.stopPropagation(), { passive:true });
+  inp.addEventListener('pointerdown', e => e.stopPropagation());
+
   btn.innerHTML = '';
   btn.appendChild(inp);
-  inp.focus(); inp.select();
+
+  // Use requestAnimationFrame to focus after DOM settles
+  requestAnimationFrame(() => { inp.focus(); inp.select(); });
+
+  let committed = false;
   const commit = () => {
+    if (committed) return;
+    committed = true;
     const name = inp.value.trim() || board.name;
     renameBoard(board.id, name);
   };
   inp.addEventListener('blur', commit);
   inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter') inp.blur();
-    if (e.key === 'Escape') { inp.value = board.name; inp.blur(); }
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+    if (e.key === 'Escape') { committed = true; inp.value = board.name; inp.blur(); renderBoardTabs(); }
   });
 }
 
