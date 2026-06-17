@@ -261,37 +261,6 @@ label { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-botto
 /* ── iCal modal ── */
 .ical-info { font-size:12px; color:rgba(255,255,255,0.4); line-height:1.6; margin-top:8px; }
 
-/* ── NAS / Netzlaufwerk ── */
-#nas-panel {
-  position:absolute; top:calc(var(--toolbar-h) + 8px); right:80px;
-  width:300px; background:rgba(15,15,25,0.97); backdrop-filter:blur(20px);
-  border:1px solid rgba(255,255,255,0.12); border-radius:14px;
-  box-shadow:0 16px 48px rgba(0,0,0,0.6); padding:16px;
-  z-index:1500; display:none;
-}
-#nas-panel.open { display:block; }
-#nas-panel h3 { font-size:13px; margin-bottom:12px; display:flex; align-items:center; gap:7px; }
-.nas-status {
-  padding:8px 11px; border-radius:8px; font-size:11.5px; margin-bottom:10px;
-  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
-  display:flex; align-items:center; gap:7px;
-}
-.nas-status.connected { border-color:rgba(34,197,94,0.3); background:rgba(34,197,94,0.08); }
-.nas-status-dot { width:7px; height:7px; border-radius:50%; background:#6b7280; flex-shrink:0; }
-.nas-status.connected .nas-status-dot { background:#22c55e; }
-.nas-btn {
-  width:100%; padding:9px 12px; border-radius:8px; border:none; cursor:pointer;
-  font-size:12.5px; font-weight:600; transition:all .15s; margin-bottom:6px;
-  display:flex; align-items:center; gap:7px; justify-content:center;
-}
-.nas-btn-primary { background:var(--brand); color:#fff; }
-.nas-btn-primary:hover { background:var(--brand-dark); }
-.nas-btn-secondary { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.8); }
-.nas-btn-secondary:hover { background:rgba(255,255,255,0.15); }
-.nas-btn-danger { background:rgba(239,68,68,0.15); color:#fca5a5; border:1px solid rgba(239,68,68,0.2); }
-.nas-btn-danger:hover { background:rgba(239,68,68,0.25); }
-.nas-divider { height:1px; background:rgba(255,255,255,0.07); margin:10px 0; }
-.nas-hint { font-size:10.5px; color:rgba(255,255,255,0.3); line-height:1.5; text-align:center; margin-top:8px; }
 /* ── Floating KI-Chat ── */
 #ki-fab {
   position:fixed; bottom:20px; left:20px; z-index:2000;
@@ -611,7 +580,6 @@ body.fullscreen #board { top:0; }
   <button class="tb-icon-btn" id="btn-bg" title="Hintergrund">🎨</button>
   <button class="tb-icon-btn" id="btn-ical" title="Stundenplan (iCal)">📅</button>
   <button class="tb-icon-btn" id="btn-export" title="Export/Import">💾</button>
-  <button class="tb-icon-btn" id="btn-nas" title="Netzlaufwerk / NAS verbinden">🗄</button>
   <div class="toolbar-sep"></div>
   <button class="tb-icon-btn" id="btn-voice" title="Sprachsteuerung (Mikrofon)">🎙️</button>
   <button class="tb-icon-btn tb-btn" id="edit-mode-btn" title="Bearbeiten/Ansicht (E)">✏️ Edit</button>
@@ -636,24 +604,6 @@ body.fullscreen #board { top:0; }
 
 <!-- Toast -->
 <div id="toast"></div>
-
-<!-- Cloud-Speicher Panel -->
-<div id="nas-panel">
-  <h3>☁️ Cloud-Speicher</h3>
-  <p style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:10px;line-height:1.5">Tafeln in der Cloud speichern & laden — von jedem Gerät im Schulnetz erreichbar.</p>
-
-  <!-- Save -->
-  <div style="display:flex;gap:6px;margin-bottom:6px;">
-    <input id="nas-slot-name" type="text" placeholder='z.B. "Klasse 7b Montag"'
-      style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:7px;color:#fff;font-size:12px;padding:7px 9px;touch-action:auto;min-width:0;">
-    <button class="nas-btn nas-btn-primary" id="nas-save-now-btn" style="width:auto;padding:7px 12px;margin:0;white-space:nowrap">⬆ Speichern</button>
-  </div>
-
-  <div class="nas-divider"></div>
-  <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">Gespeicherte Stände:</div>
-  <div id="nas-slots-list" style="max-height:180px;overflow-y:auto;"></div>
-  <p class="nas-hint" style="margin-top:8px">Konto erforderlich — oben rechts anmelden.</p>
-</div>
 
 <!-- Floating KI-Chat -->
 <button id="ki-fab" title="KI-Assistent öffnen">🤖</button>
@@ -3877,7 +3827,6 @@ function init() {
   const btn = document.getElementById('edit-mode-btn');
   btn.textContent = APP.state.editMode ? '✏️ Edit' : '👁 Ansicht';
   btn.classList.toggle('active', APP.state.editMode);
-  NAS.initUI();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3948,131 +3897,6 @@ async function showVotingPage(pollId) {
     optsEl.appendChild(btn);
   });
 }
-
-// ══════════════════════════════════════════════════════════════
-// NAS / SCHULCLOUD-SPEICHER
-// Speichert Tafeln in Supabase (cloud) – kein CORS, kein Laufwerk nötig
-// Lehrer können Tafeln teilen und von jedem Gerät laden
-// ══════════════════════════════════════════════════════════════
-const NAS = {
-  STORAGE_KEY: 'klassenboard_nas_name',
-
-  _client() { return AUTH.client; },
-
-  async save(slotName) {
-    const client = this._client();
-    if (!client) { toast('❌ Bitte zuerst anmelden (Konto-Icon oben rechts)'); return false; }
-    try {
-      const data = {
-        user_id: AUTH.user.id,
-        slot_name: slotName,
-        boards: APP.state.boards,
-        active_board_id: APP.state.activeBoardId,
-        saved_at: new Date().toISOString(),
-        version: 2
-      };
-      const { error } = await client.from('nas_slots').upsert(data, { onConflict: 'user_id,slot_name' });
-      if (error) throw error;
-      localStorage.setItem(this.STORAGE_KEY, slotName);
-      toast('✅ Gespeichert als „' + slotName + '"');
-      return true;
-    } catch(e) { toast('❌ Speichern: ' + e.message); return false; }
-  },
-
-  async load(slotName) {
-    const client = this._client();
-    if (!client) { toast('❌ Bitte zuerst anmelden'); return; }
-    try {
-      const { data, error } = await client.from('nas_slots')
-        .select('*').eq('user_id', AUTH.user.id).eq('slot_name', slotName).maybeSingle();
-      if (error) throw error;
-      if (!data) { toast('ℹ️ Kein gespeicherter Slot „' + slotName + '" gefunden'); return; }
-      APP.snapshotUndo();
-      APP.state.boards = data.boards;
-      APP.state.activeBoardId = data.active_board_id || data.boards[0]?.id;
-      APP.save();
-      renderAll();
-      toast('✅ Geladen: ' + data.boards.length + ' Tafel(n)');
-    } catch(e) { toast('❌ Laden: ' + e.message); }
-  },
-
-  async listSlots() {
-    const client = this._client();
-    if (!client) return [];
-    try {
-      const { data, error } = await client.from('nas_slots')
-        .select('slot_name, saved_at').eq('user_id', AUTH.user.id).order('saved_at', { ascending: false });
-      if (error) throw error;
-      return data || [];
-    } catch(e) { return []; }
-  },
-
-  async delete(slotName) {
-    const client = this._client();
-    if (!client) return;
-    const { error } = await client.from('nas_slots').delete()
-        .eq('user_id', AUTH.user.id).eq('slot_name', slotName);
-    if (!error) toast('🗑 Slot „' + slotName + '" gelöscht');
-  },
-
-  async renderSlots() {
-    const listEl = document.getElementById('nas-slots-list');
-    if (!listEl) return;
-    listEl.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.35);text-align:center;padding:8px">Lade…</div>';
-    const slots = await this.listSlots();
-    if (slots.length === 0) {
-      listEl.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.3);text-align:center;padding:8px;font-style:italic">Noch keine gespeicherten Stände</div>';
-      return;
-    }
-    listEl.innerHTML = '';
-    slots.forEach(s => {
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);';
-      const date = new Date(s.saved_at).toLocaleString('de-DE', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
-      row.innerHTML = `
-        <div style="flex:1;min-width:0">
-          <div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.slot_name}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.35)">${date}</div>
-        </div>
-        <button class="nas-btn nas-btn-secondary" style="padding:4px 8px;font-size:11px;margin:0;width:auto" data-load="${s.slot_name}">⬇</button>
-        <button class="nas-btn nas-btn-danger" style="padding:4px 8px;font-size:11px;margin:0;width:auto" data-del="${s.slot_name}">🗑</button>
-      `;
-      row.querySelector('[data-load]').addEventListener('click', async () => {
-        await NAS.load(s.slot_name);
-        document.getElementById('nas-panel').classList.remove('open');
-      });
-      row.querySelector('[data-del]').addEventListener('click', async () => {
-        if (confirm('Slot „' + s.slot_name + '" löschen?')) {
-          await NAS.delete(s.slot_name);
-          NAS.renderSlots();
-        }
-      });
-      listEl.appendChild(row);
-    });
-  },
-
-  initUI() {
-    const nasBtn = document.getElementById('btn-nas');
-    const nasPanel = document.getElementById('nas-panel');
-    if (!nasBtn || !nasPanel) return;
-
-    nasBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      const open = nasPanel.classList.toggle('open');
-      if (open) NAS.renderSlots();
-    });
-    document.addEventListener('click', e => {
-      if (!nasPanel.contains(e.target) && e.target !== nasBtn) nasPanel.classList.remove('open');
-    });
-
-    document.getElementById('nas-save-now-btn').addEventListener('click', async () => {
-      const nameEl = document.getElementById('nas-slot-name');
-      const name = nameEl.value.trim() || 'Meine Tafeln';
-      const ok = await NAS.save(name);
-      if (ok) NAS.renderSlots();
-    });
-  }
-};
 
 // ══════════════════════════════════════════════════════════════
 // FLOATING KI-CHAT// ══════════════════════════════════════════════════════════════
