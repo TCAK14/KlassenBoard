@@ -639,18 +639,43 @@ body.fullscreen #board { top:0; }
 
 <!-- NAS Panel -->
 <div id="nas-panel">
-  <h3>🗄 Netzlaufwerk / NAS</h3>
+  <h3>🗄 NAS / Netzlaufwerk</h3>
   <div class="nas-status" id="nas-status">
     <span class="nas-status-dot"></span>
     <span id="nas-status-text">Nicht verbunden</span>
   </div>
-  <button class="nas-btn nas-btn-primary" id="nas-connect-btn">📁 Ordner auswählen…</button>
-  <div class="nas-divider"></div>
-  <button class="nas-btn nas-btn-secondary" id="nas-save-btn" disabled>⬆ Auf Laufwerk speichern</button>
-  <button class="nas-btn nas-btn-secondary" id="nas-load-btn" disabled>⬇ Vom Laufwerk laden</button>
-  <div class="nas-divider"></div>
+
+  <!-- Connected actions -->
+  <button class="nas-btn nas-btn-secondary" id="nas-save-btn" disabled>⬆ Auf NAS speichern</button>
+  <button class="nas-btn nas-btn-secondary" id="nas-load-btn" disabled>⬇ Vom NAS laden</button>
   <button class="nas-btn nas-btn-danger" id="nas-disconnect-btn" style="display:none">🔌 Trennen</button>
-  <p class="nas-hint">Wähle einen Ordner auf deinem Netzlaufwerk (z.B. Z:\KlassenBoard\).<br>Boards werden als <b>klassenboard.json</b> gespeichert.</p>
+  <button class="nas-btn nas-btn-secondary" id="nas-show-setup" style="font-size:11px;opacity:0.6">⚙ Verbindung ändern</button>
+
+  <!-- Setup form -->
+  <div id="nas-setup">
+    <div class="nas-divider"></div>
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      <div>
+        <label style="font-size:10.5px;color:rgba(255,255,255,0.45);display:block;margin-bottom:3px;">NAS-Adresse (WebDAV)</label>
+        <input id="nas-url" type="url" placeholder="http://192.168.1.100/webdav/KlassenBoard/"
+          style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:7px;color:#fff;font-size:12px;padding:7px 9px;touch-action:auto;">
+      </div>
+      <div style="display:flex;gap:7px;">
+        <div style="flex:1">
+          <label style="font-size:10.5px;color:rgba(255,255,255,0.45);display:block;margin-bottom:3px;">Benutzername</label>
+          <input id="nas-user" type="text" placeholder="admin"
+            style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:7px;color:#fff;font-size:12px;padding:7px 9px;touch-action:auto;">
+        </div>
+        <div style="flex:1">
+          <label style="font-size:10.5px;color:rgba(255,255,255,0.45);display:block;margin-bottom:3px;">Passwort</label>
+          <input id="nas-pass" type="password" placeholder="••••••"
+            style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:7px;color:#fff;font-size:12px;padding:7px 9px;touch-action:auto;">
+        </div>
+      </div>
+      <button class="nas-btn nas-btn-primary" id="nas-connect-btn">🔌 Verbinden</button>
+    </div>
+    <p class="nas-hint">WebDAV muss am NAS aktiviert sein.<br>Synology: Systemsteuerung → Dateidienste → WebDAV</p>
+  </div>
 </div>
 
 <!-- Floating KI-Chat -->
@@ -3948,98 +3973,121 @@ async function showVotingPage(pollId) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// NAS / NETZLAUFWERK (File System Access API)
+// NAS / NETZLAUFWERK (WebDAV)
 // ══════════════════════════════════════════════════════════════
 const NAS = {
-  dirHandle: null,
+  STORAGE_KEY: 'klassenboard_nas',
   FILENAME: 'klassenboard.json',
+  cfg: null, // { url, user, pass }
 
-  get supported() { return !!window.showDirectoryPicker; },
-
-  async connect() {
-    if (!this.supported) {
-      toast('❌ Dein Browser unterstützt keinen Ordnerzugriff (Chrome empfohlen)');
-      return;
-    }
-    try {
-      this.dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-      this._updateUI();
-      toast('✅ Verbunden: ' + this.dirHandle.name);
-    } catch(e) {
-      if (e.name !== 'AbortError') toast('❌ ' + e.message);
-    }
+  _authHeader(cfg) {
+    return 'Basic ' + btoa(cfg.user + ':' + cfg.pass);
   },
 
-  disconnect() {
-    this.dirHandle = null;
-    this._updateUI();
-    toast('🔌 Laufwerk getrennt');
+  _fullUrl(cfg) {
+    let url = cfg.url.trim();
+    if (!url.endsWith('/')) url += '/';
+    return url + this.FILENAME;
+  },
+
+  load_cfg() {
+    try { this.cfg = JSON.parse(localStorage.getItem(this.STORAGE_KEY)) || null; } catch(e) { this.cfg = null; }
+  },
+
+  save_cfg(cfg) {
+    this.cfg = cfg;
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(cfg));
+  },
+
+  clear_cfg() {
+    this.cfg = null;
+    localStorage.removeItem(this.STORAGE_KEY);
+  },
+
+  async test(cfg) {
+    // Try a PROPFIND or GET to verify connection
+    const res = await fetch(this._fullUrl(cfg), {
+      method: 'GET',
+      headers: { 'Authorization': this._authHeader(cfg) }
+    });
+    // 200 = file exists, 404 = folder OK but no file yet, both mean connection works
+    if (res.status === 200 || res.status === 404) return true;
+    if (res.status === 401) throw new Error('Falsches Passwort oder Benutzername');
+    if (res.status === 403) throw new Error('Zugriff verweigert');
+    throw new Error('Server-Fehler: ' + res.status);
   },
 
   async save() {
-    if (!this.dirHandle) { toast('❌ Kein Laufwerk verbunden'); return; }
+    if (!this.cfg) { toast('❌ Kein NAS verbunden'); return; }
     try {
-      const fileHandle = await this.dirHandle.getFileHandle(this.FILENAME, { create: true });
-      const writable = await fileHandle.createWritable();
       const data = JSON.stringify({
         boards: APP.state.boards,
         activeBoardId: APP.state.activeBoardId,
         savedAt: new Date().toISOString(),
         version: 2
       }, null, 2);
-      await writable.write(data);
-      await writable.close();
-      toast('✅ Gespeichert auf ' + this.dirHandle.name + '/' + this.FILENAME);
+      const res = await fetch(this._fullUrl(this.cfg), {
+        method: 'PUT',
+        headers: {
+          'Authorization': this._authHeader(this.cfg),
+          'Content-Type': 'application/json'
+        },
+        body: data
+      });
+      if (!res.ok && res.status !== 201 && res.status !== 204) throw new Error('HTTP ' + res.status);
+      toast('✅ Auf NAS gespeichert');
+      this._updateStatus(true, this.cfg.url);
     } catch(e) {
-      toast('❌ Speichern fehlgeschlagen: ' + e.message);
+      if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+        toast('❌ NAS nicht erreichbar – bist du im Schulnetz?');
+      } else { toast('❌ ' + e.message); }
     }
   },
 
-  async load() {
-    if (!this.dirHandle) { toast('❌ Kein Laufwerk verbunden'); return; }
+  async load_data() {
+    if (!this.cfg) { toast('❌ Kein NAS verbunden'); return; }
     try {
-      const fileHandle = await this.dirHandle.getFileHandle(this.FILENAME);
-      const file = await fileHandle.getFile();
-      const text = await file.text();
-      const data = JSON.parse(text);
+      const res = await fetch(this._fullUrl(this.cfg), {
+        headers: { 'Authorization': this._authHeader(this.cfg) }
+      });
+      if (res.status === 404) { toast('ℹ️ Noch keine Daten auf dem NAS (zuerst speichern)'); return; }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
       if (!data.boards || !Array.isArray(data.boards)) throw new Error('Ungültiges Format');
       APP.snapshotUndo();
       APP.state.boards = data.boards;
       APP.state.activeBoardId = data.activeBoardId || data.boards[0]?.id;
       APP.save();
       renderAll();
-      toast('✅ Geladen: ' + data.boards.length + ' Tafel(n) vom Laufwerk');
+      toast('✅ ' + data.boards.length + ' Tafel(n) vom NAS geladen');
     } catch(e) {
-      if (e.name === 'NotFoundError') toast('❌ Datei ' + this.FILENAME + ' nicht gefunden');
-      else toast('❌ Laden fehlgeschlagen: ' + e.message);
+      if (e.message.includes('Failed to fetch')) toast('❌ NAS nicht erreichbar – bist du im Schulnetz?');
+      else toast('❌ ' + e.message);
     }
   },
 
-  _updateUI() {
+  _updateStatus(connected, url) {
     const statusEl = document.getElementById('nas-status');
     const statusText = document.getElementById('nas-status-text');
-    const connectBtn = document.getElementById('nas-connect-btn');
+    if (!statusEl) return;
+    statusEl.classList.toggle('connected', connected);
+    statusText.textContent = connected ? ('🟢 ' + (url || '')) : '⚪ Nicht verbunden';
     const saveBtn = document.getElementById('nas-save-btn');
     const loadBtn = document.getElementById('nas-load-btn');
     const disconnectBtn = document.getElementById('nas-disconnect-btn');
-    if (!statusEl) return;
-    const connected = !!this.dirHandle;
-    statusEl.classList.toggle('connected', connected);
-    statusText.textContent = connected ? ('📁 ' + this.dirHandle.name) : 'Nicht verbunden';
-    saveBtn.disabled = !connected;
-    loadBtn.disabled = !connected;
-    connectBtn.textContent = connected ? '📁 Anderen Ordner wählen…' : '📁 Ordner auswählen…';
-    disconnectBtn.style.display = connected ? 'flex' : 'none';
-    if (!this.supported) {
-      connectBtn.disabled = true;
-      connectBtn.textContent = '❌ Chrome erforderlich';
-    }
+    const setupDiv = document.getElementById('nas-setup');
+    if (saveBtn) saveBtn.disabled = !connected;
+    if (loadBtn) loadBtn.disabled = !connected;
+    if (disconnectBtn) disconnectBtn.style.display = connected ? 'flex' : 'none';
+    if (setupDiv) setupDiv.style.display = connected ? 'none' : 'block';
   },
 
   initUI() {
+    this.load_cfg();
     const nasBtn = document.getElementById('btn-nas');
     const nasPanel = document.getElementById('nas-panel');
     if (!nasBtn || !nasPanel) return;
+
     nasBtn.addEventListener('click', e => {
       e.stopPropagation();
       nasPanel.classList.toggle('open');
@@ -4047,11 +4095,51 @@ const NAS = {
     document.addEventListener('click', e => {
       if (!nasPanel.contains(e.target) && e.target !== nasBtn) nasPanel.classList.remove('open');
     });
-    document.getElementById('nas-connect-btn').addEventListener('click', () => NAS.connect());
+
+    const connectBtn = document.getElementById('nas-connect-btn');
+    connectBtn.addEventListener('click', async () => {
+      const url = document.getElementById('nas-url').value.trim();
+      const user = document.getElementById('nas-user').value.trim();
+      const pass = document.getElementById('nas-pass').value;
+      if (!url) { toast('❌ Bitte NAS-Adresse eingeben'); return; }
+      connectBtn.disabled = true;
+      connectBtn.textContent = '⏳ Verbinde…';
+      try {
+        const cfg = { url, user, pass };
+        await this.test(cfg);
+        this.save_cfg(cfg);
+        this._updateStatus(true, url);
+        toast('✅ NAS verbunden!');
+      } catch(e) {
+        if (e.message.includes('Failed to fetch')) {
+          toast('❌ NAS nicht erreichbar. Prüfe die Adresse und ob du im Schulnetz bist.');
+        } else { toast('❌ ' + e.message); }
+      } finally {
+        connectBtn.disabled = false;
+        connectBtn.textContent = '🔌 Verbinden';
+      }
+    });
+
     document.getElementById('nas-save-btn').addEventListener('click', () => NAS.save());
-    document.getElementById('nas-load-btn').addEventListener('click', () => NAS.load());
-    document.getElementById('nas-disconnect-btn').addEventListener('click', () => { NAS.disconnect(); });
-    this._updateUI();
+    document.getElementById('nas-load-btn').addEventListener('click', () => NAS.load_data());
+    document.getElementById('nas-disconnect-btn').addEventListener('click', () => {
+      NAS.clear_cfg();
+      NAS._updateStatus(false);
+      toast('🔌 NAS getrennt');
+    });
+    document.getElementById('nas-show-setup').addEventListener('click', () => {
+      document.getElementById('nas-setup').style.display = 'block';
+    });
+
+    // Restore saved connection
+    if (this.cfg) {
+      document.getElementById('nas-url').value = this.cfg.url || '';
+      document.getElementById('nas-user').value = this.cfg.user || '';
+      document.getElementById('nas-pass').value = this.cfg.pass || '';
+      this._updateStatus(true, this.cfg.url);
+    } else {
+      this._updateStatus(false);
+    }
   }
 };
 
