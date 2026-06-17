@@ -261,6 +261,37 @@ label { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-botto
 /* ── iCal modal ── */
 .ical-info { font-size:12px; color:rgba(255,255,255,0.4); line-height:1.6; margin-top:8px; }
 
+/* ── NAS / Netzlaufwerk ── */
+#nas-panel {
+  position:absolute; top:calc(var(--toolbar-h) + 8px); right:80px;
+  width:300px; background:rgba(15,15,25,0.97); backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.12); border-radius:14px;
+  box-shadow:0 16px 48px rgba(0,0,0,0.6); padding:16px;
+  z-index:1500; display:none;
+}
+#nas-panel.open { display:block; }
+#nas-panel h3 { font-size:13px; margin-bottom:12px; display:flex; align-items:center; gap:7px; }
+.nas-status {
+  padding:8px 11px; border-radius:8px; font-size:11.5px; margin-bottom:10px;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
+  display:flex; align-items:center; gap:7px;
+}
+.nas-status.connected { border-color:rgba(34,197,94,0.3); background:rgba(34,197,94,0.08); }
+.nas-status-dot { width:7px; height:7px; border-radius:50%; background:#6b7280; flex-shrink:0; }
+.nas-status.connected .nas-status-dot { background:#22c55e; }
+.nas-btn {
+  width:100%; padding:9px 12px; border-radius:8px; border:none; cursor:pointer;
+  font-size:12.5px; font-weight:600; transition:all .15s; margin-bottom:6px;
+  display:flex; align-items:center; gap:7px; justify-content:center;
+}
+.nas-btn-primary { background:var(--brand); color:#fff; }
+.nas-btn-primary:hover { background:var(--brand-dark); }
+.nas-btn-secondary { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.8); }
+.nas-btn-secondary:hover { background:rgba(255,255,255,0.15); }
+.nas-btn-danger { background:rgba(239,68,68,0.15); color:#fca5a5; border:1px solid rgba(239,68,68,0.2); }
+.nas-btn-danger:hover { background:rgba(239,68,68,0.25); }
+.nas-divider { height:1px; background:rgba(255,255,255,0.07); margin:10px 0; }
+.nas-hint { font-size:10.5px; color:rgba(255,255,255,0.3); line-height:1.5; text-align:center; margin-top:8px; }
 /* ── Floating KI-Chat ── */
 #ki-fab {
   position:fixed; bottom:20px; left:20px; z-index:2000;
@@ -580,6 +611,7 @@ body.fullscreen #board { top:0; }
   <button class="tb-icon-btn" id="btn-bg" title="Hintergrund">🎨</button>
   <button class="tb-icon-btn" id="btn-ical" title="Stundenplan (iCal)">📅</button>
   <button class="tb-icon-btn" id="btn-export" title="Export/Import">💾</button>
+  <button class="tb-icon-btn" id="btn-nas" title="Netzlaufwerk / NAS verbinden">🗄</button>
   <div class="toolbar-sep"></div>
   <button class="tb-icon-btn" id="btn-voice" title="Sprachsteuerung (Mikrofon)">🎙️</button>
   <button class="tb-icon-btn tb-btn" id="edit-mode-btn" title="Bearbeiten/Ansicht (E)">✏️ Edit</button>
@@ -604,6 +636,22 @@ body.fullscreen #board { top:0; }
 
 <!-- Toast -->
 <div id="toast"></div>
+
+<!-- NAS Panel -->
+<div id="nas-panel">
+  <h3>🗄 Netzlaufwerk / NAS</h3>
+  <div class="nas-status" id="nas-status">
+    <span class="nas-status-dot"></span>
+    <span id="nas-status-text">Nicht verbunden</span>
+  </div>
+  <button class="nas-btn nas-btn-primary" id="nas-connect-btn">📁 Ordner auswählen…</button>
+  <div class="nas-divider"></div>
+  <button class="nas-btn nas-btn-secondary" id="nas-save-btn" disabled>⬆ Auf Laufwerk speichern</button>
+  <button class="nas-btn nas-btn-secondary" id="nas-load-btn" disabled>⬇ Vom Laufwerk laden</button>
+  <div class="nas-divider"></div>
+  <button class="nas-btn nas-btn-danger" id="nas-disconnect-btn" style="display:none">🔌 Trennen</button>
+  <p class="nas-hint">Wähle einen Ordner auf deinem Netzlaufwerk (z.B. Z:\KlassenBoard\).<br>Boards werden als <b>klassenboard.json</b> gespeichert.</p>
+</div>
 
 <!-- Floating KI-Chat -->
 <button id="ki-fab" title="KI-Assistent öffnen">🤖</button>
@@ -1065,9 +1113,28 @@ function switchBoard(id) {
 function deleteBoard(id) {
   if (APP.state.boards.length <= 1) { toast('Mindestens eine Tafel erforderlich'); return; }
   APP.snapshotUndo();
+  // Find index and name of deleted board
+  const delIdx = APP.state.boards.findIndex(b => b.id === id);
+  const delName = APP.state.boards[delIdx]?.name || '';
+  // Check if deleted board had default name "Tafel N"
+  const defaultMatch = delName.match(/^Tafel (\d+)$/);
+  const delNum = defaultMatch ? parseInt(defaultMatch[1]) : null;
+
   APP.state.boards = APP.state.boards.filter(b => b.id !== id);
+
+  // Auto-renumber: boards with default name "Tafel M" where M > delNum → "Tafel M-1"
+  if (delNum !== null) {
+    APP.state.boards.forEach(b => {
+      const m = b.name.match(/^Tafel (\d+)$/);
+      if (m && parseInt(m[1]) > delNum) {
+        b.name = 'Tafel ' + (parseInt(m[1]) - 1);
+      }
+    });
+  }
+
   if (APP.state.activeBoardId === id) {
-    APP.state.activeBoardId = APP.state.boards[0].id;
+    const newIdx = Math.min(delIdx, APP.state.boards.length - 1);
+    APP.state.activeBoardId = APP.state.boards[newIdx].id;
   }
   APP.save();
   renderAll();
@@ -1229,7 +1296,18 @@ function renderBoardTabs() {
     btn.addEventListener('click', () => switchBoard(board.id));
     btn.addEventListener('dblclick', e => {
       e.preventDefault();
-      switchBoard(board.id);
+      e.stopPropagation();
+      if (APP.state.activeBoardId !== board.id) {
+        // Switch without full re-render, then rename
+        APP.state.activeBoardId = board.id;
+        APP.selectedId = null;
+        stopAllIntervals();
+        APP.save();
+        renderBoardBg();
+        renderWidgets();
+        // Update active class manually
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.bid === board.id));
+      }
       startTabRename(btn, board);
     });
     container.appendChild(btn);
@@ -3797,6 +3875,7 @@ function init() {
   const btn = document.getElementById('edit-mode-btn');
   btn.textContent = APP.state.editMode ? '✏️ Edit' : '👁 Ansicht';
   btn.classList.toggle('active', APP.state.editMode);
+  NAS.initUI();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3867,6 +3946,114 @@ async function showVotingPage(pollId) {
     optsEl.appendChild(btn);
   });
 }
+
+// ══════════════════════════════════════════════════════════════
+// NAS / NETZLAUFWERK (File System Access API)
+// ══════════════════════════════════════════════════════════════
+const NAS = {
+  dirHandle: null,
+  FILENAME: 'klassenboard.json',
+
+  get supported() { return !!window.showDirectoryPicker; },
+
+  async connect() {
+    if (!this.supported) {
+      toast('❌ Dein Browser unterstützt keinen Ordnerzugriff (Chrome empfohlen)');
+      return;
+    }
+    try {
+      this.dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      this._updateUI();
+      toast('✅ Verbunden: ' + this.dirHandle.name);
+    } catch(e) {
+      if (e.name !== 'AbortError') toast('❌ ' + e.message);
+    }
+  },
+
+  disconnect() {
+    this.dirHandle = null;
+    this._updateUI();
+    toast('🔌 Laufwerk getrennt');
+  },
+
+  async save() {
+    if (!this.dirHandle) { toast('❌ Kein Laufwerk verbunden'); return; }
+    try {
+      const fileHandle = await this.dirHandle.getFileHandle(this.FILENAME, { create: true });
+      const writable = await fileHandle.createWritable();
+      const data = JSON.stringify({
+        boards: APP.state.boards,
+        activeBoardId: APP.state.activeBoardId,
+        savedAt: new Date().toISOString(),
+        version: 2
+      }, null, 2);
+      await writable.write(data);
+      await writable.close();
+      toast('✅ Gespeichert auf ' + this.dirHandle.name + '/' + this.FILENAME);
+    } catch(e) {
+      toast('❌ Speichern fehlgeschlagen: ' + e.message);
+    }
+  },
+
+  async load() {
+    if (!this.dirHandle) { toast('❌ Kein Laufwerk verbunden'); return; }
+    try {
+      const fileHandle = await this.dirHandle.getFileHandle(this.FILENAME);
+      const file = await fileHandle.getFile();
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data.boards || !Array.isArray(data.boards)) throw new Error('Ungültiges Format');
+      APP.snapshotUndo();
+      APP.state.boards = data.boards;
+      APP.state.activeBoardId = data.activeBoardId || data.boards[0]?.id;
+      APP.save();
+      renderAll();
+      toast('✅ Geladen: ' + data.boards.length + ' Tafel(n) vom Laufwerk');
+    } catch(e) {
+      if (e.name === 'NotFoundError') toast('❌ Datei ' + this.FILENAME + ' nicht gefunden');
+      else toast('❌ Laden fehlgeschlagen: ' + e.message);
+    }
+  },
+
+  _updateUI() {
+    const statusEl = document.getElementById('nas-status');
+    const statusText = document.getElementById('nas-status-text');
+    const connectBtn = document.getElementById('nas-connect-btn');
+    const saveBtn = document.getElementById('nas-save-btn');
+    const loadBtn = document.getElementById('nas-load-btn');
+    const disconnectBtn = document.getElementById('nas-disconnect-btn');
+    if (!statusEl) return;
+    const connected = !!this.dirHandle;
+    statusEl.classList.toggle('connected', connected);
+    statusText.textContent = connected ? ('📁 ' + this.dirHandle.name) : 'Nicht verbunden';
+    saveBtn.disabled = !connected;
+    loadBtn.disabled = !connected;
+    connectBtn.textContent = connected ? '📁 Anderen Ordner wählen…' : '📁 Ordner auswählen…';
+    disconnectBtn.style.display = connected ? 'flex' : 'none';
+    if (!this.supported) {
+      connectBtn.disabled = true;
+      connectBtn.textContent = '❌ Chrome erforderlich';
+    }
+  },
+
+  initUI() {
+    const nasBtn = document.getElementById('btn-nas');
+    const nasPanel = document.getElementById('nas-panel');
+    if (!nasBtn || !nasPanel) return;
+    nasBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      nasPanel.classList.toggle('open');
+    });
+    document.addEventListener('click', e => {
+      if (!nasPanel.contains(e.target) && e.target !== nasBtn) nasPanel.classList.remove('open');
+    });
+    document.getElementById('nas-connect-btn').addEventListener('click', () => NAS.connect());
+    document.getElementById('nas-save-btn').addEventListener('click', () => NAS.save());
+    document.getElementById('nas-load-btn').addEventListener('click', () => NAS.load());
+    document.getElementById('nas-disconnect-btn').addEventListener('click', () => { NAS.disconnect(); });
+    this._updateUI();
+  }
+};
 
 // ══════════════════════════════════════════════════════════════
 // FLOATING KI-CHAT
