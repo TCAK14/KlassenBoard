@@ -29,6 +29,70 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
 .modal, .modal * { touch-action:auto; }
 .tab-input { touch-action:auto; user-select:text; -webkit-user-select:text; }
 
+/* ── Klassen-Wechsler ── */
+#class-switcher {
+  position:relative; flex-shrink:0;
+}
+#class-btn {
+  display:flex; align-items:center; gap:5px;
+  padding:5px 10px; border-radius:var(--radius-sm);
+  background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15);
+  color:#fff; cursor:pointer; font-size:13px; font-weight:600;
+  transition:all .15s; white-space:nowrap; max-width:130px;
+}
+#class-btn:hover { background:rgba(255,255,255,0.18); }
+#class-btn .class-name { overflow:hidden; text-overflow:ellipsis; max-width:90px; }
+#class-dropdown {
+  position:absolute; top:calc(100% + 8px); left:0;
+  min-width:220px; background:rgba(15,15,25,0.97);
+  backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px; box-shadow:0 16px 48px rgba(0,0,0,0.6);
+  z-index:2000; display:none; overflow:hidden;
+}
+#class-dropdown.open { display:block; }
+.class-dd-header {
+  padding:10px 12px 6px; font-size:10.5px;
+  color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:.8px;
+}
+.class-dd-item {
+  display:flex; align-items:center; gap:8px;
+  padding:9px 12px; cursor:pointer; transition:background .1s;
+  font-size:13px;
+}
+.class-dd-item:hover { background:rgba(255,255,255,0.07); }
+.class-dd-item.active { background:rgba(99,102,241,0.2); color:#a5b4fc; }
+.class-dd-item .class-dd-name { flex:1; font-weight:500; }
+.class-dd-item .class-dd-count { font-size:10.5px; color:rgba(255,255,255,0.3); }
+.class-dd-item .class-dd-del {
+  opacity:0; font-size:11px; padding:2px 5px; border-radius:4px;
+  border:none; background:transparent; color:rgba(255,255,255,0.4); cursor:pointer;
+  transition:opacity .15s;
+}
+.class-dd-item:hover .class-dd-del { opacity:1; }
+.class-dd-item .class-dd-del:hover { background:rgba(239,68,68,0.2); color:#fca5a5; }
+.class-dd-divider { height:1px; background:rgba(255,255,255,0.07); margin:4px 0; }
+.class-dd-add {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 12px 10px; cursor:pointer;
+  font-size:12.5px; color:rgba(255,255,255,0.45);
+  transition:color .15s;
+}
+.class-dd-add:hover { color:#fff; }
+.class-dd-add-input {
+  display:none; padding:6px 12px 10px; gap:6px; flex-direction:column;
+}
+.class-dd-add-input.visible { display:flex; }
+.class-dd-add-input input {
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
+  border-radius:7px; color:#fff; font-size:12.5px; padding:7px 10px;
+  touch-action:auto; outline:none;
+}
+.class-dd-add-input input:focus { border-color:rgba(99,102,241,0.6); }
+.class-dd-add-input button {
+  padding:6px 12px; border-radius:7px; border:none; cursor:pointer;
+  background:var(--brand); color:#fff; font-size:12px; font-weight:600;
+}
+
 /* ── Toolbar ── */
 #toolbar {
   position:fixed; top:0; left:0; right:0; height:var(--toolbar-h);
@@ -571,6 +635,25 @@ body.fullscreen #board { top:0; }
     <span id="logo-text">KlassenBoard</span>
         <span style="font-size:9px;opacity:0.4;margin-left:2px;font-weight:400;letter-spacing:1px;text-transform:uppercase;align-self:flex-end;margin-bottom:1px">Beta</span>
   </div>
+  <!-- Klassen-Wechsler -->
+  <div id="class-switcher">
+    <button id="class-btn" title="Klasse wechseln">
+      <span>🏷</span>
+      <span class="class-name" id="class-btn-name">Klasse wählen</span>
+      <span style="opacity:0.5;font-size:10px">▾</span>
+    </button>
+    <div id="class-dropdown">
+      <div class="class-dd-header">Meine Klassen</div>
+      <div id="class-list"></div>
+      <div class="class-dd-divider"></div>
+      <div class="class-dd-add" id="class-add-trigger">＋ Neue Klasse anlegen</div>
+      <div class="class-dd-add-input" id="class-add-form">
+        <input id="class-add-input" type="text" placeholder='z.B. "2e" oder "7b Deutsch"' maxlength="30">
+        <button id="class-add-confirm">Anlegen</button>
+      </div>
+    </div>
+  </div>
+  <div class="toolbar-sep" style="margin:0 2px"></div>
   <div id="board-tabs"></div>
   <button id="add-board-btn" title="Neue Tafel">+</button>
   <div class="toolbar-sep"></div>
@@ -3827,6 +3910,7 @@ function init() {
   const btn = document.getElementById('edit-mode-btn');
   btn.textContent = APP.state.editMode ? '✏️ Edit' : '👁 Ansicht';
   btn.classList.toggle('active', APP.state.editMode);
+  CLASSES.initUI();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3899,7 +3983,218 @@ async function showVotingPage(pollId) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// KLASSEN-VERWALTUNG
+// ══════════════════════════════════════════════════════════════
+const CLASSES = {
+  STORAGE_KEY: 'klassenboard_classes',
+  CURRENT_KEY: 'klassenboard_current_class',
+
+  // ── Lokale Daten ──
+  _data() {
+    try { return JSON.parse(localStorage.getItem(this.STORAGE_KEY)) || {}; } catch(e) { return {}; }
+  },
+  _save(data) { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data)); },
+  current() { return localStorage.getItem(this.CURRENT_KEY) || null; },
+  _setCurrent(name) { localStorage.setItem(this.CURRENT_KEY, name); },
+
+  list() { return Object.keys(this._data()).sort(); },
+
+  // ── Aktuelle Tafeln in die Klasse speichern ──
+  saveCurrentBoards(className) {
+    if (!className) return;
+    const data = this._data();
+    data[className] = {
+      boards: APP.state.boards,
+      activeBoardId: APP.state.activeBoardId,
+      savedAt: new Date().toISOString()
+    };
+    this._save(data);
+    // Auch Supabase sync falls angemeldet
+    if (AUTH.user && AUTH.client) {
+      AUTH.client.from('class_boards').upsert({
+        user_id: AUTH.user.id,
+        class_name: className,
+        boards: APP.state.boards,
+        active_board_id: APP.state.activeBoardId,
+        saved_at: new Date().toISOString()
+      }, { onConflict: 'user_id,class_name' }).then(({ error }) => {
+        if (error) console.warn('Class cloud sync error:', error);
+      });
+    }
+  },
+
+  // ── Klassen-Tafeln laden ──
+  async loadClass(className) {
+    // 1. Versuche Supabase wenn angemeldet
+    if (AUTH.user && AUTH.client) {
+      const { data, error } = await AUTH.client.from('class_boards')
+        .select('*').eq('user_id', AUTH.user.id).eq('class_name', className).maybeSingle();
+      if (!error && data) {
+        APP.snapshotUndo();
+        APP.state.boards = data.boards || [];
+        APP.state.activeBoardId = data.active_board_id || data.boards?.[0]?.id;
+        if (APP.state.boards.length === 0) this._createDefaultBoard(className);
+        APP.save();
+        renderAll();
+        return;
+      }
+    }
+    // 2. Fallback: localStorage
+    const stored = this._data()[className];
+    APP.snapshotUndo();
+    APP.state.boards = stored?.boards || [];
+    APP.state.activeBoardId = stored?.activeBoardId || stored?.boards?.[0]?.id;
+    if (APP.state.boards.length === 0) this._createDefaultBoard(className);
+    APP.save();
+    renderAll();
+  },
+
+  _createDefaultBoard(className) {
+    const id = 'b-' + Date.now();
+    APP.state.boards = [{ id, name: 'Tafel 1', background: { type:'gradient', value:'linear-gradient(135deg,#667eea,#764ba2)' }, widgets: [] }];
+    APP.state.activeBoardId = id;
+  },
+
+  // ── Klasse wechseln ──
+  async switchTo(className) {
+    const current = this.current();
+    if (current) {
+      this.saveCurrentBoards(current); // auto-save current
+    }
+    this._setCurrent(className);
+    await this.loadClass(className);
+    this.renderDropdown();
+    document.getElementById('class-btn-name').textContent = className;
+    document.getElementById('class-dropdown').classList.remove('open');
+    toast('📚 Klasse ' + className + ' geladen');
+  },
+
+  // ── Neue Klasse anlegen ──
+  create(name) {
+    if (!name.trim()) return;
+    const data = this._data();
+    if (!data[name]) data[name] = { boards: [], savedAt: new Date().toISOString() };
+    this._save(data);
+    this.switchTo(name);
+  },
+
+  // ── Klasse löschen ──
+  delete(name) {
+    if (!confirm('Klasse "' + name + '" und alle ihre Tafeln löschen?')) return;
+    const data = this._data();
+    delete data[name];
+    this._save(data);
+    if (AUTH.user && AUTH.client) {
+      AUTH.client.from('class_boards').delete()
+        .eq('user_id', AUTH.user.id).eq('class_name', name).then(() => {});
+    }
+    if (this.current() === name) {
+      const remaining = this.list();
+      if (remaining.length > 0) this.switchTo(remaining[0]);
+      else { localStorage.removeItem(this.CURRENT_KEY); this.renderDropdown(); }
+    } else {
+      this.renderDropdown();
+    }
+  },
+
+  // ── Dropdown rendern ──
+  renderDropdown() {
+    const listEl = document.getElementById('class-list');
+    if (!listEl) return;
+    const classes = this.list();
+    const current = this.current();
+    listEl.innerHTML = '';
+
+    if (classes.length === 0) {
+      listEl.innerHTML = '<div style="padding:8px 12px;font-size:11.5px;color:rgba(255,255,255,0.3);font-style:italic">Noch keine Klassen angelegt</div>';
+      return;
+    }
+
+    classes.forEach(cls => {
+      const item = document.createElement('div');
+      item.className = 'class-dd-item' + (cls === current ? ' active' : '');
+      item.innerHTML = `
+        <span style="font-size:16px">${this._emoji(cls)}</span>
+        <span class="class-dd-name">${cls}</span>
+        <button class="class-dd-del" title="Klasse löschen">✕</button>
+      `;
+      item.addEventListener('click', e => {
+        if (e.target.classList.contains('class-dd-del')) return;
+        this.switchTo(cls);
+      });
+      item.querySelector('.class-dd-del').addEventListener('click', e => {
+        e.stopPropagation();
+        this.delete(cls);
+      });
+      listEl.appendChild(item);
+    });
+  },
+
+  _emoji(name) {
+    const n = name.toLowerCase();
+    if (n.includes('deutsch') || n.includes('de')) return '📖';
+    if (n.includes('mathe') || n.includes('math')) return '🔢';
+    if (n.includes('sport')) return '⚽';
+    if (n.includes('musik')) return '🎵';
+    if (n.includes('kunst')) return '🎨';
+    if (n.includes('bio') || n.includes('natur')) return '🌿';
+    if (n.includes('physik') || n.includes('chemie')) return '⚗️';
+    return '🏷';
+  },
+
+  // ── UI initialisieren ──
+  initUI() {
+    const btn = document.getElementById('class-btn');
+    const dropdown = document.getElementById('class-dropdown');
+    if (!btn || !dropdown) return;
+
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = dropdown.classList.toggle('open');
+      if (open) this.renderDropdown();
+    });
+    document.addEventListener('click', e => {
+      if (!dropdown.contains(e.target) && e.target !== btn) dropdown.classList.remove('open');
+    });
+
+    // Add trigger
+    document.getElementById('class-add-trigger').addEventListener('click', () => {
+      const form = document.getElementById('class-add-form');
+      form.classList.toggle('visible');
+      if (form.classList.contains('visible')) document.getElementById('class-add-input').focus();
+    });
+
+    // Confirm new class
+    const confirmAdd = () => {
+      const inp = document.getElementById('class-add-input');
+      const name = inp.value.trim();
+      if (!name) return;
+      inp.value = '';
+      document.getElementById('class-add-form').classList.remove('visible');
+      this.create(name);
+    };
+    document.getElementById('class-add-confirm').addEventListener('click', confirmAdd);
+    document.getElementById('class-add-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') confirmAdd();
+      e.stopPropagation();
+    });
+    document.getElementById('class-add-input').addEventListener('click', e => e.stopPropagation());
+
+    // Restore current class on load
+    const current = this.current();
+    if (current) {
+      document.getElementById('class-btn-name').textContent = current;
+    }
+    this.renderDropdown();
+  }
+};
+
+// ══════════════════════════════════════════════════════════════
 // FLOATING KI-CHAT// ══════════════════════════════════════════════════════════════
+// KLASSEN-VERWALTUNG
+// ══════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════
 // FLOATING KI-CHAT
 // ══════════════════════════════════════════════════════════════
 (function() {
