@@ -3506,6 +3506,14 @@ function toggleFullscreen() {
   }
 }
 
+// Listen for ESC key exiting fullscreen (browser-native)
+document.addEventListener('fullscreenchange', () => {
+  const fs = !!document.fullscreenElement;
+  document.body.classList.toggle('fullscreen', fs);
+  const btn = document.getElementById('btn-fullscreen');
+  if (btn) btn.textContent = fs ? '⤡' : '⤢';
+});
+
 function toggleEditMode() {
   APP.state.editMode = !APP.state.editMode;
   const btn = document.getElementById('edit-mode-btn');
