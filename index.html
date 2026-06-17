@@ -114,14 +114,17 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
 .tab-btn:hover { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.85); }
 .tab-btn.active { background:rgba(255,255,255,0.18); color:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.3); }
 .tab-btn { display:flex; align-items:center; gap:5px; }
-.tab-close {
-  font-size:11px; opacity:0; width:14px; height:14px; border-radius:3px;
+.tab-name-span { pointer-events:none; }
+.tab-action {
+  font-size:11px; opacity:0; border-radius:3px; flex-shrink:0;
   display:flex; align-items:center; justify-content:center;
-  transition:opacity .15s, background .15s; flex-shrink:0; line-height:1;
-  margin-left:1px;
+  transition:opacity .15s, background .15s; line-height:1;
+  padding:1px 2px; cursor:pointer;
 }
-.tab-btn:hover .tab-close { opacity:0.55; }
-.tab-btn:hover .tab-close:hover { opacity:1; background:rgba(255,255,255,0.2); }
+.tab-btn:hover .tab-action { opacity:0.6; }
+.tab-btn:hover .tab-action:hover { opacity:1; background:rgba(255,255,255,0.2); }
+.tab-edit { font-size:10px; }
+.tab-close { font-size:11px; margin-left:1px; }
 .tab-input { background:transparent; border:none; outline:none; color:#fff; font:inherit; width:100px; }
 #add-board-btn {
   flex-shrink:0; width:28px; height:28px; border-radius:var(--radius-sm);
@@ -1312,72 +1315,85 @@ function renderBoardTabs() {
     btn.dataset.bid = board.id;
 
     const nameSpan = document.createElement('span');
+    nameSpan.className = 'tab-name-span';
     nameSpan.textContent = board.name;
-    nameSpan.style.pointerEvents = 'none';
+
+    const editBtn = document.createElement('span');
+    editBtn.className = 'tab-action tab-edit';
+    editBtn.textContent = '✏️';
+    editBtn.title = 'Umbenennen';
 
     const closeX = document.createElement('span');
-    closeX.className = 'tab-close';
+    closeX.className = 'tab-action tab-close';
     closeX.textContent = '✕';
     closeX.title = 'Tafel löschen';
+
+    editBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      openRenameModal(board);
+    });
     closeX.addEventListener('click', e => {
       e.stopPropagation();
       if (APP.state.boards.length <= 1) { toast('❌ Mindestens eine Tafel muss vorhanden sein'); return; }
-      if (confirm(`Tafel "${board.name}" wirklich löschen?`)) {
-        deleteBoard(board.id);
-      }
+      if (confirm('Tafel "' + board.name + '" wirklich löschen?')) deleteBoard(board.id);
     });
 
-    btn.append(nameSpan, closeX);
+    btn.append(nameSpan, editBtn, closeX);
     btn.addEventListener('click', () => switchBoard(board.id));
-    btn.addEventListener('dblclick', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (APP.state.activeBoardId !== board.id) {
-        // Switch without full re-render, then rename
-        APP.state.activeBoardId = board.id;
-        APP.selectedId = null;
-        stopAllIntervals();
-        APP.save();
-        renderBoardBg();
-        renderWidgets();
-        // Update active class manually
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.bid === board.id));
-      }
-      startTabRename(btn, board);
-    });
     container.appendChild(btn);
   });
 }
 
-function startTabRename(btn, board) {
-  // Stop any clicks inside the input from bubbling to the button (prevents switchBoard re-render)
-  const inp = el('input','tab-input');
+function openRenameModal(board) {
+  // Remove existing modal if any
+  document.getElementById('rename-modal-overlay')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'rename-modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px)';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:14px;padding:20px;min-width:280px;box-shadow:0 20px 60px rgba(0,0,0,0.7)';
+  box.innerHTML = '<div style="font-size:14px;font-weight:700;margin-bottom:12px">✏️ Tafel umbenennen</div>';
+
+  const inp = document.createElement('input');
+  inp.type = 'text';
   inp.value = board.name;
-  inp.style.minWidth = '80px';
-  inp.addEventListener('click',       e => e.stopPropagation());
-  inp.addEventListener('mousedown',   e => e.stopPropagation());
-  inp.addEventListener('touchstart',  e => e.stopPropagation(), { passive:true });
-  inp.addEventListener('pointerdown', e => e.stopPropagation());
+  inp.style.cssText = 'width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;font-size:14px;padding:9px 12px;margin-bottom:12px;box-sizing:border-box;touch-action:auto;outline:none';
+  inp.addEventListener('click', e => e.stopPropagation());
 
-  btn.innerHTML = '';
-  btn.appendChild(inp);
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;justify-content:flex-end';
 
-  // Use requestAnimationFrame to focus after DOM settles
-  requestAnimationFrame(() => { inp.focus(); inp.select(); });
+  const cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'Abbrechen';
+  cancelBtn.style.cssText = 'padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.7);cursor:pointer;font-size:13px';
 
-  let committed = false;
-  const commit = () => {
-    if (committed) return;
-    committed = true;
-    const name = inp.value.trim() || board.name;
-    renameBoard(board.id, name);
+  const okBtn = document.createElement('button');
+  okBtn.textContent = 'Speichern';
+  okBtn.style.cssText = 'padding:8px 16px;border-radius:8px;border:none;background:#6366f1;color:#fff;cursor:pointer;font-size:13px;font-weight:600';
+
+  const close = () => overlay.remove();
+  const confirm_rename = () => {
+    const name = inp.value.trim();
+    if (name) renameBoard(board.id, name);
+    close();
   };
-  inp.addEventListener('blur', commit);
+
+  cancelBtn.addEventListener('click', close);
+  okBtn.addEventListener('click', confirm_rename);
   inp.addEventListener('keydown', e => {
     e.stopPropagation();
-    if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
-    if (e.key === 'Escape') { committed = true; inp.value = board.name; inp.blur(); renderBoardTabs(); }
+    if (e.key === 'Enter') confirm_rename();
+    if (e.key === 'Escape') close();
   });
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+  row.append(cancelBtn, okBtn);
+  box.append(inp, row);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => { inp.focus(); inp.select(); });
 }
 
 function renderBoardBg() {
