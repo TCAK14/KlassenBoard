@@ -49,6 +49,15 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
 }
 .tab-btn:hover { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.85); }
 .tab-btn.active { background:rgba(255,255,255,0.18); color:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.3); }
+.tab-btn { display:flex; align-items:center; gap:5px; }
+.tab-close {
+  font-size:11px; opacity:0; width:14px; height:14px; border-radius:3px;
+  display:flex; align-items:center; justify-content:center;
+  transition:opacity .15s, background .15s; flex-shrink:0; line-height:1;
+  margin-left:1px;
+}
+.tab-btn:hover .tab-close { opacity:0.55; }
+.tab-btn:hover .tab-close:hover { opacity:1; background:rgba(255,255,255,0.2); }
 .tab-input { background:transparent; border:none; outline:none; color:#fff; font:inherit; width:100px; }
 #add-board-btn {
   flex-shrink:0; width:28px; height:28px; border-radius:var(--radius-sm);
@@ -1198,16 +1207,36 @@ function renderBoardTabs() {
   container.innerHTML = '';
   APP.state.boards.forEach(board => {
     const btn = el('button','tab-btn' + (board.id === APP.state.activeBoardId ? ' active' : ''));
-    btn.textContent = board.name;
     btn.dataset.bid = board.id;
+
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = board.name;
+    nameSpan.style.pointerEvents = 'none';
+
+    const closeX = document.createElement('span');
+    closeX.className = 'tab-close';
+    closeX.textContent = '✕';
+    closeX.title = 'Tafel löschen';
+    closeX.addEventListener('click', e => {
+      e.stopPropagation();
+      if (APP.state.boards.length <= 1) { toast('❌ Mindestens eine Tafel muss vorhanden sein'); return; }
+      if (confirm(`Tafel "${board.name}" wirklich löschen?`)) {
+        deleteBoard(board.id);
+      }
+    });
+
+    btn.append(nameSpan, closeX);
     btn.addEventListener('click', () => switchBoard(board.id));
-    btn.addEventListener('dblclick', () => startTabRename(btn, board));
+    btn.addEventListener('dblclick', e => {
+      e.preventDefault();
+      switchBoard(board.id);
+      startTabRename(btn, board);
+    });
     container.appendChild(btn);
   });
 }
 
 function startTabRename(btn, board) {
-  if (board.id !== APP.state.activeBoardId) return;
   const inp = el('input','tab-input');
   inp.value = board.name;
   btn.innerHTML = '';
