@@ -702,17 +702,17 @@ body.fullscreen #board { top:0; }
   <div id="board-tabs"></div>
   <button id="add-board-btn" title="Neue Tafel">+</button>
   <div class="toolbar-sep"></div>
-  <button class="tb-btn" id="btn-ai-board" title="KI erstellt Board automatisch">🪄 KI-Board</button>
-  <button class="tb-btn" id="btn-add-widget" title="Widget hinzufügen (W)">＋ Widget</button>
-  <button class="tb-icon-btn" id="btn-template" title="Vorlage laden">📋</button>
-  <button class="tb-icon-btn" id="btn-bg" title="Hintergrund">🎨</button>
-  <button class="tb-icon-btn" id="btn-ical" title="Stundenplan (iCal)">📅</button>
-  <button class="tb-icon-btn" id="btn-export" title="Export/Import">💾</button>
+  <button class="tb-btn" id="btn-add-widget" title="Elemente hinzufügen (W)">＋ Elemente</button>
+  <button class="tb-icon-btn tb-item" id="btn-template" data-tbid="template" title="Vorlage laden">📋</button>
+  <button class="tb-icon-btn tb-item" id="btn-bg" data-tbid="bg" title="Hintergrund">🎨</button>
+  <button class="tb-icon-btn tb-item" id="btn-ical" data-tbid="ical" title="Stundenplan (iCal)">📅</button>
+  <button class="tb-icon-btn tb-item" id="btn-export" data-tbid="export" title="Export/Import">💾</button>
   <div class="toolbar-sep"></div>
-  <button class="tb-icon-btn" id="btn-voice" title="Sprachsteuerung (Mikrofon)">🎙️</button>
-  <button class="tb-icon-btn" id="btn-draw" title="Zeichnen / Schreiben">🖊</button>
-  <button class="tb-icon-btn tb-btn" id="edit-mode-btn" title="Bearbeiten/Ansicht (E)">✏️ Edit</button>
-  <button class="tb-icon-btn" id="btn-fullscreen" title="Vollbild (F)">⤢</button>
+  <button class="tb-icon-btn tb-item" id="btn-voice" data-tbid="voice" title="Sprachsteuerung (Mikrofon)">🎙️</button>
+  <button class="tb-icon-btn tb-item" id="btn-draw" data-tbid="draw" title="Zeichnen / Schreiben">🖊</button>
+  <button class="tb-icon-btn tb-btn tb-item" id="edit-mode-btn" data-tbid="editmode" title="Bearbeiten/Ansicht (E)">✏️ Edit</button>
+  <button class="tb-icon-btn tb-item" id="btn-fullscreen" data-tbid="fullscreen" title="Vollbild (F)">⤢</button>
+  <button class="tb-icon-btn" id="btn-customize-toolbar" title="Leiste anpassen" style="opacity:0.5;font-size:15px">⚙</button>
   <div class="toolbar-sep"></div>
   <div id="auth-area">
     <button id="auth-login-btn">🔑 Anmelden</button>
@@ -992,9 +992,9 @@ const REGISTRY = {
 const WIDGET_CATS = [
   { label:'Zeit',        types:['clock','timer','stopwatch'] },
   { label:'Unterricht',  types:['text','goal','homework','traffic','names'] },
-  { label:'Tools',       types:['qr','dice','randomnum','groups','noise','poll','ai','ask'] },
+  { label:'Tools',       types:['qr','dice','randomnum','groups','noise','poll'] },
   { label:'Planung',     types:['agenda','checklist','phases','status'] },
-  { label:'Medien',      types:['image','youtube','files','browser'] },
+  { label:'Medien',      types:['youtube','files','browser'] },
   { label:'Stundenplan', types:['timetable'] },
 ];
 
@@ -4262,6 +4262,8 @@ document.getElementById('add-board-btn').addEventListener('click', () => {
 });
 document.getElementById('edit-mode-btn').addEventListener('click', toggleEditMode);
 document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
+document.getElementById('btn-customize-toolbar').addEventListener('click', e => { e.stopPropagation(); openToolbarCustomizer(); });
+applyToolbarPrefs();
 document.getElementById('auth-login-btn').addEventListener('click', openLoginModal);
 document.getElementById('auth-logout-btn').addEventListener('click', () => AUTH.logout());
 
@@ -4727,60 +4729,58 @@ const DRAW = {
     this.canvas.style.cursor = tool === 'eraser' ? 'cell' : tool === 'text' ? 'text' : 'crosshair';
   },
 
-  _initTextTool() {
+  _showTextInput(x, y) {
     const ta = document.getElementById('draw-text-input');
     if (!ta) return;
-
-    // Double-click on canvas → show text input
-    this.canvas.addEventListener('dblclick', e => {
-      if (!this.active || this.tool !== 'text') return;
-      e.preventDefault();
-      ta.style.display = 'block';
-      ta.style.left = e.clientX + 'px';
-      ta.style.top  = e.clientY + 'px';
-      ta.style.fontSize = Math.max(14, this.size * 4) + 'px';
-      ta.style.color = this.color;
-      ta.value = '';
-      ta.focus();
-    });
-
-    // Also: when text tool active, any double-click on board opens text input
-    document.getElementById('board')?.addEventListener('dblclick', e => {
-      if (!this.active || this.tool !== 'text') return;
-      e.preventDefault();
-      ta.style.display = 'block';
-      ta.style.left = e.clientX + 'px';
-      ta.style.top  = e.clientY + 'px';
-      ta.style.fontSize = Math.max(14, this.size * 4) + 'px';
-      ta.style.color = this.color;
-      ta.value = '';
-      ta.focus();
-    });
+    ta.style.display = 'block';
+    // Keep inside viewport
+    ta.style.left = Math.min(x, window.innerWidth - 220) + 'px';
+    ta.style.top  = Math.min(y, window.innerHeight - 80) + 'px';
+    ta.style.fontSize = Math.max(14, this.size * 3) + 'px';
+    ta.style.color = this.color;
+    ta.value = '';
+    ta.rows = 1;
+    requestAnimationFrame(() => ta.focus());
 
     const commit = () => {
-      const txt = ta.value.trim();
-      if (txt) {
-        const x = parseInt(ta.style.left);
-        const y = parseInt(ta.style.top);
-        this.history.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height));
-        if (this.history.length > 30) this.history.shift();
-        this.ctx.font = `${ta.style.fontSize} sans-serif`;
-        this.ctx.fillStyle = this.color;
-        this.ctx.globalCompositeOperation = 'source-over';
-        // multi-line
-        txt.split('\n').forEach((line, i) => {
-          this.ctx.fillText(line, x, y + (i+1) * parseInt(ta.style.fontSize));
-        });
-      }
       ta.style.display = 'none';
+      const txt = ta.value.trim();
+      if (!txt) return;
+      const px = parseInt(ta.style.left);
+      const py = parseInt(ta.style.top);
+      const fs = parseInt(ta.style.fontSize) || 18;
+      this.history.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height));
+      if (this.history.length > 30) this.history.shift();
+      this.ctx.globalCompositeOperation = 'source-over';
+      this.ctx.fillStyle = this.color;
+      this.ctx.font = `${fs}px sans-serif`;
+      this.ctx.shadowBlur = 0;
+      txt.split('\n').forEach((line, i) => {
+        this.ctx.fillText(line, px, py + fs + i * (fs + 4));
+      });
+      this.saveBoard(APP.state.activeBoardId);
     };
 
-    ta.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { ta.style.display='none'; return; }
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commit(); }
+    // Remove old listeners by cloning
+    const fresh = ta.cloneNode(true);
+    ta.parentNode.replaceChild(fresh, ta);
+    fresh.style.display = 'block';
+    fresh.style.left = ta.style.left;
+    fresh.style.top  = ta.style.top;
+    fresh.style.fontSize = ta.style.fontSize;
+    fresh.style.color = ta.style.color;
+    fresh.value = '';
+    requestAnimationFrame(() => fresh.focus());
+
+    fresh.addEventListener('keydown', ev => {
+      ev.stopPropagation();
+      if (ev.key === 'Escape') { fresh.style.display = 'none'; return; }
+      if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); commit(); }
     });
-    ta.addEventListener('blur', () => { setTimeout(commit, 100); });
+    fresh.addEventListener('blur', () => setTimeout(commit, 150));
   },
+
+  _initTextTool() { /* text handled in _showTextInput, called from _start */ },
 
   _resize() {
     if (!this.canvas) return;
@@ -4802,6 +4802,11 @@ const DRAW = {
 
   _start(e) {
     if (!this.active) return;
+    if (this.tool === 'text') {
+      // Text tool: show input on click (no preventDefault so dblclick still works)
+      this._showTextInput(e.clientX, e.clientY);
+      return;
+    }
     e.preventDefault();
     // Save snapshot for undo
     this.history.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height));
@@ -4812,7 +4817,6 @@ const DRAW = {
     this.lastX = pos.x;
     this.lastY = pos.y;
 
-    if (this.tool === 'text') { this.drawing = false; return; } // text uses dblclick
     // Dot on click
     this.ctx.beginPath();
     this._applyStyle();
@@ -4835,7 +4839,13 @@ const DRAW = {
     this.lastY = pos.y;
   },
 
-  _end(e) { this.drawing = false; },
+  _end(e) {
+    if (this.drawing) {
+      this.drawing = false;
+      // Auto-save after every stroke
+      this.saveBoard(APP.state.activeBoardId);
+    }
+  },
 
   _applyStyle() {
     const ctx = this.ctx;
@@ -4998,6 +5008,91 @@ const DRAW = {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
   });
 })();
+
+// ══════════════════════════════════════════════════════════════
+// TOOLBAR ANPASSEN
+// ══════════════════════════════════════════════════════════════
+const TOOLBAR_ITEMS = [
+  { id:'template',  label:'📋 Vorlage',      default:true },
+  { id:'bg',        label:'🎨 Hintergrund',   default:true },
+  { id:'ical',      label:'📅 Stundenplan',   default:true },
+  { id:'export',    label:'💾 Export',        default:true },
+  { id:'voice',     label:'🎙️ Sprache',       default:true },
+  { id:'draw',      label:'🖊 Zeichnen',      default:true },
+  { id:'editmode',  label:'✏️ Edit-Modus',    default:true },
+  { id:'fullscreen',label:'⤢ Vollbild',       default:true },
+];
+
+function getToolbarPrefs() {
+  try { return JSON.parse(localStorage.getItem('kb_toolbar_prefs') || 'null'); } catch { return null; }
+}
+function saveToolbarPrefs(prefs) {
+  localStorage.setItem('kb_toolbar_prefs', JSON.stringify(prefs));
+}
+function applyToolbarPrefs() {
+  const prefs = getToolbarPrefs();
+  TOOLBAR_ITEMS.forEach(item => {
+    const el = document.querySelector(`[data-tbid="${item.id}"]`);
+    if (!el) return;
+    const visible = prefs ? (prefs[item.id] !== false) : item.default;
+    el.style.display = visible ? '' : 'none';
+  });
+}
+
+function openToolbarCustomizer() {
+  document.getElementById('tb-customize-panel')?.remove();
+  const prefs = getToolbarPrefs() || {};
+  const panel = document.createElement('div');
+  panel.id = 'tb-customize-panel';
+  panel.style.cssText = 'position:fixed;top:56px;right:12px;z-index:9990;background:rgba(18,18,38,0.97);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:16px 18px;min-width:220px;box-shadow:0 8px 40px rgba(0,0,0,0.6);backdrop-filter:blur(12px);';
+  panel.innerHTML = '<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px;letter-spacing:0.3px">⚙ Leiste anpassen</div>';
+
+  TOOLBAR_ITEMS.forEach(item => {
+    const visible = prefs[item.id] !== false;
+    const row = document.createElement('label');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 4px;border-radius:8px;transition:.15s;';
+    row.innerHTML = `
+      <span style="flex:1;font-size:13px;color:rgba(255,255,255,0.85)">${item.label}</span>
+      <span class="tb-cust-toggle ${visible ? 'on' : ''}" data-id="${item.id}" style="
+        width:36px;height:20px;border-radius:10px;position:relative;cursor:pointer;
+        background:${visible ? '#6366f1' : 'rgba(255,255,255,0.12)'};transition:.2s;flex-shrink:0;display:inline-block">
+        <span style="position:absolute;top:2px;left:${visible ? '18px' : '2px'};width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s;"></span>
+      </span>`;
+    row.querySelector('.tb-cust-toggle').addEventListener('click', e => {
+      e.preventDefault();
+      const tog = e.currentTarget;
+      const id = tog.dataset.id;
+      const nowOn = !tog.classList.contains('on');
+      tog.classList.toggle('on', nowOn);
+      tog.style.background = nowOn ? '#6366f1' : 'rgba(255,255,255,0.12)';
+      tog.querySelector('span').style.left = nowOn ? '18px' : '2px';
+      const newPrefs = getToolbarPrefs() || {};
+      newPrefs[id] = nowOn;
+      saveToolbarPrefs(newPrefs);
+      applyToolbarPrefs();
+    });
+    panel.appendChild(row);
+  });
+
+  const resetBtn = document.createElement('button');
+  resetBtn.textContent = 'Zurücksetzen';
+  resetBtn.style.cssText = 'margin-top:12px;width:100%;border:none;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);border-radius:8px;padding:7px;cursor:pointer;font-size:12px;';
+  resetBtn.addEventListener('click', () => {
+    localStorage.removeItem('kb_toolbar_prefs');
+    applyToolbarPrefs();
+    panel.remove();
+    openToolbarCustomizer();
+  });
+  panel.appendChild(resetBtn);
+
+  document.body.appendChild(panel);
+  document.addEventListener('pointerdown', function outside(ev) {
+    if (!panel.contains(ev.target) && ev.target.id !== 'btn-customize-toolbar') {
+      panel.remove();
+      document.removeEventListener('pointerdown', outside);
+    }
+  });
+}
 
 // ══════════════════════════════════════════════════════════════
 // STARTUP
