@@ -1228,6 +1228,8 @@ function createBoard(name, bg, widgets=[]) {
 }
 
 function switchBoard(id) {
+  // Save drawing of current board before switching
+  DRAW.saveBoard(APP.state.activeBoardId);
   APP.state.activeBoardId = id;
   APP.selectedId = null;
   stopAllIntervals();
@@ -1235,6 +1237,8 @@ function switchBoard(id) {
   renderBoardTabs();
   renderBoardBg();
   renderWidgets();
+  // Load drawing of new board
+  DRAW.loadBoard(id);
 }
 
 function deleteBoard(id) {
@@ -1934,9 +1938,31 @@ const WIDGET_RENDERERS = {
   // ── Image ──
   image(w, body) {
     if (!w.config.src) {
-      const hint = el('div'); hint.style.cssText='color:rgba(255,255,255,0.3);font-size:13px;text-align:center;padding:16px';
-      hint.textContent = '🖼 Bild-URL oder Datei eintragen (⚙)';
-      body.appendChild(hint);
+      // Clickable upload area — like YouTube widget
+      const wrap = el('div');
+      wrap.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;border:2px dashed rgba(255,255,255,0.2);border-radius:12px;transition:all .2s;box-sizing:border-box;';
+      wrap.innerHTML = '<div style="font-size:36px">🖼</div><div style="font-size:14px;color:rgba(255,255,255,0.5)">Klicken zum Bild hochladen</div><div style="font-size:11px;color:rgba(255,255,255,0.3)">oder URL über ⚙ eingeben</div>';
+      wrap.addEventListener('mouseenter', () => { wrap.style.borderColor='rgba(255,255,255,0.5)'; wrap.style.background='rgba(255,255,255,0.05)'; });
+      wrap.addEventListener('mouseleave', () => { wrap.style.borderColor='rgba(255,255,255,0.2)'; wrap.style.background=''; });
+      wrap.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = () => {
+          const file = input.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = e => {
+            w.config.src = e.target.result;
+            w.config.alt = file.name;
+            APP.save();
+            renderWidgets();
+          };
+          reader.readAsDataURL(file);
+        };
+        input.click();
+      });
+      body.appendChild(wrap);
     } else {
       const img = el('img','w-image-inner');
       img.alt = w.config.alt || '';
@@ -4490,6 +4516,7 @@ const DRAW = {
   drawing: false,
   lastX: 0, lastY: 0,
   history: [], // array of ImageData snapshots for undo
+  boardDrawings: {}, // { boardId: dataURL } — per-board drawings
 
   init() {
     this.canvas = document.getElementById('draw-canvas');
@@ -4646,6 +4673,25 @@ const DRAW = {
     if (this.history.length === 0) return;
     const snap = this.history.pop();
     this.ctx.putImageData(snap, 0, 0);
+  },
+
+  // Save drawing of current board before switching
+  saveBoard(boardId) {
+    if (!this.canvas || !boardId) return;
+    this.boardDrawings[boardId] = this.canvas.toDataURL();
+  },
+
+  // Load drawing for new board (clear canvas if none)
+  loadBoard(boardId) {
+    if (!this.canvas || !boardId) return;
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.history = [];
+    const dataURL = this.boardDrawings[boardId];
+    if (dataURL) {
+      const img = new Image();
+      img.onload = () => this.ctx.drawImage(img, 0, 0);
+      img.src = dataURL;
+    }
   }
 };
 
