@@ -967,7 +967,7 @@ const REGISTRY = {
   phases:       { label:'Arbeitsphasen', emoji:'⏳', w:300, h:260 },
   status:       { label:'Klassenstatus', emoji:'😊', w:240, h:200 },
   browser:      { label:'Browser',      emoji:'🌐', w:600, h:450 },
-  files:        { label:'Datei-Anzeige', emoji:'📂', w:500, h:400 },
+  files:        { label:'Dateien',       emoji:'📂', w:500, h:400 },
   noise:        { label:'Lautstärke',    emoji:'🎤', w:260, h:220 },
   poll:         { label:'Live-Umfrage',  emoji:'📊', w:340, h:280 },
   ai:           { label:'KI-Assistent', emoji:'🤖', w:360, h:300 },
@@ -979,7 +979,7 @@ const WIDGET_CATS = [
   { label:'Unterricht',  types:['text','goal','homework','traffic','names'] },
   { label:'Tools',       types:['qr','dice','randomnum','groups','noise','poll','ai','ask'] },
   { label:'Planung',     types:['agenda','checklist','phases','status'] },
-  { label:'Medien',      types:['image','youtube'] },
+  { label:'Medien',      types:['image','youtube','files','browser'] },
   { label:'Stundenplan', types:['timetable'] },
 ];
 
@@ -2593,11 +2593,11 @@ const WIDGET_RENDERERS = {
       // Drop zone
       const zone = document.createElement('div');
       zone.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer';
-      zone.innerHTML = '<div style="font-size:36px">📂</div><div style="font-size:13px;color:rgba(255,255,255,0.6)">Datei hier ablegen oder klicken</div><div style="font-size:11px;color:rgba(255,255,255,0.3)">Bilder, PDFs, Videos</div>';
+      zone.innerHTML = '<div style="font-size:36px">📂</div><div style="font-size:13px;color:rgba(255,255,255,0.6)">Datei hier ablegen oder klicken</div><div style="font-size:11px;color:rgba(255,255,255,0.3)">Bild · PDF · MP3 · Video · Text · und mehr</div>';
 
       const fileInp = document.createElement('input');
       fileInp.type = 'file';
-      fileInp.accept = 'image/*,application/pdf,video/*,audio/*,.txt,.doc,.docx';
+      fileInp.accept = '*';
       fileInp.style.display = 'none';
 
       fileInp.addEventListener('change', () => {
