@@ -4265,7 +4265,6 @@ document.getElementById('add-board-btn').addEventListener('click', () => {
 document.getElementById('edit-mode-btn').addEventListener('click', toggleEditMode);
 document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
 document.getElementById('btn-customize-toolbar').addEventListener('click', e => { e.stopPropagation(); openToolbarCustomizer(); });
-applyToolbarPrefs();
 document.getElementById('auth-login-btn').addEventListener('click', openLoginModal);
 document.getElementById('auth-logout-btn').addEventListener('click', () => AUTH.logout());
 
@@ -5107,6 +5106,7 @@ if (_pollParam) {
   init();
   AUTH.init();
   DRAW.init();
+  applyToolbarPrefs();
 }
 </script>
 </body>
