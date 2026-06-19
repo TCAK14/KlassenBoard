@@ -971,4 +971,218 @@ body.yearly .save-badge { opacity:1; }
       </div>
       <div class="faq-item">
         <div class="faq-q">Was passiert wenn ich kündige? <span class="faq-arr">▼</span></div>
-        <div class="faq-a">Nach der Kündigung wechselst du automatisch in den Kostenlos-Plan. Du hast dann weiterhin Zugriff auf 1 Klasse und 3 Tafeln. Deine Daten werden ni
+        <div class="faq-a">Nach der Kündigung wechselst du automatisch in den Kostenlos-Plan. Du hast dann weiterhin Zugriff auf 1 Klasse und 3 Tafeln. Deine Daten werden nicht gelöscht.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Kann ich Tafeln mit Kollegen teilen? <span class="faq-arr">▼</span></div>
+        <div class="faq-a">Das gemeinsame Bearbeiten von Tafeln mit Kollegen ist in Planung. Mit der Schullizenz wird diese Funktion priorisiert verfügbar sein.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<div class="container" style="padding:80px 28px 0">
+  <div class="cta-final">
+    <h2>Bereit für besseren Unterricht?</h2>
+    <p>Starte jetzt kostenlos — kein Download, keine Kreditkarte. In 30 Sekunden startklar.</p>
+    <div class="cta-final-btns">
+      <a href="index.html" class="btn btn-primary btn-primary-lg">🚀 Kostenlos starten</a>
+      <button onclick="openModal('school')" class="btn btn-outline-lg">Schullizenz kaufen</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="logo">🏫 Klassen<em>Board</em></div>
+        <p>Die digitale Tafel für moderne Lehrkräfte. Entwickelt in Deutschland, für den deutschen Schulalltag.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Produkt</h4>
+        <ul>
+          <li><a href="index.html">App starten</a></li>
+          <li><a href="#funktionen">Funktionen</a></li>
+          <li><a href="#widgets">Widgets</a></li>
+          <li><a href="#preise">Preise</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Für Schulen</h4>
+        <ul>
+          <li><a href="#preise">Schullizenz</a></li>
+          <li><a href="#">AVV & Datenschutz</a></li>
+          <li><a href="#">Onboarding</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Rechtliches</h4>
+        <ul>
+          <li><a href="#">Impressum</a></li>
+          <li><a href="#">Datenschutz</a></li>
+          <li><a href="#">AGB</a></li>
+          <li><a href="mailto:info@klassenboard.de">Kontakt</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 KlassenBoard · Alle Rechte vorbehalten · Made in Germany 🇩🇪</p>
+      <div class="footer-social">
+        <a href="#" title="Instagram">📸</a>
+        <a href="#" title="LinkedIn">💼</a>
+        <a href="#" title="YouTube">▶️</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-bg" id="modal-bg" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-content-form">
+      <div class="modal-plan-badge" id="modal-badge">⭐ Pro — Einzellizenz</div>
+      <h2 id="modal-title">Fast geschafft!</h2>
+      <p style="font-size:14px;color:var(--muted2);margin-bottom:0">Gib deine E-Mail-Adresse ein. In weniger als 2 Minuten hast du Zugang zu allen Pro-Features.</p>
+      <div class="modal-summary" id="modal-summary">
+        <strong>Plan:</strong> Pro — Einzellizenz<br>
+        <strong>Preis:</strong> 2,50 € / Monat oder 22 € / Jahr<br>
+        <strong>14 Tage gratis</strong> testen — keine Kreditkarte nötig
+      </div>
+      <div class="modal-form">
+        <input class="modal-input" id="modal-email" type="email" placeholder="Deine E-Mail-Adresse" required>
+        <input class="modal-input" id="modal-school" type="text" placeholder="Name der Schule (optional)">
+        <button class="modal-submit" onclick="submitModal()">🔒 Weiter zur sicheren Zahlung</button>
+        <p class="modal-fine">Zahlung via Stripe · SSL-verschlüsselt · Jederzeit kündbar</p>
+      </div>
+    </div>
+    <div class="modal-success" id="modal-success" style="display:none">
+      <div class="ms-icon">🎉</div>
+      <h3>Weiterleitung zu Stripe...</h3>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── SCHOOL CALCULATOR ──
+let teacherCount = 5;
+function calcSchool(n) {
+  const base = 88, extra = 15, min = 1;
+  n = Math.max(min, n);
+  const total = n <= 5 ? base : base + (n - 5) * extra;
+  const perTeacher = (total / n).toFixed(2).replace('.', ',');
+  document.getElementById('sc-count').textContent = n;
+  document.getElementById('sc-total').textContent = total + ' €';
+  document.getElementById('sc-per-teacher').textContent = perTeacher + ' €';
+  let breakdown = n <= 5
+    ? 'Grundpreis für bis zu 5 Lehrkräfte'
+    : '88 € Grundpreis + ' + (n - 5) + ' × 15 € = ' + total + ' €';
+  document.getElementById('sc-breakdown').textContent = breakdown;
+  teacherCount = n;
+}
+function changeTeachers(delta) { calcSchool(teacherCount + delta); }
+
+// ── CHECKOUT MODAL ──
+let currentPlan = 'pro';
+function openModal(plan) {
+  currentPlan = plan;
+  const isYearly = document.body.classList.contains('yearly');
+  const schoolTotal = teacherCount <= 5 ? 88 : 88 + (teacherCount - 5) * 15;
+
+  if (plan === 'pro') {
+    document.getElementById('modal-badge').textContent = '⭐ Pro — Einzellizenz';
+    document.getElementById('modal-title').textContent = 'Fast geschafft!';
+    document.getElementById('modal-summary').innerHTML =
+      '<strong>Plan:</strong> Pro — Einzellizenz<br>' +
+      '<strong>Preis:</strong> ' + (isYearly ? '22 € / Jahr (≈ 1,83 €/Monat)' : '2,50 € / Monat') + '<br>' +
+      '<strong>14 Tage gratis</strong> testen — keine Kreditkarte nötig';
+    document.getElementById('modal-school').style.display = 'none';
+  } else {
+    document.getElementById('modal-badge').textContent = '🏫 Schullizenz';
+    document.getElementById('modal-title').textContent = 'Schullizenz bestellen';
+    document.getElementById('modal-summary').innerHTML =
+      '<strong>Lehrkräfte:</strong> ' + teacherCount + '<br>' +
+      '<strong>Gesamtpreis:</strong> ' + schoolTotal + ' € / Jahr<br>' +
+      '<strong>Rechnung</strong> geht direkt an deine Schule';
+    document.getElementById('modal-school').style.display = '';
+  }
+  document.getElementById('modal-content-form').style.display = '';
+  document.getElementById('modal-success').style.display = 'none';
+  document.getElementById('modal-email').value = '';
+  document.getElementById('modal-bg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('modal-email').focus(), 200);
+}
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeModalOutside(e) { if (e.target === document.getElementById('modal-bg')) closeModal(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+async function submitModal() {
+  const email = document.getElementById('modal-email').value.trim();
+  if (!email || !email.includes('@')) {
+    document.getElementById('modal-email').style.borderColor = '#ef4444';
+    document.getElementById('modal-email').focus();
+    return;
+  }
+  document.getElementById('modal-email').style.borderColor = '';
+  const btn = document.querySelector('.modal-submit');
+  btn.disabled = true;
+  btn.textContent = '⏳ Weiterleitung zu Stripe...';
+
+  const isYearly = document.body.classList.contains('yearly');
+  const plan = currentPlan === 'pro'
+    ? (isYearly ? 'pro-yearly' : 'pro-monthly')
+    : 'school';
+
+  try {
+    const res = await fetch('/.netlify/functions/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan, teachers: teacherCount, email })
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error(data.error || 'Unbekannter Fehler');
+    }
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = '🔒 Weiter zur sicheren Zahlung';
+    alert('Fehler: ' + err.message);
+  }
+}
+
+// ── PRICING TOGGLE ──
+function setToggle(mode) {
+  document.body.classList.toggle('yearly', mode === 'yearly');
+  document.getElementById('tog-monthly').classList.toggle('active', mode === 'monthly');
+  document.getElementById('tog-yearly').classList.toggle('active', mode === 'yearly');
+  document.querySelectorAll('.price-monthly').forEach(el => el.style.display = mode === 'monthly' ? 'flex' : 'none');
+  document.querySelectorAll('.price-yearly').forEach(el => el.style.display = mode === 'yearly' ? 'flex' : 'none');
+}
+
+// ── FAQ ──
+document.querySelectorAll('.faq-q').forEach(q => {
+  q.addEventListener('click', () => q.parentElement.classList.toggle('open'));
+});
+
+// ── NAV HIGHLIGHT ──
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting)
+      navLinks.forEach(l => l.style.color = l.getAttribute('href') === '#' + e.target.id ? '#fff' : '');
+  });
+}, { threshold: 0.4 });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
