@@ -4514,9 +4514,10 @@ const CLASSES = {
         .eq('user_id', AUTH.user.id).eq('class_name', name).then(() => {});
     }
     if (this.current() === name) {
+      localStorage.removeItem(this.CURRENT_KEY); // clear first so switchTo doesn't re-save deleted class
       const remaining = this.list();
       if (remaining.length > 0) this.switchTo(remaining[0]);
-      else { localStorage.removeItem(this.CURRENT_KEY); this.renderDropdown(); }
+      else { this.renderDropdown(); }
     } else {
       this.renderDropdown();
     }
@@ -5105,9 +5106,4 @@ if (_pollParam) {
 } else {
   init();
   AUTH.init();
-  DRAW.init();
-  applyToolbarPrefs();
-}
-</script>
-</body>
-</html>
+  D
