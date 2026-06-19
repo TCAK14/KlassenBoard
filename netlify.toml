@@ -1,6 +1,12 @@
 [build]
   publish = "."
-  command = "echo 'No build needed'"
+  command = "npm install"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
 
 [[redirects]]
   from = "/*"
