@@ -395,6 +395,86 @@ footer { border-top:1px solid var(--border); padding:56px 28px 40px; }
   .hero-btns { flex-direction:column; align-items:center; }
 }
 
+/* ── SCHOOL CALCULATOR ── */
+.school-calc {
+  background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 14px; padding: 18px 20px; margin-bottom: 18px;
+}
+.sc-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+.sc-controls { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.sc-btn {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(255,255,255,0.1); border: 1px solid var(--border2);
+  color: #fff; font-size: 20px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; line-height: 1;
+}
+.sc-btn:hover { background: var(--brand); border-color: var(--brand); }
+.sc-num { font-size: 28px; font-weight: 900; min-width: 36px; text-align: center; }
+.sc-price-row { display: flex; align-items: baseline; gap: 6px; }
+.sc-total { font-size: 38px; font-weight: 950; letter-spacing: -1px; color: #fff; }
+.sc-per { font-size: 14px; color: var(--muted); }
+.sc-breakdown { font-size: 12px; color: var(--brand3); margin-top: 4px; font-weight: 600; }
+.sc-per-teacher { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+/* ── CHECKOUT MODAL ── */
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(8px); z-index: 999;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.modal-bg.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--dark2); border: 1px solid var(--border2);
+  border-radius: 22px; padding: 36px; max-width: 480px; width: 100%;
+  position: relative; transform: translateY(16px); transition: transform .2s;
+  box-shadow: 0 40px 120px rgba(0,0,0,0.6);
+}
+.modal-bg.open .modal { transform: translateY(0); }
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px; border-radius: 8px;
+  background: rgba(255,255,255,0.08); border: none; color: var(--muted);
+  font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.modal-close:hover { background: rgba(255,255,255,0.15); color: #fff; }
+.modal-plan-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3);
+  padding: 5px 14px; border-radius: 999px; font-size: 12px;
+  color: var(--brand3); font-weight: 700; margin-bottom: 18px;
+}
+.modal h2 { font-size: 24px; font-weight: 850; letter-spacing: -0.5px; margin-bottom: 6px; }
+.modal-summary {
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px; margin: 18px 0;
+  font-size: 14px; color: var(--muted2); line-height: 1.7;
+}
+.modal-summary strong { color: #fff; }
+.modal-form { display: flex; flex-direction: column; gap: 12px; }
+.modal-input {
+  width: 100%; padding: 13px 16px; border-radius: 11px;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border2);
+  color: #fff; font-size: 15px; outline: none; transition: border-color .15s;
+  font-family: inherit;
+}
+.modal-input::placeholder { color: var(--muted); }
+.modal-input:focus { border-color: var(--brand); }
+.modal-submit {
+  width: 100%; padding: 14px; border-radius: 12px;
+  background: var(--brand); color: #fff; border: none; cursor: pointer;
+  font-size: 16px; font-weight: 800; transition: all .18s;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.35); font-family: inherit;
+}
+.modal-submit:hover { background: #4f46e5; transform: translateY(-1px); }
+.modal-fine { font-size: 12px; color: var(--muted); text-align: center; margin-top: 4px; }
+.modal-success { text-align: center; padding: 20px 0; display: none; }
+.modal-success .ms-icon { font-size: 52px; margin-bottom: 16px; }
+.modal-success h3 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+.modal-success p { font-size: 14px; color: var(--muted2); line-height: 1.7; }
+
 /* pricing toggle logic */
 .price-monthly { display:flex; }
 .price-yearly { display:none; }
@@ -821,35 +901,38 @@ body.yearly .save-badge { opacity:1; }
           <li><span class="ck">✓</span> Stundenplan-Import (iCal)</li>
           <li><span class="ck">✓</span> E-Mail-Support</li>
         </ul>
-        <a href="index.html" class="p-btn p-btn-pri">Jetzt upgraden →</a>
+        <button onclick="openModal('pro')" class="p-btn p-btn-pri">Jetzt upgraden →</button>
       </div>
 
       <!-- SCHULE -->
       <div class="price-card">
         <div class="p-tier">Schullizenz</div>
-        <div class="p-price price-monthly" style="flex-direction:column; align-items:flex-start; gap:2px">
-          <div style="display:flex;align-items:baseline;gap:4px"><span class="p-eur">€</span><span class="p-num" style="font-size:40px">88</span><span class="p-per">/Jahr</span></div>
-          <div style="font-size:13px;color:var(--brand3);font-weight:600">für 5 Lehrkräfte</div>
+        <!-- Live-Rechner -->
+        <div class="school-calc">
+          <div class="sc-label">Wie viele Lehrkräfte?</div>
+          <div class="sc-controls">
+            <button class="sc-btn" onclick="changeTeachers(-1)">−</button>
+            <span class="sc-num" id="sc-count">5</span>
+            <button class="sc-btn" onclick="changeTeachers(1)">+</button>
+          </div>
+          <div class="sc-price-row">
+            <span class="sc-total" id="sc-total">88 €</span>
+            <span class="sc-per">/Jahr</span>
+          </div>
+          <div class="sc-breakdown" id="sc-breakdown">Grundpreis für 5 Lehrkräfte</div>
+          <div class="sc-per-teacher">= <span id="sc-per-teacher">17,60 €</span> pro Lehrkraft/Jahr</div>
         </div>
-        <div class="p-price price-yearly" style="display:none; flex-direction:column; align-items:flex-start; gap:2px">
-          <div style="display:flex;align-items:baseline;gap:4px"><span class="p-eur">€</span><span class="p-num" style="font-size:40px">88</span><span class="p-per">/Jahr</span></div>
-          <div style="font-size:13px;color:var(--brand3);font-weight:600">für 5 Lehrkräfte</div>
-        </div>
-        <div class="p-alt">+ 17 € pro weiterer Lehrkraft/Jahr</div>
-        <div class="p-desc">Für Schulen, die das gesamte Kollegium ausstatten möchten. Zentrale Verwaltung inklusive.</div>
+        <div class="p-desc" style="margin-top:0">Für Schulen, die das gesamte Kollegium ausstatten möchten. Zentrale Verwaltung inklusive.</div>
         <ul class="p-features">
           <li><span class="ck">✓</span> Alle Pro-Features</li>
           <li><span class="ck">✓</span> Zentrales Admin-Dashboard</li>
           <li><span class="ck">✓</span> Klassen-übergreifende Vorlagen</li>
-          <li><span class="ck">✓</span> Schulweite Namens-Listen</li>
-          <li><span class="ck">✓</span> Schullogin (SSO) — geplant</li>
           <li><span class="ck">✓</span> AVV (Datenschutzvertrag)</li>
           <li><span class="ck">✓</span> Telefonischer Support</li>
-          <li><span class="ck">✓</span> Onboarding & Einführungs-Schulung</li>
+          <li><span class="ck">✓</span> Onboarding-Schulung</li>
           <li><span class="ck">✓</span> Rechnung auf die Schule</li>
         </ul>
-        <a href="mailto:info@klassenboard.de" class="p-btn p-btn-soft">Angebot anfragen</a>
-        <p class="p-school-note">Beispiel: 10 Lehrkräfte = 88€ + 5 × 17€ = 173€/Jahr<br>Auf Anfrage auch für größere Kollegien.</p>
+        <button onclick="openModal('school')" class="p-btn p-btn-pri">Schullizenz kaufen →</button>
       </div>
 
     </div>
@@ -888,101 +971,4 @@ body.yearly .save-badge { opacity:1; }
       </div>
       <div class="faq-item">
         <div class="faq-q">Was passiert wenn ich kündige? <span class="faq-arr">▼</span></div>
-        <div class="faq-a">Nach der Kündigung wechselst du automatisch in den Kostenlos-Plan. Du hast dann weiterhin Zugriff auf 1 Klasse und 3 Tafeln. Deine Daten werden nicht gelöscht.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">Kann ich Tafeln mit Kollegen teilen? <span class="faq-arr">▼</span></div>
-        <div class="faq-a">Das gemeinsame Bearbeiten von Tafeln mit Kollegen ist in Planung für ein zukünftiges Update. Mit der Schullizenz wird diese Funktion priorisiert verfügbar sein.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA FINAL -->
-<div class="container" style="padding:80px 28px 0">
-  <div class="cta-final">
-    <h2>Bereit für besseren Unterricht?</h2>
-    <p>Starte jetzt kostenlos — kein Download, keine Kreditkarte. In 30 Sekunden startklar.</p>
-    <div class="cta-final-btns">
-      <a href="index.html" class="btn btn-primary btn-primary-lg">🚀 Kostenlos starten</a>
-      <a href="mailto:info@klassenboard.de" class="btn btn-outline-lg">Schullizenz anfragen</a>
-    </div>
-  </div>
-</div>
-
-<!-- FOOTER -->
-<footer>
-  <div class="footer-inner">
-    <div class="footer-top">
-      <div class="footer-brand">
-        <div class="logo">🏫 Klassen<em>Board</em></div>
-        <p>Die digitale Tafel für moderne Lehrkräfte. Entwickelt in Deutschland, für den deutschen Schulalltag.</p>
-      </div>
-      <div class="footer-col">
-        <h4>Produkt</h4>
-        <ul>
-          <li><a href="index.html">App starten</a></li>
-          <li><a href="#funktionen">Funktionen</a></li>
-          <li><a href="#widgets">Widgets</a></li>
-          <li><a href="#preise">Preise</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Für Schulen</h4>
-        <ul>
-          <li><a href="#preise">Schullizenz</a></li>
-          <li><a href="mailto:info@klassenboard.de">Angebot anfragen</a></li>
-          <li><a href="#">AVV & Datenschutz</a></li>
-          <li><a href="#">Onboarding</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Rechtliches</h4>
-        <ul>
-          <li><a href="#">Impressum</a></li>
-          <li><a href="#">Datenschutz</a></li>
-          <li><a href="#">AGB</a></li>
-          <li><a href="mailto:info@klassenboard.de">Kontakt</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>© 2025 KlassenBoard · Alle Rechte vorbehalten · Made in Germany 🇩🇪</p>
-      <div class="footer-social">
-        <a href="#" title="Instagram">📸</a>
-        <a href="#" title="LinkedIn">💼</a>
-        <a href="#" title="YouTube">▶️</a>
-      </div>
-    </div>
-  </div>
-</footer>
-
-<script>
-// Pricing toggle
-function setToggle(mode) {
-  document.body.classList.toggle('yearly', mode === 'yearly');
-  document.getElementById('tog-monthly').classList.toggle('active', mode === 'monthly');
-  document.getElementById('tog-yearly').classList.toggle('active', mode === 'yearly');
-  document.querySelectorAll('.price-monthly').forEach(el => el.style.display = mode === 'monthly' ? 'flex' : 'none');
-  document.querySelectorAll('.price-yearly').forEach(el => el.style.display = mode === 'yearly' ? 'flex' : 'none');
-}
-
-// FAQ toggle
-document.querySelectorAll('.faq-q').forEach(q => {
-  q.addEventListener('click', () => q.parentElement.classList.toggle('open'));
-});
-
-// Smooth nav highlight
-const sections = document.querySelectorAll('section[id], div[id]');
-const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      navLinks.forEach(l => l.style.color = l.getAttribute('href') === '#' + e.target.id ? '#fff' : '');
-    }
-  });
-}, { threshold: 0.4 });
-sections.forEach(s => observer.observe(s));
-</script>
-</body>
-</html>
+        <div class="faq-a">Nach der Kündigung wechselst du automatisch in den Kostenlos-Plan. Du hast dann weiterhin Zugriff auf 1 Klasse und 3 Tafeln. Deine Daten werden ni
