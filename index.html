@@ -3835,10 +3835,23 @@ document.addEventListener('keydown', e => {
     removeWidget(APP.selectedId);
   }
   if (e.key === 'Escape') {
+    // Remove all overlays / modals
     document.querySelectorAll('.modal-overlay').forEach(m=>m.remove());
-    const wm = document.getElementById('widget-menu'); if (wm) wm.remove();
+    document.getElementById('widget-menu')?.remove();
+    document.getElementById('rename-modal-overlay')?.remove();
+    document.getElementById('tb-customize-panel')?.remove();
+    // Close dropdowns
+    document.getElementById('class-dropdown')?.classList.remove('open');
+    // Exit draw mode if active
+    if (DRAW.active) DRAW.toggle();
+    // Clear selection
     APP.selectedId = null;
     document.querySelectorAll('.widget').forEach(w=>w.classList.remove('selected'));
+    // Nuclear option: remove any stuck fixed overlays (not toolbar/board/toast/ki)
+    const safe = new Set(['toolbar','board','board-bg','widgets-layer','toast','ki-fab','ki-panel','draw-canvas','draw-toolbar','draw-text-input']);
+    document.querySelectorAll('body > *[style*="fixed"], body > *[style*="inset"]').forEach(el => {
+      if (!safe.has(el.id)) el.remove();
+    });
   }
 });
 
@@ -4515,6 +4528,7 @@ const CLASSES = {
     }
     if (this.current() === name) {
       localStorage.removeItem(this.CURRENT_KEY); // clear first so switchTo doesn't re-save deleted class
+      document.getElementById('class-dropdown')?.classList.remove('open');
       const remaining = this.list();
       if (remaining.length > 0) this.switchTo(remaining[0]);
       else { this.renderDropdown(); }
@@ -5088,22 +5102,4 @@ function openToolbarCustomizer() {
   panel.appendChild(resetBtn);
 
   document.body.appendChild(panel);
-  document.addEventListener('pointerdown', function outside(ev) {
-    if (!panel.contains(ev.target) && ev.target.id !== 'btn-customize-toolbar') {
-      panel.remove();
-      document.removeEventListener('pointerdown', outside);
-    }
-  });
-}
-
-// ══════════════════════════════════════════════════════════════
-// STARTUP
-// ══════════════════════════════════════════════════════════════
-const _pollParam = new URLSearchParams(window.location.search).get('poll');
-if (_pollParam) {
-  // Schüler-Modus: nur Voting-Seite zeigen
-  showVotingPage(_pollParam);
-} else {
-  init();
-  AUTH.init();
-  D
+  document.addEventListener('pointerdown', function outside(
