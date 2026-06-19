@@ -99,7 +99,8 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
   background:rgba(0,0,0,0.4); backdrop-filter:blur(16px);
   border-bottom:1px solid var(--glass-border);
   display:flex; align-items:center; gap:8px; padding:0 12px;
-  z-index:1000; user-select:none;
+  z-index:99999 !important; user-select:none;
+  pointer-events:all !important;
 }
 #logo { display:flex; align-items:center; gap:6px; margin-right:8px; flex-shrink:0; }
 #logo span:first-child { font-size:22px; }
@@ -5102,4 +5103,4 @@ function openToolbarCustomizer() {
   panel.appendChild(resetBtn);
 
   document.body.appendChild(panel);
-  document.addEventListener('pointerdown', function outside(
+  document.addE
