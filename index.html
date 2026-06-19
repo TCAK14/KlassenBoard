@@ -4820,24 +4820,26 @@ const DRAW = {
   _start(e) {
     if (!this.active) return;
     if (this.tool === 'text') {
-      // Text tool: show input on click (no preventDefault so dblclick still works)
       this._showTextInput(e.clientX, e.clientY);
       return;
     }
     e.preventDefault();
-    // Save snapshot for undo
+    // Capture pointer so drawing works even outside window
+    try { this.canvas.setPointerCapture(e.pointerId); } catch(_) {}
+
+    // Undo snapshot
     this.history.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height));
     if (this.history.length > 30) this.history.shift();
 
-    const pos = this._getPos(e);
     this.drawing = true;
-    this.lastX = pos.x;
-    this.lastY = pos.y;
+    this._pts = [{ x: e.clientX, y: e.clientY }];
+    this._rafPending = false;
 
-    // Dot on click
-    this.ctx.beginPath();
+    // Draw initial dot
     this._applyStyle();
-    this.ctx.arc(pos.x, pos.y, this._lineWidth() / 2, 0, Math.PI * 2);
+    const lw = this._lineWidth();
+    this.ctx.beginPath();
+    this.ctx.arc(e.clientX, e.clientY, lw / 2, 0, Math.PI * 2);
     this.ctx.fill();
     this.ctx.shadowBlur = 0;
   },
@@ -4845,23 +4847,55 @@ const DRAW = {
   _move(e) {
     if (!this.active || !this.drawing) return;
     e.preventDefault();
-    const pos = this._getPos(e);
+
+    // Collect all coalesced points for stylus/high-freq input
+    const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    for (const ev of events) {
+      this._pts.push({ x: ev.clientX, y: ev.clientY });
+    }
+
+    if (!this._rafPending) {
+      this._rafPending = true;
+      requestAnimationFrame(() => {
+        this._rafPending = false;
+        this._flushPoints();
+      });
+    }
+  },
+
+  _flushPoints() {
+    const pts = this._pts;
+    if (pts.length < 2) return;
     this._applyStyle();
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.lastX, this.lastY);
-    this.ctx.lineTo(pos.x, pos.y);
-    this.ctx.stroke();
-    this.ctx.shadowBlur = 0; // reset after brush stroke
-    this.lastX = pos.x;
-    this.lastY = pos.y;
+    const ctx = this.ctx;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+
+    // Quadratic bezier through midpoints — smooth, precise
+    for (let i = 1; i < pts.length - 1; i++) {
+      const mx = (pts[i].x + pts[i+1].x) / 2;
+      const my = (pts[i].y + pts[i+1].y) / 2;
+      ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+    }
+    // Last segment to current point
+    const last = pts[pts.length - 1];
+    ctx.lineTo(last.x, last.y);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Keep only the last point as the new start
+    this._pts = [last];
   },
 
   _end(e) {
-    if (this.drawing) {
-      this.drawing = false;
-      // Auto-save after every stroke
-      this.saveBoard(APP.state.activeBoardId);
-    }
+    if (!this.drawing) return;
+    this.drawing = false;
+    // Flush remaining points
+    if (this._pts && this._pts.length > 1) this._flushPoints();
+    try { this.canvas.releasePointerCapture(e.pointerId); } catch(_) {}
+    // Debounced save — don't call toDataURL on every stroke end
+    clearTimeout(this._saveTimer);
+    this._saveTimer = setTimeout(() => this.saveBoard(APP.state.activeBoardId), 800);
   },
 
   _applyStyle() {
