@@ -4912,7 +4912,7 @@ const DRAW = {
       if (self.history.length > 30) self.history.shift();
       self.ctx.globalCompositeOperation = 'source-over';
       self.ctx.fillStyle = self.color;
-      self.ctx.font = \`bold \${fs}px sans-serif\`;
+      self.ctx.font = `bold ${fs}px sans-serif`;
       self.ctx.shadowBlur = 0;
       self.ctx.fillText(txt, px, py);
       clearTimeout(self._saveTimer);
