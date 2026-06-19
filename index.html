@@ -5103,4 +5103,42 @@ function openToolbarCustomizer() {
   panel.appendChild(resetBtn);
 
   document.body.appendChild(panel);
-  document.addE
+  document.addEventListener('pointerdown', function outside(ev) {
+    if (!panel.contains(ev.target) && ev.target.id !== 'btn-customize-toolbar') {
+      panel.remove();
+      document.removeEventListener('pointerdown', outside);
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// TOOLBAR GUARDIAN — auto-removes any element blocking the toolbar
+// ══════════════════════════════════════════════════════════════
+setInterval(() => {
+  const safe = new Set(['toolbar','board','board-bg','widgets-layer','toast','ki-fab','ki-panel','draw-canvas','draw-toolbar','draw-text-input']);
+  document.querySelectorAll('body > *').forEach(el => {
+    if (safe.has(el.id)) return;
+    const r = el.getBoundingClientRect();
+    const s = window.getComputedStyle(el);
+    if (r.top <= 0 && r.height > 40 && r.width > 200 && s.display !== 'none') {
+      console.warn('[KB] Blocking element removed:', el.id || el.className);
+      el.remove();
+    }
+  });
+}, 500);
+
+// ══════════════════════════════════════════════════════════════
+// STARTUP
+// ══════════════════════════════════════════════════════════════
+const _pollParam = new URLSearchParams(window.location.search).get('poll');
+if (_pollParam) {
+  showVotingPage(_pollParam);
+} else {
+  AUTH.init();
+  DRAW.init();
+  applyToolbarPrefs();
+  init();
+}
+</script>
+</body>
+</html>
