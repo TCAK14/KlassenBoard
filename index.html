@@ -5276,8 +5276,9 @@ const DRAW = {
 };
 
 
+
 // ══════════════════════════════════════════════════════════════
-// FLOATING KI-CHAT
+// FLOATING KI-CHAT (Groq via Netlify Function)
 // ══════════════════════════════════════════════════════════════
 (function() {
   const fab = document.getElementById('ki-fab');
@@ -5290,8 +5291,9 @@ const DRAW = {
   const TEXT_AI_KEY = 'kb_text_ai_count';
   const MAX_FREE_TEXT = 10;
   let sending = false;
+  const chatHistory = [];
 
-  // ── Resize ──
+  // Resize
   const rh = document.getElementById('ki-resize');
   if (rh) {
     let dragging = false, sx, sy, sw, sh;
@@ -5310,84 +5312,68 @@ const DRAW = {
     rh.addEventListener('lostpointercapture', () => dragging = false);
   }
 
-  // ── Open/Close ──
-  let open = false;
+  let isOpen = false;
   fab.addEventListener('click', () => {
-    open = !open;
-    panel.classList.toggle('open', open);
-    fab.textContent = open ? '✕' : '🤖';
-    if (open) textarea.focus();
+    isOpen = !isOpen;
+    panel.classList.toggle('open', isOpen);
+    fab.textContent = isOpen ? '✕' : '🤖';
+    if (isOpen) textarea.focus();
   });
 
-  // ── Detection ──
   function isImageRequest(q) {
     const t = q.trim().toLowerCase();
-    if (/^(zeig|zeige|mal|male|zeichne|generiere|erstell|bild von|bild:|foto von|zeig mir|zeige mir|show|draw)\b/.test(t)) return true;
-    if (/(als bild|als foto|als zeichnung|als illustration)\b/.test(t)) return true;
-    return false;
+    return /^(zeig|zeige|mal|male|zeichne|generiere|erstell|bild von|bild:|foto von|zeig mir|zeige mir|show|draw)\b/.test(t) ||
+           /(als bild|als foto|als zeichnung|als illustration)\b/.test(t);
   }
-
+  function isDrawRequest(q) {
+    return /^(mal|male|zeichne|draw)\b/i.test(q.trim()) || /(als zeichnung|als illustration)\b/i.test(q);
+  }
   function extractSubject(q) {
     return q.replace(/^(zeig(e)?(\s*(mir|uns|einen|eine|ein|das|die|den|ne))?|mal(e)?(\s*(mir|uns))?|zeichne|generiere|erstell(e)?|bild von|bild:|foto von|show(\s*me)?|draw)\s*/i, '').trim() || q;
   }
 
-  // ── Bubbles ──
   function addBubble(cls, text) {
     const b = document.createElement('div');
     b.className = 'ki-bubble ' + cls;
+    if (cls === 'ai') { b.style.whiteSpace = 'pre-wrap'; b.style.lineHeight = '1.5'; }
     b.textContent = text;
     historyEl.appendChild(b);
     historyEl.scrollTop = historyEl.scrollHeight;
     return b;
   }
 
-  function isDrawRequest(q) {
-    return /^(mal|male|zeichne|draw)\b/i.test(q.trim()) ||
-           /(als zeichnung|als illustration)\b/i.test(q);
-  }
-
-  function addImageBubble(subject, isAiDraw) {
+  function addImageBubble(subject, isDraw) {
     const b = document.createElement('div');
     b.className = 'ki-bubble ai';
     b.style.padding = '6px';
     const lbl = document.createElement('div');
     lbl.style.cssText = 'font-size:10px;opacity:0.5;margin-bottom:4px;padding:0 4px';
-    lbl.textContent = (isAiDraw ? '🎨 ' : '🖼 ') + subject;
+    lbl.textContent = (isDraw ? '🎨 ' : '🖼 ' ) + subject;
     const img = document.createElement('img');
     img.alt = subject;
     img.style.cssText = 'max-width:100%;border-radius:7px;display:block;min-height:40px;background:rgba(255,255,255,0.05)';
-    img.onerror = () => {
-      img.onerror = null;
-      img.style.display = 'none';
+    const url = isDraw
+      ? 'https://image.pollinations.ai/prompt/' + encodeURIComponent(subject + ', illustration, colorful, educational') + '?width=600&height=400&nologo=true&seed=' + Math.floor(Math.random()*2e9)
+      : 'https://loremflickr.com/600/400/' + encodeURIComponent(subject) + '?random=' + Date.now();
+    img.onerror = function() {
+      this.onerror = null;
+      this.style.display = 'none';
       const err = document.createElement('div');
-      err.style.cssText = 'padding:10px;font-size:12px;color:#fca5a5;text-align:center';
+      err.style.cssText = 'padding:8px;font-size:12px;color:#fca5a5;text-align:center';
       err.textContent = '❌ Bild konnte nicht geladen werden';
-      const retryBtn = document.createElement('button');
-      retryBtn.textContent = '🔄 Nochmal';
-      retryBtn.style.cssText = 'margin-top:6px;padding:5px 12px;border-radius:8px;border:none;background:rgba(99,102,241,0.3);color:#a5b4fc;font-size:11px;cursor:pointer;font-weight:600';
-      retryBtn.addEventListener('click', () => {
-        err.remove(); retryBtn.remove();
-        img.style.display = 'block';
-        img.src = buildImageUrl(subject, isAiDraw);
-      });
-      b.append(err, retryBtn);
+      const retry = document.createElement('button');
+      retry.textContent = '🔄 Nochmal';
+      retry.style.cssText = 'margin-top:6px;padding:5px 12px;border-radius:8px;border:none;background:rgba(99,102,241,0.3);color:#a5b4fc;font-size:11px;cursor:pointer;font-weight:600';
+      retry.addEventListener('click', function() { err.remove(); retry.remove(); img.style.display='block'; img.src=url+'&r='+Date.now(); });
+      b.append(err, retry);
     };
-    img.src = buildImageUrl(subject, isAiDraw);
+    img.src = url;
     b.append(lbl, img);
     historyEl.appendChild(b);
     historyEl.scrollTop = historyEl.scrollHeight;
     return b;
   }
 
-  function buildImageUrl(subject, isAiDraw) {
-    if (isAiDraw) {
-      const seed = Math.floor(Math.random() * 2000000000);
-      return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(subject + ', illustration, colorful, educational') + '?width=600&height=400&nologo=true&seed=' + seed;
-    }
-    return 'https://loremflickr.com/600/400/' + encodeURIComponent(subject) + '?random=' + Date.now();
-  }
-
-  // ── Send ──
   async function send() {
     if (sending) return;
     const q = textarea.value.trim();
@@ -5397,14 +5383,13 @@ const DRAW = {
     addBubble('user', q);
 
     if (isImageRequest(q)) {
-      const subject = extractSubject(q);
-      addImageBubble(subject, isDrawRequest(q));
+      addImageBubble(extractSubject(q), isDrawRequest(q));
       return;
     }
 
     const count = parseInt(localStorage.getItem(TEXT_AI_KEY) || '0');
     if (!isPro() && count >= MAX_FREE_TEXT) {
-      addBubble('ai', '🔒 ' + MAX_FREE_TEXT + ' kostenlose Anfragen verbraucht. Upgrade auf Pro für unbegrenzte KI-Nutzung.');
+      addBubble('ai', '🔒 ' + MAX_FREE_TEXT + ' kostenlose Anfragen verbraucht.\nUpgrade auf Pro für unbegrenzte KI-Nutzung.');
       return;
     }
 
@@ -5415,23 +5400,34 @@ const DRAW = {
 
     try {
       let answer;
+
       if (isPro() && AUTH.client) {
-        const { data, error } = await AUTH.client.functions.invoke('ai-generate', { body: { type: 'ask', question: q } });
+        const { data, error } = await AUTH.client.functions.invoke('ai-generate', {
+          body: { type: 'ask', question: q }
+        });
         if (error) throw new Error(error.message);
         answer = data?.text;
       } else {
-        const sys = 'Du bist ein hilfreicher KI-Assistent fuer Lehrkraefte an deutschen Schulen. Antworte kurz, klar und auf Deutsch.';
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 30000);
-        const res = await fetch(
-          'https://text.pollinations.ai/' + encodeURIComponent(q) + '?model=openai&system=' + encodeURIComponent(sys),
-          { signal: controller.signal }
-        );
+        const timeout = setTimeout(function() { controller.abort(); }, 30000);
+        const res = await fetch('/.netlify/functions/ai-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q, history: chatHistory.slice(-6) }),
+          signal: controller.signal
+        });
         clearTimeout(timeout);
-        if (!res.ok) throw new Error('Serverfehler (' + res.status + ')');
-        answer = await res.text();
+        if (!res.ok) {
+          const err = await res.json().catch(function() { return {}; });
+          throw new Error(err.error || 'Serverfehler (' + res.status + ')');
+        }
+        const data = await res.json();
+        answer = data.text;
         if (!isPro()) localStorage.setItem(TEXT_AI_KEY, String(count + 1));
       }
+
+      chatHistory.push({ role: 'user', content: q });
+      chatHistory.push({ role: 'assistant', content: answer });
 
       thinking.remove();
       const bubble = addBubble('ai', answer || '(Keine Antwort)');
@@ -5440,12 +5436,12 @@ const DRAW = {
         const left = MAX_FREE_TEXT - count - 1;
         const c = document.createElement('div');
         c.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.2);margin-top:4px';
-        c.textContent = left + '/' + MAX_FREE_TEXT + ' Anfragen uebrig';
+        c.textContent = left + '/' + MAX_FREE_TEXT + ' Anfragen übrig';
         bubble.appendChild(c);
       }
     } catch (e) {
       thinking.remove();
-      const msg = e.name === 'AbortError' ? 'Zeitueberschreitung - versuche es nochmal.' : e.message;
+      const msg = e.name === 'AbortError' ? 'Zeitüberschreitung - bitte nochmal versuchen.' : e.message;
       addBubble('ai', '❌ ' + msg);
     } finally {
       sending = false;
@@ -5455,11 +5451,11 @@ const DRAW = {
   }
 
   sendBtn.addEventListener('click', send);
-  textarea.addEventListener('keydown', e => {
+  textarea.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
     e.stopPropagation();
   });
-  textarea.addEventListener('input', () => {
+  textarea.addEventListener('input', function() {
     textarea.style.height = '38px';
     textarea.style.height = Math.min(textarea.scrollHeight, 90) + 'px';
   });
