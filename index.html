@@ -332,21 +332,17 @@ label { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-botto
 /* ── Floating KI-Chat ── */
 #ki-fab {
   position:fixed; bottom:24px; left:24px; z-index:2000;
-  width:52px; height:52px; border-radius:50%;
-  background:linear-gradient(135deg,#7c3aed,#6366f1);
-  border:2px solid rgba(255,255,255,0.2);
+  width:48px; height:48px; border-radius:14px;
+  background:rgba(15,15,30,0.85);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(99,102,241,0.3);
   cursor:pointer;
-  box-shadow:0 4px 24px rgba(99,102,241,0.6), 0 0 0 0 rgba(99,102,241,0.4);
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
   display:flex; align-items:center; justify-content:center;
-  transition:all .25s; padding:0;
-  animation: ki-pulse 3s ease-in-out infinite;
+  transition:all .2s; padding:0;
 }
-@keyframes ki-pulse {
-  0%,100% { box-shadow:0 4px 24px rgba(99,102,241,0.6), 0 0 0 0 rgba(99,102,241,0.3); }
-  50% { box-shadow:0 4px 24px rgba(99,102,241,0.6), 0 0 0 8px rgba(99,102,241,0); }
-}
-#ki-fab:hover { transform:scale(1.12); box-shadow:0 8px 32px rgba(99,102,241,0.8); animation:none; }
-#ki-fab:active { transform:scale(0.96); }
+#ki-fab:hover { transform:translateY(-2px); border-color:rgba(99,102,241,0.6); box-shadow:0 8px 28px rgba(99,102,241,0.3); background:rgba(99,102,241,0.15); }
+#ki-fab:active { transform:scale(0.95); }
 #ki-panel {
   position:fixed; bottom:80px; left:20px; z-index:2000;
   width:320px; height:420px;
@@ -679,11 +675,11 @@ body.fullscreen #board { top:0; }
 
 <!-- Toolbar -->
 <div id="toolbar">
-  <div id="logo">
+  <a id="logo" href="landing.html" title="Zur Startseite" style="text-decoration:none;color:inherit">
     <span>🏫</span>
     <span id="logo-text">KlassenBoard</span>
         <span style="font-size:9px;opacity:0.4;margin-left:2px;font-weight:400;letter-spacing:1px;text-transform:uppercase;align-self:flex-end;margin-bottom:1px">Beta</span>
-  </div>
+  </a>
   <!-- Klassen-Wechsler -->
   <div id="class-switcher">
     <button id="class-btn" title="Klasse wechseln">
@@ -1084,7 +1080,7 @@ const BUILT_IN_TEMPLATES = [
   {
     id:'tpl-gruppe', name:'Gruppenarbeit', emoji:'👥',
     desc:'Timer, Gruppen, Phasen',
-    bg:{ type:'gradient', value:'linear-gradient(135deg,#43e97b,#38f9d7)' },
+    bg:{ type:'gradient', value:'linear-gradient(135deg,#1a5c3a,#0f3d2e)' },
     widgets:[
       { type:'timer',   x:20,  y:20,  w:240, h:160, config:{ minutes:15 } },
       { type:'groups',  x:280, y:20,  w:300, h:220, config:{ names:'Anna\nBen\nClara\nDavid\nEva\nFinn', size:3 } },
@@ -1841,14 +1837,34 @@ const WIDGET_RENDERERS = {
     div.style.color = w.config.color || '#fff';
     const text = w.config.text || '';
     const charCount = Math.max(text.length, 1);
-    // If user set explicit font size respect it, otherwise auto-scale
     const autoFs = Math.min(w.w * 0.07, w.h * 0.25) * Math.min(1, Math.pow(40 / charCount, 0.35));
     div.style.fontSize = (w.config.fontSize || Math.max(14, Math.min(autoFs, 72))) + 'px';
     div.textContent = text;
     if (APP.state.editMode) {
       div.addEventListener('dblclick', e => {
         e.stopPropagation();
-        openTextEdit(w);
+        div.contentEditable = 'true';
+        div.style.cursor = 'text';
+        div.style.outline = '2px solid rgba(99,102,241,0.6)';
+        div.style.borderRadius = '6px';
+        div.focus();
+        const sel = window.getSelection();
+        sel.selectAllChildren(div);
+        sel.collapseToEnd();
+        const finish = () => {
+          div.contentEditable = 'false';
+          div.style.cursor = '';
+          div.style.outline = '';
+          w.config.text = div.textContent;
+          APP.save();
+          div.removeEventListener('blur', finish);
+        };
+        div.addEventListener('blur', finish);
+        div.addEventListener('keydown', ev => {
+          ev.stopPropagation();
+          if (ev.key === 'Escape') { div.blur(); }
+          if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); div.blur(); }
+        });
       });
     }
     body.appendChild(div);
@@ -4571,7 +4587,7 @@ function setupDemo() {
 
   // Tafel 2: Gruppenarbeit
   createBoard('Gruppenarbeit',
-    { type:'gradient', value:'linear-gradient(135deg,#43e97b,#38f9d7)' },
+    { type:'gradient', value:'linear-gradient(135deg,#1a5c3a,#0f3d2e)' },
     [
       { type:'timer',   x:30,  y:20,  w:260, h:170, config:{ minutes:15 } },
       { type:'groups',  x:310, y:20,  w:340, h:240, config:{ names:'Emma\nLeon\nMia\nNoah\nSophie\nBen\nHanna\nLuca\nLina\nFinn\nEmilia\nPaul', size:3 } },
@@ -5334,7 +5350,39 @@ const TOOLBAR_ITEMS = [
   { id:'draw',      label:'🖊 Zeichnen',      default:true },
   { id:'editmode',  label:'✏️ Edit-Modus',    default:true },
   { id:'fullscreen',label:'⤢ Vollbild',       default:true },
+  ...Object.entries(REGISTRY).map(([type, reg]) => ({
+    id: 'qadd-' + type,
+    label: reg.emoji + ' + ' + reg.label,
+    default: false,
+    widgetType: type,
+  })),
 ];
+
+// Create quick-add widget buttons in toolbar
+(function initWidgetToolbarButtons() {
+  const sep = document.getElementById('btn-add-widget');
+  Object.entries(REGISTRY).forEach(([type, reg]) => {
+    const btn = document.createElement('button');
+    btn.className = 'tb-icon-btn tb-item';
+    btn.dataset.tbid = 'qadd-' + type;
+    btn.title = reg.label + ' hinzufügen';
+    btn.textContent = reg.emoji;
+    btn.style.display = 'none';
+    btn.addEventListener('click', () => {
+      const board = APP.activeBoard();
+      if (!board) return;
+      APP.snapshotUndo();
+      board.widgets.push({
+        id: 'w_' + Date.now(), type,
+        x: 40 + Math.random()*200, y: 80 + Math.random()*150,
+        w: reg.w, h: reg.h, config: {}, createdAt: new Date().toISOString()
+      });
+      APP.save(); renderWidgets();
+      toast('✅ ' + reg.label + ' hinzugefügt');
+    });
+    sep.parentNode.insertBefore(btn, sep);
+  });
+})();
 
 function getToolbarPrefs() {
   try { return JSON.parse(localStorage.getItem('kb_toolbar_prefs') || 'null'); } catch { return null; }
