@@ -2800,7 +2800,13 @@ const WIDGET_RENDERERS = {
     // Header bar
     const header = document.createElement('div');
     header.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(0,0,0,0.3);flex-shrink:0;font-size:11.5px;';
-    header.innerHTML = '<span style="opacity:0.6">📄</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + file.name + '</span>';
+    const fileIcon = document.createElement('span');
+    fileIcon.style.opacity = '0.6';
+    fileIcon.textContent = '📄';
+    const fileName = document.createElement('span');
+    fileName.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    fileName.textContent = file.name;
+    header.append(fileIcon, fileName);
     const changeBtn = document.createElement('button');
     changeBtn.textContent = '↺ Andere Datei';
     changeBtn.style.cssText = 'border:none;background:rgba(255,255,255,0.1);color:#fff;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:10.5px;flex-shrink:0';

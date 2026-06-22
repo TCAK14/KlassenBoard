@@ -1,14 +1,20 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
-  }
-
   const headers = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*'
+    'Access-Control-Allow-Origin': 'https://klassenboard.netlify.app',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers };
+  }
+
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, headers, body: 'Method Not Allowed' };
+  }
 
   try {
     const { plan, teachers = 5, email } = JSON.parse(event.body);
@@ -38,8 +44,8 @@ exports.handler = async (event) => {
         subscription_data: {
           trial_period_days: 14
         },
-        success_url: BASE_URL + '/landing?success=pro',
-        cancel_url: BASE_URL + '/landing#preise',
+        success_url: BASE_URL + '/landing.html?success=pro',
+        cancel_url: BASE_URL + '/landing.html#preise',
       });
 
     } else if (plan === 'school') {
@@ -62,8 +68,8 @@ exports.handler = async (event) => {
           },
           quantity: 1
         }],
-        success_url: BASE_URL + '/landing?success=school',
-        cancel_url: BASE_URL + '/landing#preise',
+        success_url: BASE_URL + '/landing.html?success=school',
+        cancel_url: BASE_URL + '/landing.html#preise',
       });
     } else {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Unbekannter Plan' }) };

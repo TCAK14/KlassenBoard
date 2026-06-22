@@ -375,8 +375,25 @@ footer { border-top:1px solid var(--border); padding:56px 28px 40px; }
 }
 .footer-social a:hover { border-color:var(--border2); background:rgba(255,255,255,0.08); }
 
+/* ── HAMBURGER ── */
+.nav-burger { display:none; flex-direction:column; gap:5px; background:none; border:none; cursor:pointer; padding:6px; z-index:201; }
+.nav-burger span { display:block; width:22px; height:2px; background:#fff; border-radius:2px; transition:all .2s; }
+.nav-burger.open span:nth-child(1) { transform:rotate(45deg) translate(5px,5px); }
+.nav-burger.open span:nth-child(2) { opacity:0; }
+.nav-burger.open span:nth-child(3) { transform:rotate(-45deg) translate(5px,-5px); }
+.mobile-menu {
+  display:none; position:fixed; top:62px; left:0; right:0;
+  background:rgba(12,12,29,0.97); backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border); padding:16px 28px 20px;
+  flex-direction:column; gap:6px; z-index:199;
+}
+.mobile-menu.open { display:flex; }
+.mobile-menu a { color:var(--muted2); text-decoration:none; font-size:15px; font-weight:500; padding:10px 0; border-bottom:1px solid var(--border); transition:color .15s; }
+.mobile-menu a:hover { color:#fff; }
+
 /* ── RESPONSIVE ── */
 @media(max-width:900px){
+  .nav-burger { display:flex; }
   .why-grid,.cases-grid,.pricing-grid,.testi-scroll,.features-big { grid-template-columns:1fr; }
   .faq-grid { grid-template-columns:1fr; }
   .footer-top { grid-template-columns:1fr 1fr; }
@@ -496,12 +513,28 @@ body.yearly .save-badge { opacity:1; }
       <a href="#preise">Preise</a>
       <a href="#faq">FAQ</a>
     </div>
+    <button class="nav-burger" id="nav-burger" aria-label="Menü öffnen" onclick="document.getElementById('mobile-menu').classList.toggle('open');this.classList.toggle('open')">
+      <span></span><span></span><span></span>
+    </button>
     <div class="nav-actions">
       <a href="index.html" class="btn btn-ghost">Anmelden</a>
       <a href="index.html" class="btn btn-primary">Kostenlos starten</a>
     </div>
   </div>
 </nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobile-menu">
+  <a href="#warum" onclick="document.getElementById('mobile-menu').classList.remove('open');document.getElementById('nav-burger').classList.remove('open')">Warum KlassenBoard</a>
+  <a href="#funktionen" onclick="document.getElementById('mobile-menu').classList.remove('open');document.getElementById('nav-burger').classList.remove('open')">Funktionen</a>
+  <a href="#widgets" onclick="document.getElementById('mobile-menu').classList.remove('open');document.getElementById('nav-burger').classList.remove('open')">Widgets</a>
+  <a href="#preise" onclick="document.getElementById('mobile-menu').classList.remove('open');document.getElementById('nav-burger').classList.remove('open')">Preise</a>
+  <a href="#faq" onclick="document.getElementById('mobile-menu').classList.remove('open');document.getElementById('nav-burger').classList.remove('open')">FAQ</a>
+  <div style="display:flex;gap:10px;margin-top:8px">
+    <a href="index.html" class="btn btn-ghost" style="flex:1;justify-content:center">Anmelden</a>
+    <a href="index.html" class="btn btn-primary" style="flex:1;justify-content:center">Kostenlos starten</a>
+  </div>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -548,7 +581,7 @@ body.yearly .save-badge { opacity:1; }
       <div class="mw">
         <div class="mw-label">Uhr</div>
         <div class="mw-big">09:14</div>
-        <div class="mw-sm">Freitag, 20. Juni 2025</div>
+        <div class="mw-sm">Montag, 23. Juni 2026</div>
       </div>
       <div class="mw">
         <div class="mw-label">Timer</div>
@@ -1014,8 +1047,8 @@ body.yearly .save-badge { opacity:1; }
         <h4>Für Schulen</h4>
         <ul>
           <li><a href="#preise">Schullizenz</a></li>
-          <li><a href="#">AVV & Datenschutz</a></li>
-          <li><a href="#">Onboarding</a></li>
+          <li><a href="datenschutz.html">AVV & Datenschutz</a></li>
+          <li><a href="mailto:info@klassenboard.de">Onboarding anfragen</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -1023,13 +1056,13 @@ body.yearly .save-badge { opacity:1; }
         <ul>
           <li><a href="impressum.html">Impressum</a></li>
           <li><a href="datenschutz.html">Datenschutz</a></li>
-          <li><a href="#">AGB</a></li>
+          <li><a href="datenschutz.html">AGB</a></li>
           <li><a href="mailto:info@klassenboard.de">Kontakt</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2025 KlassenBoard · Alle Rechte vorbehalten · Made in Germany 🇩🇪</p>
+      <p>© 2025–2026 KlassenBoard · Alle Rechte vorbehalten · Made in Germany 🇩🇪</p>
       <div class="footer-social">
         <a href="#" title="Instagram">📸</a>
         <a href="#" title="LinkedIn">💼</a>
