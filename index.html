@@ -347,14 +347,20 @@ label { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-botto
 #ki-fab:active { transform:scale(0.95); }
 #ki-panel {
   position:fixed; bottom:80px; left:20px; z-index:2000;
-  width:320px; height:420px; min-width:260px; min-height:250px;
+  width:320px; height:420px; min-width:260px; min-height:250px; max-width:90vw; max-height:80vh;
   background:rgba(15,15,25,0.95); backdrop-filter:blur(20px);
   border:1px solid rgba(99,102,241,0.3); border-radius:16px;
   box-shadow:0 16px 48px rgba(0,0,0,0.6);
   display:flex; flex-direction:column; overflow:hidden;
   transform:scale(0.9) translateY(10px); opacity:0;
   transition:opacity .2s, transform .2s; pointer-events:none;
-  resize:both;
+}
+#ki-panel .ki-resize {
+  position:absolute; top:0; right:0; width:18px; height:18px; cursor:ne-resize; z-index:5;
+}
+#ki-panel .ki-resize::after {
+  content:''; position:absolute; top:4px; right:4px;
+  width:8px; height:8px; border-top:2px solid rgba(255,255,255,0.3); border-right:2px solid rgba(255,255,255,0.3);
 }
 #ki-panel.open { transform:scale(1) translateY(0); opacity:1; pointer-events:all; }
 #ki-panel-header {
@@ -796,6 +802,7 @@ body.fullscreen #board { top:0; }
   </svg>
 </button>
 <div id="ki-panel">
+  <div class="ki-resize" id="ki-resize"></div>
   <div id="ki-panel-header">
     <span>🤖</span>
     <b>KI-Assistent</b>
@@ -5285,6 +5292,26 @@ const DRAW = {
   const sendBtn = document.getElementById('ki-send');
   if (!fab) return;
 
+  // Resize handle
+  const resizeHandle = document.getElementById('ki-resize');
+  if (resizeHandle) {
+    let rDrag = false, rStartX, rStartY, rStartW, rStartH;
+    resizeHandle.addEventListener('pointerdown', e => {
+      e.preventDefault(); e.stopPropagation();
+      rDrag = true; rStartX = e.clientX; rStartY = e.clientY;
+      rStartW = panel.offsetWidth; rStartH = panel.offsetHeight;
+      resizeHandle.setPointerCapture(e.pointerId);
+    });
+    resizeHandle.addEventListener('pointermove', e => {
+      if (!rDrag) return;
+      const dw = e.clientX - rStartX;
+      const dh = rStartY - e.clientY;
+      panel.style.width  = Math.max(260, Math.min(rStartW + dw, window.innerWidth * 0.9)) + 'px';
+      panel.style.height = Math.max(250, Math.min(rStartH + dh, window.innerHeight * 0.8)) + 'px';
+    });
+    resizeHandle.addEventListener('pointerup', () => { rDrag = false; });
+  }
+
   let open = false;
   fab.addEventListener('click', () => {
     open = !open;
@@ -5334,6 +5361,8 @@ const DRAW = {
       const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(subject + ', realistic photograph, high quality, educational, clear lighting')}?width=600&height=400&nologo=true&seed=${Math.floor(Math.random()*2000000000)}`;
       thinking.remove();
       addBubble('ai', { url, label: subject }, true);
+      sendBtn.disabled = false;
+      return;
     } else {
       const KEY = 'kb_text_ai_count';
       const MAX_FREE = 10;
