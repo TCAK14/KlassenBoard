@@ -5341,92 +5341,50 @@ const DRAW = {
     return b;
   }
 
-  // Image queue: ensures minimum 3s between API requests to avoid 429
-  const imgQueue = [];
-  let imgBusy = false;
-  let lastImgTime = 0;
-
-  function enqueueImage(subject, url, container) {
-    imgQueue.push({ subject, url, container });
-    processQueue();
+  function isDrawRequest(q) {
+    return /^(mal|male|zeichne|draw)\b/i.test(q.trim()) ||
+           /(als zeichnung|als illustration)\b/i.test(q);
   }
 
-  async function processQueue() {
-    if (imgBusy || imgQueue.length === 0) return;
-    imgBusy = true;
-    const { subject, url, container } = imgQueue.shift();
-    const wait = Math.max(0, 3000 - (Date.now() - lastImgTime));
-    if (wait > 0) await new Promise(r => setTimeout(r, wait));
-    await fetchImage(subject, url, container, 0);
-    lastImgTime = Date.now();
-    imgBusy = false;
-    processQueue();
-  }
-
-  async function fetchImage(subject, baseUrl, container, attempt) {
-    attempt++;
-    container.innerHTML = '';
-    const spinner = document.createElement('div');
-    spinner.style.cssText = 'text-align:center;padding:16px;font-size:12px;color:rgba(255,255,255,0.4)';
-    spinner.textContent = attempt > 1 ? '⏳ Neuer Versuch…' : '⏳ Bild wird geladen…';
-    container.appendChild(spinner);
-
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 25000);
-      const res = await fetch(baseUrl + '&t=' + Date.now(), { signal: controller.signal });
-      clearTimeout(timeout);
-
-      if (res.status === 429) {
-        if (attempt < 4) {
-          spinner.textContent = '⏳ Server beschäftigt, warte…';
-          await new Promise(r => setTimeout(r, 3000));
-          return fetchImage(subject, baseUrl, container, attempt);
-        }
-        throw new Error('Server überlastet');
-      }
-      if (!res.ok) throw new Error('Fehler ' + res.status);
-
-      const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      container.innerHTML = '';
-      const img = document.createElement('img');
-      img.src = blobUrl;
-      img.alt = subject;
-      img.style.cssText = 'max-width:100%;border-radius:7px;display:block';
-      container.appendChild(img);
-      historyEl.scrollTop = historyEl.scrollHeight;
-    } catch (e) {
-      container.innerHTML = '';
-      const isTimeout = e.name === 'AbortError';
-      if (!isTimeout && attempt < 3) {
-        await new Promise(r => setTimeout(r, 2000));
-        return fetchImage(subject, baseUrl, container, attempt);
-      }
-      const err = document.createElement('div');
-      err.style.cssText = 'padding:10px;font-size:12px;color:#fca5a5;text-align:center';
-      err.textContent = '❌ ' + (isTimeout ? 'Zeitüberschreitung' : e.message);
-      const retryBtn = document.createElement('button');
-      retryBtn.textContent = '🔄 Nochmal';
-      retryBtn.style.cssText = 'margin-top:6px;padding:5px 12px;border-radius:8px;border:none;background:rgba(99,102,241,0.3);color:#a5b4fc;font-size:11px;cursor:pointer;font-weight:600';
-      retryBtn.addEventListener('click', () => fetchImage(subject, baseUrl, container, 0));
-      container.append(err, retryBtn);
-    }
-  }
-
-  function addImageBubble(subject, url) {
+  function addImageBubble(subject, isAiDraw) {
     const b = document.createElement('div');
     b.className = 'ki-bubble ai';
     b.style.padding = '6px';
     const lbl = document.createElement('div');
     lbl.style.cssText = 'font-size:10px;opacity:0.5;margin-bottom:4px;padding:0 4px';
-    lbl.textContent = '🖼 ' + subject;
-    const container = document.createElement('div');
-    b.append(lbl, container);
+    lbl.textContent = (isAiDraw ? '🎨 ' : '🖼 ') + subject;
+    const img = document.createElement('img');
+    img.alt = subject;
+    img.style.cssText = 'max-width:100%;border-radius:7px;display:block;min-height:40px;background:rgba(255,255,255,0.05)';
+    img.onerror = () => {
+      img.onerror = null;
+      img.style.display = 'none';
+      const err = document.createElement('div');
+      err.style.cssText = 'padding:10px;font-size:12px;color:#fca5a5;text-align:center';
+      err.textContent = '❌ Bild konnte nicht geladen werden';
+      const retryBtn = document.createElement('button');
+      retryBtn.textContent = '🔄 Nochmal';
+      retryBtn.style.cssText = 'margin-top:6px;padding:5px 12px;border-radius:8px;border:none;background:rgba(99,102,241,0.3);color:#a5b4fc;font-size:11px;cursor:pointer;font-weight:600';
+      retryBtn.addEventListener('click', () => {
+        err.remove(); retryBtn.remove();
+        img.style.display = 'block';
+        img.src = buildImageUrl(subject, isAiDraw);
+      });
+      b.append(err, retryBtn);
+    };
+    img.src = buildImageUrl(subject, isAiDraw);
+    b.append(lbl, img);
     historyEl.appendChild(b);
     historyEl.scrollTop = historyEl.scrollHeight;
-    enqueueImage(subject, url, container);
     return b;
+  }
+
+  function buildImageUrl(subject, isAiDraw) {
+    if (isAiDraw) {
+      const seed = Math.floor(Math.random() * 2000000000);
+      return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(subject + ', illustration, colorful, educational') + '?width=600&height=400&nologo=true&seed=' + seed;
+    }
+    return 'https://loremflickr.com/600/400/' + encodeURIComponent(subject) + '?random=' + Date.now();
   }
 
   // ── Send ──
@@ -5440,9 +5398,7 @@ const DRAW = {
 
     if (isImageRequest(q)) {
       const subject = extractSubject(q);
-      const seed = Math.floor(Math.random() * 2000000000);
-      const prompt = encodeURIComponent(subject + ', realistic photograph, high quality, educational, clear lighting');
-      addImageBubble(subject, 'https://image.pollinations.ai/prompt/' + prompt + '?width=600&height=400&nologo=true&seed=' + seed);
+      addImageBubble(subject, isDrawRequest(q));
       return;
     }
 
