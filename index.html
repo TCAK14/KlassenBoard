@@ -2643,7 +2643,27 @@ const WIDGET_RENDERERS = {
       renderMessages();
       APP.save();
     });
-    topRow.appendChild(clearBtn);
+
+    // Expand/shrink button
+    const expandBtn = el('button','ask-clear-btn');
+    expandBtn.textContent = '⛶ Vergrößern';
+    expandBtn.style.marginRight = '4px';
+    expandBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const isLarge = w.w >= 700;
+      w.w = isLarge ? 400 : 750;
+      w.h = isLarge ? 300 : 520;
+      expandBtn.textContent = isLarge ? '⛶ Vergrößern' : '⊡ Verkleinern';
+      // re-render widget with new size
+      const wEl = document.querySelector('.widget[data-id="' + w.id + '"]');
+      if (wEl) {
+        wEl.style.width  = w.w + 'px';
+        wEl.style.height = w.h + 'px';
+      }
+      APP.save();
+    });
+
+    topRow.append(expandBtn, clearBtn);
 
     // ── Input row ──
     const inputRow = el('div','ask-input-row');
@@ -2692,7 +2712,7 @@ const WIDGET_RENDERERS = {
           const subject = extractImagePrompt(q);
           const w_px = Math.min(800, Math.max(400, w.w * 2));
           const h_px = Math.min(600, Math.max(300, w.h * 1.5));
-          const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(subject + ', clean illustration, educational, colorful')}?width=${w_px}&height=${h_px}&nologo=true&seed=${Date.now()}`;
+          const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(subject + ', clean illustration, educational, colorful')}?width=${w_px}&height=${h_px}&nologo=true&seed=${Math.floor(Math.random()*2000000000)}`;
           thinkingBubble.remove();
           messages.push({ role:'ai', type:'image', url, text: subject });
         } else {
@@ -5310,7 +5330,7 @@ const DRAW = {
     if (isImageRequest(q)) {
       const thinking = addBubble('thinking', '🎨 Generiere Bild…');
       const subject = extractImagePrompt(q);
-      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(subject + ', clean illustration, educational, colorful')}?width=600&height=400&nologo=true&seed=${Date.now()}`;
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(subject + ', clean illustration, educational, colorful')}?width=600&height=400&nologo=true&seed=${Math.floor(Math.random()*2000000000)}`;
       thinking.remove();
       addBubble('ai', { url, label: subject }, true);
     } else {
