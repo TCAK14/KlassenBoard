@@ -2669,7 +2669,7 @@ const WIDGET_RENDERERS = {
     }
 
     function extractImagePrompt(q) {
-      return q.replace(/^(zeig(e)?(\s*(mir|ein|eine|einen|das|die|den))?|mal(e)?|zeichne|generiere|erstell(e)?|bild von|bild:|foto von|show|draw)\s*/i, '').trim() || q;
+      return q.replace(/^(zeig(e)?(\s*(mir|einen|eine|ein|das|die|den))?|mal(e)?|zeichne|generiere|erstell(e)?|bild von|bild:|foto von|show|draw)\s*/i, '').trim() || q;
     }
 
     sendBtn.addEventListener('click', async e => {
