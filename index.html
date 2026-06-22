@@ -2664,13 +2664,12 @@ const WIDGET_RENDERERS = {
     // ── Send ──
     // Detect image request from German keywords
     function isImageRequest(q) {
-      return /^(zeig|zeige|mal|male|zeichne|generiere|erstell|bild von|bild:|foto von|zeig mir|zeige mir)/i.test(q.trim()) ||
-             /(als bild|als foto|als zeichnung|als illustration)/i.test(q);
+      return /^(zeig|zeige|mal|male|zeichne|generiere|erstell|bild von|bild:|foto von|zeig mir|zeige mir|show|draw)\b/i.test(q.trim()) ||
+             /(als bild|als foto|als zeichnung|als illustration)/i.test(q);
     }
 
     function extractImagePrompt(q) {
-      // Strip leading command words, keep the subject
-      return q.replace(/^(zeig(e)?|mal(e)?|zeichne|generiere|erstell(e)?|bild von|bild:|foto von|zeig mir|zeige mir)\s*/i, '').trim() || q;
+      return q.replace(/^(zeig(e)?(\s*(mir|ein|eine|einen|das|die|den))?|mal(e)?|zeichne|generiere|erstell(e)?|bild von|bild:|foto von|show|draw)\s*/i, '').trim() || q;
     }
 
     sendBtn.addEventListener('click', async e => {
@@ -5274,11 +5273,11 @@ const DRAW = {
   });
 
   function isImageRequest(q) {
-    return /^(zeig|zeige|mal|male|zeichne|generiere|erstell|bild von|bild:|foto von|zeig mir|zeige mir)/i.test(q.trim()) ||
-           /(als bild|als foto|als zeichnung)/i.test(q);
+    return /^(zeig|zeige|mal|male|zeichne|generiere|erstell|bild von|bild:|foto von|zeig mir|zeige mir|show|draw)\b/i.test(q.trim()) ||
+           /(als bild|als foto|als zeichnung)/i.test(q);
   }
   function extractImagePrompt(q) {
-    return q.replace(/^(zeig(e)?|mal(e)?|zeichne|generiere|erstell(e)?|bild von|bild:|foto von|zeig mir|zeige mir)\s*/i, '').trim() || q;
+    return q.replace(/^(zeig(e)?(\s*(mir|ein|eine|einen|das|die|den))?|mal(e)?|zeichne|generiere|erstell(e)?|bild von|bild:|foto von|show|draw)\s*/i, '').trim() || q;
   }
 
   function addBubble(cls, content, isImage) {
