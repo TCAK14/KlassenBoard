@@ -5275,11 +5275,6 @@ const DRAW = {
   }
 };
 
-// ══════════════════════════════════════════════════════════════
-// FLOATING KI-CHAT// ══════════════════════════════════════════════════════════════
-// KLASSEN-VERWALTUNG
-// ══════════════════════════════════════════════════════════════
-
 
 // ══════════════════════════════════════════════════════════════
 // FLOATING KI-CHAT
@@ -5287,31 +5282,35 @@ const DRAW = {
 (function() {
   const fab = document.getElementById('ki-fab');
   const panel = document.getElementById('ki-panel');
-  const history = document.getElementById('ki-history');
+  const historyEl = document.getElementById('ki-history');
   const textarea = document.getElementById('ki-textarea');
   const sendBtn = document.getElementById('ki-send');
   if (!fab) return;
 
-  // Resize handle
-  const resizeHandle = document.getElementById('ki-resize');
-  if (resizeHandle) {
-    let rDrag = false, rStartX, rStartY, rStartW, rStartH;
-    resizeHandle.addEventListener('pointerdown', e => {
+  const TEXT_AI_KEY = 'kb_text_ai_count';
+  const MAX_FREE_TEXT = 10;
+  let sending = false;
+
+  // ── Resize ──
+  const rh = document.getElementById('ki-resize');
+  if (rh) {
+    let dragging = false, sx, sy, sw, sh;
+    rh.addEventListener('pointerdown', e => {
       e.preventDefault(); e.stopPropagation();
-      rDrag = true; rStartX = e.clientX; rStartY = e.clientY;
-      rStartW = panel.offsetWidth; rStartH = panel.offsetHeight;
-      resizeHandle.setPointerCapture(e.pointerId);
+      dragging = true; sx = e.clientX; sy = e.clientY;
+      sw = panel.offsetWidth; sh = panel.offsetHeight;
+      rh.setPointerCapture(e.pointerId);
     });
-    resizeHandle.addEventListener('pointermove', e => {
-      if (!rDrag) return;
-      const dw = e.clientX - rStartX;
-      const dh = rStartY - e.clientY;
-      panel.style.width  = Math.max(260, Math.min(rStartW + dw, window.innerWidth * 0.9)) + 'px';
-      panel.style.height = Math.max(250, Math.min(rStartH + dh, window.innerHeight * 0.8)) + 'px';
+    rh.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      panel.style.width = Math.max(280, Math.min(sw + (e.clientX - sx), window.innerWidth * 0.9)) + 'px';
+      panel.style.height = Math.max(280, Math.min(sh + (sy - e.clientY), window.innerHeight * 0.85)) + 'px';
     });
-    resizeHandle.addEventListener('pointerup', () => { rDrag = false; });
+    rh.addEventListener('pointerup', () => dragging = false);
+    rh.addEventListener('lostpointercapture', () => dragging = false);
   }
 
+  // ── Open/Close ──
   let open = false;
   fab.addEventListener('click', () => {
     open = !open;
@@ -5320,92 +5319,139 @@ const DRAW = {
     if (open) textarea.focus();
   });
 
+  // ── Detection ──
   function isImageRequest(q) {
-    return /^(zeig|zeige|mal|male|zeichne|generiere|erstell|bild von|bild:|foto von|zeig mir|zeige mir|show|draw)\b/i.test(q.trim()) ||
-           /(als bild|als foto|als zeichnung)/i.test(q);
-  }
-  function extractImagePrompt(q) {
-    return q.replace(/^(zeig(e)?(\s*(mir|ein|eine|einen|das|die|den))?|mal(e)?|zeichne|generiere|erstell(e)?|bild von|bild:|foto von|show|draw)\s*/i, '').trim() || q;
+    const t = q.trim().toLowerCase();
+    if (/^(zeig|zeige|mal|male|zeichne|generiere|erstell|bild von|bild:|foto von|zeig mir|zeige mir|show|draw)\b/.test(t)) return true;
+    if (/(als bild|als foto|als zeichnung|als illustration)\b/.test(t)) return true;
+    return false;
   }
 
-  function addBubble(cls, content, isImage) {
+  function extractSubject(q) {
+    return q.replace(/^(zeig(e)?(\s*(mir|uns|einen|eine|ein|das|die|den|ne))?|mal(e)?(\s*(mir|uns))?|zeichne|generiere|erstell(e)?|bild von|bild:|foto von|show(\s*me)?|draw)\s*/i, '').trim() || q;
+  }
+
+  // ── Bubbles ──
+  function addBubble(cls, text) {
     const b = document.createElement('div');
     b.className = 'ki-bubble ' + cls;
-    if (isImage) {
-      const lbl = document.createElement('div');
-      lbl.style.cssText = 'font-size:10px;opacity:0.5;margin-bottom:4px;';
-      lbl.textContent = '🖼 ' + (content.label || 'Bild');
-      const img = document.createElement('img');
-      img.src = content.url;
-      img.style.cssText = 'max-width:100%;border-radius:7px;display:block;';
-      img.onerror = () => img.replaceWith(Object.assign(document.createElement('span'), {textContent:'❌ Bild konnte nicht geladen werden'}));
-      b.append(lbl, img);
-    } else {
-      b.textContent = content;
-    }
-    history.appendChild(b);
-    history.scrollTop = history.scrollHeight;
+    b.textContent = text;
+    historyEl.appendChild(b);
+    historyEl.scrollTop = historyEl.scrollHeight;
     return b;
   }
 
+  function addImageBubble(subject, url) {
+    const b = document.createElement('div');
+    b.className = 'ki-bubble ai';
+    b.style.padding = '6px';
+
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'font-size:10px;opacity:0.5;margin-bottom:4px;padding:0 4px';
+    lbl.textContent = '🖼 ' + subject;
+
+    const img = document.createElement('img');
+    img.style.cssText = 'max-width:100%;border-radius:7px;display:none;background:rgba(255,255,255,0.05);min-height:60px';
+    img.alt = subject;
+
+    const spinner = document.createElement('div');
+    spinner.style.cssText = 'text-align:center;padding:20px;font-size:12px;color:rgba(255,255,255,0.4)';
+    spinner.textContent = '⏳ Bild wird geladen…';
+
+    b.append(lbl, spinner, img);
+    historyEl.appendChild(b);
+    historyEl.scrollTop = historyEl.scrollHeight;
+
+    img.onload = () => {
+      spinner.remove();
+      img.style.display = 'block';
+      historyEl.scrollTop = historyEl.scrollHeight;
+    };
+    img.onerror = () => {
+      spinner.textContent = '❌ Bild konnte nicht geladen werden';
+      spinner.style.color = '#fca5a5';
+    };
+    img.src = url;
+    return b;
+  }
+
+  // ── Send ──
   async function send() {
+    if (sending) return;
     const q = textarea.value.trim();
     if (!q) return;
     textarea.value = '';
+    textarea.style.height = '38px';
     addBubble('user', q);
-    sendBtn.disabled = true;
 
     if (isImageRequest(q)) {
-      const thinking = addBubble('thinking', '🎨 Generiere Bild…');
-      const subject = extractImagePrompt(q);
-      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(subject + ', realistic photograph, high quality, educational, clear lighting')}?width=600&height=400&nologo=true&seed=${Math.floor(Math.random()*2000000000)}`;
-      thinking.remove();
-      addBubble('ai', { url, label: subject }, true);
-      sendBtn.disabled = false;
+      const subject = extractSubject(q);
+      const seed = Math.floor(Math.random() * 2000000000);
+      const prompt = encodeURIComponent(subject + ', realistic photograph, high quality, educational, clear lighting');
+      addImageBubble(subject, 'https://image.pollinations.ai/prompt/' + prompt + '?width=600&height=400&nologo=true&seed=' + seed);
       return;
-    } else {
-      const KEY = 'kb_text_ai_count';
-      const MAX_FREE = 10;
-      const count = parseInt(localStorage.getItem(KEY) || '0');
-      if (!isPro() && count >= MAX_FREE) {
-        addBubble('ai', '🔒 Du hast deine ' + MAX_FREE + ' kostenlosen Textanfragen aufgebraucht. Upgrade auf Pro für unbegrenzte KI-Anfragen.');
-        sendBtn.disabled = false;
-        return;
-      }
-      if (!isPro()) localStorage.setItem(KEY, String(count + 1));
-      const remaining = isPro() ? '∞' : (MAX_FREE - count - 1);
-      const thinking = addBubble('thinking', '⏳ Denke nach…');
-      try {
-        let answer;
-        if (isPro() && AUTH.client) {
-          const { data, error } = await AUTH.client.functions.invoke('ai-generate', { body: { type:'ask', question: q } });
-          if (error) throw new Error(error.message);
-          answer = data?.text;
-        } else {
-          const sysMsg = 'Du bist ein hilfreicher KI-Assistent für Lehrkräfte. Antworte kurz und auf Deutsch. Gib nützliche Antworten für den Schulunterricht.';
-          const encoded = encodeURIComponent(q);
-          const res = await fetch('https://text.pollinations.ai/' + encoded + '?model=openai&system=' + encodeURIComponent(sysMsg));
-          answer = await res.text();
-        }
-        thinking.remove();
-        const bubble = addBubble('ai', answer || '(Keine Antwort)');
-        if (!isPro()) {
-          const counter = document.createElement('div');
-          counter.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.25);margin-top:4px';
-          counter.textContent = remaining + ' von ' + MAX_FREE + ' Anfragen übrig';
-          bubble.appendChild(counter);
-        }
-      } catch(e) {
-        thinking.textContent = '❌ ' + e.message;
-        thinking.style.color = '#fca5a5';
-      }
     }
-    sendBtn.disabled = false;
+
+    const count = parseInt(localStorage.getItem(TEXT_AI_KEY) || '0');
+    if (!isPro() && count >= MAX_FREE_TEXT) {
+      addBubble('ai', '🔒 ' + MAX_FREE_TEXT + ' kostenlose Anfragen verbraucht. Upgrade auf Pro für unbegrenzte KI-Nutzung.');
+      return;
+    }
+
+    sending = true;
+    sendBtn.disabled = true;
+    sendBtn.style.opacity = '0.4';
+    const thinking = addBubble('thinking', '⏳ Denke nach…');
+
+    try {
+      let answer;
+      if (isPro() && AUTH.client) {
+        const { data, error } = await AUTH.client.functions.invoke('ai-generate', { body: { type: 'ask', question: q } });
+        if (error) throw new Error(error.message);
+        answer = data?.text;
+      } else {
+        const sys = 'Du bist ein hilfreicher KI-Assistent fuer Lehrkraefte an deutschen Schulen. Antworte kurz, klar und auf Deutsch.';
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
+        const res = await fetch(
+          'https://text.pollinations.ai/' + encodeURIComponent(q) + '?model=openai&system=' + encodeURIComponent(sys),
+          { signal: controller.signal }
+        );
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error('Serverfehler (' + res.status + ')');
+        answer = await res.text();
+        if (!isPro()) localStorage.setItem(TEXT_AI_KEY, String(count + 1));
+      }
+
+      thinking.remove();
+      const bubble = addBubble('ai', answer || '(Keine Antwort)');
+
+      if (!isPro()) {
+        const left = MAX_FREE_TEXT - count - 1;
+        const c = document.createElement('div');
+        c.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.2);margin-top:4px';
+        c.textContent = left + '/' + MAX_FREE_TEXT + ' Anfragen uebrig';
+        bubble.appendChild(c);
+      }
+    } catch (e) {
+      thinking.remove();
+      const msg = e.name === 'AbortError' ? 'Zeitueberschreitung - versuche es nochmal.' : e.message;
+      addBubble('ai', '❌ ' + msg);
+    } finally {
+      sending = false;
+      sendBtn.disabled = false;
+      sendBtn.style.opacity = '';
+    }
   }
 
   sendBtn.addEventListener('click', send);
   textarea.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+    e.stopPropagation();
+  });
+  textarea.addEventListener('input', () => {
+    textarea.style.height = '38px';
+    textarea.style.height = Math.min(textarea.scrollHeight, 90) + 'px';
   });
 })();
 
