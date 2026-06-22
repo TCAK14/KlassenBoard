@@ -2712,7 +2712,7 @@ const WIDGET_RENDERERS = {
           const subject = extractImagePrompt(q);
           const w_px = Math.min(800, Math.max(400, w.w * 2));
           const h_px = Math.min(600, Math.max(300, w.h * 1.5));
-          const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(subject + ', clean illustration, educational, colorful')}?width=${w_px}&height=${h_px}&nologo=true&seed=${Math.floor(Math.random()*2000000000)}`;
+          const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(subject + ', realistic photograph, high quality, educational, clear lighting')}?width=${w_px}&height=${h_px}&nologo=true&seed=${Math.floor(Math.random()*2000000000)}`;
           thinkingBubble.remove();
           messages.push({ role:'ai', type:'image', url, text: subject });
         } else {
@@ -5330,7 +5330,7 @@ const DRAW = {
     if (isImageRequest(q)) {
       const thinking = addBubble('thinking', '🎨 Generiere Bild…');
       const subject = extractImagePrompt(q);
-      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(subject + ', clean illustration, educational, colorful')}?width=600&height=400&nologo=true&seed=${Math.floor(Math.random()*2000000000)}`;
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(subject + ', realistic photograph, high quality, educational, clear lighting')}?width=600&height=400&nologo=true&seed=${Math.floor(Math.random()*2000000000)}`;
       thinking.remove();
       addBubble('ai', { url, label: subject }, true);
     } else {
