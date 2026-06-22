@@ -5352,18 +5352,9 @@ const DRAW = {
           if (error) throw new Error(error.message);
           answer = data?.text;
         } else {
-          const res = await fetch('https://text.pollinations.ai/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              messages: [
-                { role: 'system', content: 'Du bist ein hilfreicher KI-Assistent für Lehrkräfte. Antworte kurz und auf Deutsch. Gib nützliche Antworten für den Schulunterricht.' },
-                { role: 'user', content: q }
-              ],
-              model: 'openai',
-              seed: Date.now()
-            })
-          });
+          const sysMsg = 'Du bist ein hilfreicher KI-Assistent für Lehrkräfte. Antworte kurz und auf Deutsch. Gib nützliche Antworten für den Schulunterricht.';
+          const encoded = encodeURIComponent(q);
+          const res = await fetch('https://text.pollinations.ai/' + encoded + '?model=openai&system=' + encodeURIComponent(sysMsg));
           answer = await res.text();
         }
         thinking.remove();
