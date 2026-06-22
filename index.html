@@ -5314,17 +5314,46 @@ const DRAW = {
       thinking.remove();
       addBubble('ai', { url, label: subject }, true);
     } else {
-      if (!AUTH.user) {
-        addBubble('ai', '💬 Für Textfragen bitte anmelden (Konto-Icon oben rechts). Bilder funktionieren ohne Login: "Zeige einen Apfel"');
+      const KEY = 'kb_text_ai_count';
+      const MAX_FREE = 10;
+      const count = parseInt(localStorage.getItem(KEY) || '0');
+      if (!isPro() && count >= MAX_FREE) {
+        addBubble('ai', '🔒 Du hast deine ' + MAX_FREE + ' kostenlosen Textanfragen aufgebraucht. Upgrade auf Pro für unbegrenzte KI-Anfragen.');
         sendBtn.disabled = false;
         return;
       }
+      if (!isPro()) localStorage.setItem(KEY, String(count + 1));
+      const remaining = isPro() ? '∞' : (MAX_FREE - count - 1);
       const thinking = addBubble('thinking', '⏳ Denke nach…');
       try {
-        const { data, error } = await AUTH.client.functions.invoke('ai-generate', { body: { type:'ask', question: q } });
-        if (error) throw new Error(error.message);
+        let answer;
+        if (isPro() && AUTH.client) {
+          const { data, error } = await AUTH.client.functions.invoke('ai-generate', { body: { type:'ask', question: q } });
+          if (error) throw new Error(error.message);
+          answer = data?.text;
+        } else {
+          const res = await fetch('https://text.pollinations.ai/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: [
+                { role: 'system', content: 'Du bist ein hilfreicher KI-Assistent für Lehrkräfte. Antworte kurz und auf Deutsch. Gib nützliche Antworten für den Schulunterricht.' },
+                { role: 'user', content: q }
+              ],
+              model: 'openai',
+              seed: Date.now()
+            })
+          });
+          answer = await res.text();
+        }
         thinking.remove();
-        addBubble('ai', data?.text || '(Keine Antwort)');
+        const bubble = addBubble('ai', answer || '(Keine Antwort)');
+        if (!isPro()) {
+          const counter = document.createElement('div');
+          counter.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.25);margin-top:4px';
+          counter.textContent = remaining + ' von ' + MAX_FREE + ' Anfragen übrig';
+          bubble.appendChild(counter);
+        }
       } catch(e) {
         thinking.textContent = '❌ ' + e.message;
         thinking.style.color = '#fca5a5';
