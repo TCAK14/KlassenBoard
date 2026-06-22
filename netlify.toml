@@ -9,6 +9,21 @@
   status = 200
 
 [[redirects]]
+  from = "/landing.html"
+  to = "/landing.html"
+  status = 200
+
+[[redirects]]
+  from = "/impressum.html"
+  to = "/impressum.html"
+  status = 200
+
+[[redirects]]
+  from = "/datenschutz.html"
+  to = "/datenschutz.html"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
