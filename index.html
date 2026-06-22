@@ -1005,6 +1005,60 @@ const WIDGET_CATS = [
 // ══════════════════════════════════════════════════════════════
 // TEMPLATES
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// FREEMIUM LIMITS
+// ══════════════════════════════════════════════════════════════
+const FREE_LIMITS = { maxClasses: 1, maxBoards: 3 };
+
+function isPro() {
+  return !!AUTH.user;
+}
+
+function checkBoardLimit() {
+  if (isPro()) return true;
+  if (APP.state.boards.length >= FREE_LIMITS.maxBoards) {
+    openUpgradeModal('boards');
+    return false;
+  }
+  return true;
+}
+
+function checkClassLimit() {
+  if (isPro()) return true;
+  const count = CLASSES.list().length;
+  if (count >= FREE_LIMITS.maxClasses) {
+    openUpgradeModal('classes');
+    return false;
+  }
+  return true;
+}
+
+function openUpgradeModal(reason) {
+  const msgs = {
+    boards: 'Im Kostenlos-Plan kannst du maximal ' + FREE_LIMITS.maxBoards + ' Tafeln erstellen.',
+    classes: 'Im Kostenlos-Plan kannst du maximal ' + FREE_LIMITS.maxClasses + ' Klasse erstellen.',
+  };
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:420px;text-align:center">
+      <button class="modal-close" style="position:absolute;top:12px;right:12px">&times;</button>
+      <div style="font-size:48px;margin-bottom:14px">🔒</div>
+      <h2 style="margin-bottom:8px">Upgrade auf Pro</h2>
+      <p style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:20px;line-height:1.6">
+        ${msgs[reason] || 'Diese Funktion ist nur im Pro-Plan verfügbar.'}<br>
+        Mit Pro bekommst du unbegrenzte Klassen, Tafeln, KI-Assistent und mehr.
+      </p>
+      <div style="display:flex;gap:10px">
+        <button class="btn-secondary" style="flex:1" onclick="this.closest('.modal-overlay').remove()">Später</button>
+        <a href="landing.html#preise" class="btn-primary" style="flex:1;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center">Ab 2,50 €/Monat →</a>
+      </div>
+    </div>`;
+  overlay.querySelector('.modal-close').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
 const BUILT_IN_TEMPLATES = [
   {
     id:'tpl-morgen', name:'Morgenstart', emoji:'🌅',
@@ -1167,7 +1221,7 @@ const APP = {
     this.state.activeBoardId = null;
     this.icalCache = {};
     this.intervals = {};
-    createBoard('Tafel 1');
+    createBoard('Tafel 1', null, [], true);
   },
 
   // ── Undo ──
@@ -1231,7 +1285,8 @@ function openModal(html, onClose) {
 // ══════════════════════════════════════════════════════════════
 // BOARD CRUD
 // ══════════════════════════════════════════════════════════════
-function createBoard(name, bg, widgets=[]) {
+function createBoard(name, bg, widgets=[], skipLimit=false) {
+  if (!skipLimit && !checkBoardLimit()) return null;
   const board = {
     id: uid(),
     name: name || 'Neue Tafel',
@@ -4465,10 +4520,11 @@ document.getElementById('board').addEventListener('dblclick', e => {
 // ══════════════════════════════════════════════════════════════
 function init() {
   const loaded = APP.load();
+  const isFirstVisit = !loaded && !localStorage.getItem('klassenboard_visited');
+
   if (!loaded || APP.state.boards.length === 0) {
-    // Create default board from Morgenstart template
     const tpl = BUILT_IN_TEMPLATES[0];
-    createBoard('Tafel 1', tpl.bg, tpl.widgets);
+    createBoard('Tafel 1', tpl.bg, tpl.widgets, true);
   } else {
     if (!APP.state.activeBoardId) APP.state.activeBoardId = APP.state.boards[0].id;
     renderAll();
@@ -4478,6 +4534,75 @@ function init() {
   btn.textContent = APP.state.editMode ? '✏️ Edit' : '👁 Ansicht';
   btn.classList.toggle('active', APP.state.editMode);
   CLASSES.initUI();
+
+  if (isFirstVisit) {
+    localStorage.setItem('klassenboard_visited', '1');
+    setupDemo();
+  }
+}
+
+function setupDemo() {
+  CLASSES.create('Demo-Klasse 3a', true);
+
+  APP.state.boards = [];
+  APP.state.activeBoardId = null;
+
+  // Tafel 1: Morgenstart
+  createBoard('Morgenstart',
+    { type:'gradient', value:'linear-gradient(135deg,#667eea,#764ba2)' },
+    [
+      { type:'clock',    x:30,  y:20,  w:240, h:140, config:{} },
+      { type:'goal',     x:290, y:20,  w:340, h:120, config:{ text:'Die Schüler kennen die Planeten unseres Sonnensystems.' } },
+      { type:'traffic',  x:650, y:20,  w:160, h:140, config:{ state:'green' } },
+      { type:'agenda',   x:30,  y:180, w:300, h:260, config:{ items:[
+        {time:'08:00', text:'Begrüßung & Morgenkreis'},
+        {time:'08:15', text:'Sachunterricht: Planeten'},
+        {time:'09:00', text:'Frühstückspause'},
+        {time:'09:20', text:'Mathe: Einmaleins üben'},
+        {time:'10:05', text:'Hofpause'},
+        {time:'10:25', text:'Deutsch: Lesezeit'}
+      ]}},
+      { type:'homework', x:350, y:180, w:300, h:260, config:{ subject:'Hausaufgaben', items:[
+        {text:'Sachbuch S. 34 lesen', done:false},
+        {text:'Einmaleins-Blatt fertig', done:false},
+        {text:'Lesebuch: Geschichte zu Ende lesen', done:false}
+      ]}},
+    ], true);
+
+  // Tafel 2: Gruppenarbeit
+  createBoard('Gruppenarbeit',
+    { type:'gradient', value:'linear-gradient(135deg,#43e97b,#38f9d7)' },
+    [
+      { type:'timer',   x:30,  y:20,  w:260, h:170, config:{ minutes:15 } },
+      { type:'groups',  x:310, y:20,  w:340, h:240, config:{ names:'Emma\nLeon\nMia\nNoah\nSophie\nBen\nHanna\nLuca\nLina\nFinn\nEmilia\nPaul', size:3 } },
+      { type:'phases',  x:30,  y:210, w:260, h:220, config:{ phases:[
+        {name:'Aufgabe lesen', color:'#6366f1', minutes:3},
+        {name:'Gruppenarbeit', color:'#22c55e', minutes:15},
+        {name:'Ergebnisse vorstellen', color:'#f59e0b', minutes:10},
+        {name:'Feedback', color:'#ec4899', minutes:5}
+      ]}},
+      { type:'text', x:310, y:280, w:340, h:100, config:{ text:'Arbeitet leise zusammen und notiert eure Ergebnisse auf dem Plakat.' } },
+    ], true);
+
+  // Tafel 3: Wochenplan
+  createBoard('Wochenplan',
+    { type:'gradient', value:'linear-gradient(135deg,#0093E9,#80D0C7)' },
+    [
+      { type:'clock',     x:30,  y:20,  w:200, h:120, config:{} },
+      { type:'checklist', x:250, y:20,  w:320, h:300, config:{ items:[
+        {text:'Mathe-Arbeitsblatt S. 12', done:true},
+        {text:'Diktat üben (10 Wörter)', done:true},
+        {text:'Sachunterricht: Steckbrief Tier', done:false},
+        {text:'Lesetagebuch: 2 Seiten', done:false},
+        {text:'Kunst: Bild fertigmalen', done:false}
+      ]}},
+      { type:'text', x:30, y:160, w:200, h:160, config:{ text:'Wochenplan KW 26\n\nArbeite die Aufgaben in deinem Tempo ab. Hake fertige Aufgaben ab.' } },
+    ], true);
+
+  APP.state.activeBoardId = APP.state.boards[0].id;
+  APP.save();
+  renderAll();
+  toast('👋 Willkommen! Das ist eine Demo-Klasse zum Ausprobieren.');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -4637,8 +4762,9 @@ const CLASSES = {
   },
 
   // ── Neue Klasse anlegen ──
-  create(name) {
+  create(name, skipLimit=false) {
     if (!name.trim()) return;
+    if (!skipLimit && !checkClassLimit()) return;
     const data = this._data();
     if (!data[name]) data[name] = { boards: [], savedAt: new Date().toISOString() };
     this._save(data);
