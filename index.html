@@ -5151,13 +5151,26 @@ const DRAW = {
 
     // Exit
     btn('dt-exit')?.addEventListener('click', () => {
-      const choice = confirm('Zeichnungen behalten?\n\nOK = Zeichnungen bleiben auf der Tafel\nAbbrechen = Alles löschen');
-      if (!choice) {
-        this.history = [];
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        delete this.boardDrawings[APP.state.activeBoardId];
-      }
-      this.toggle();
+      const self = this;
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.innerHTML = '<div class="modal" style="max-width:340px;text-align:center">'
+        + '<h2 style="margin-bottom:8px">Zeichnungen beibehalten?</h2>'
+        + '<p style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:18px">Der Zeichenmodus wird beendet.</p>'
+        + '<div style="display:flex;gap:10px">'
+        + '<button id="draw-exit-no" class="btn-secondary" style="flex:1;padding:10px;font-size:14px;font-weight:600">Nein, löschen</button>'
+        + '<button id="draw-exit-yes" class="btn-primary" style="flex:1;padding:10px;font-size:14px">Ja, behalten</button>'
+        + '</div></div>';
+      document.body.appendChild(overlay);
+      overlay.querySelector('#draw-exit-yes').addEventListener('click', function() { overlay.remove(); self.toggle(); });
+      overlay.querySelector('#draw-exit-no').addEventListener('click', function() {
+        self.history = [];
+        self.ctx.clearRect(0, 0, self.canvas.width, self.canvas.height);
+        delete self.boardDrawings[APP.state.activeBoardId];
+        overlay.remove();
+        self.toggle();
+      });
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) { overlay.remove(); self.toggle(); } });
     });
 
     // ── Text tool: double-click on canvas ──
