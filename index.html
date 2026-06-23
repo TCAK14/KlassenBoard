@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>KlassenBoard – Das digitale Klassenzimmer</title>
-<meta name="description" content="KlassenBoard ist das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer. Widgets, KI-Assistent, Live-Umfragen, Sprachsteuerung und mehr.">
+<title>ClassPuls – Das digitale Klassenzimmer</title>
+<meta name="description" content="ClassPuls ist das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer. Widgets, KI-Assistent, Live-Umfragen, Sprachsteuerung und mehr.">
 <meta name="theme-color" content="#6366f1">
-<meta property="og:title" content="KlassenBoard">
+<meta property="og:title" content="ClassPuls">
 <meta property="og:description" content="Das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏫</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>">
 <style>
 :root {
   --brand: #6366f1;
@@ -765,8 +765,8 @@ body.fullscreen #board { top:0; }
 <!-- Toolbar -->
 <div id="toolbar">
   <a id="logo" href="landing.html" title="Zur Startseite" style="text-decoration:none;color:inherit">
-    <span>🏫</span>
-    <span id="logo-text">KlassenBoard</span>
+    <span style="font-size:16px;font-weight:800;color:#2bbcb3">C</span>
+    <span id="logo-text">ClassPuls</span>
         <span style="font-size:9px;opacity:0.4;margin-left:2px;font-weight:400;letter-spacing:1px;text-transform:uppercase;align-self:flex-end;margin-bottom:1px">Beta</span>
   </a>
   <!-- Klassen-Wechsler -->
@@ -933,7 +933,7 @@ const AUTH = {
 
   init() {
     if (!window.supabase || SUPABASE_URL.includes('DEINE')) {
-      console.info('KlassenBoard: Supabase nicht konfiguriert — lokaler Modus aktiv.');
+      console.info('ClassPuls: Supabase nicht konfiguriert — lokaler Modus aktiv.');
       return;
     }
     try {
@@ -1257,13 +1257,13 @@ const APP = {
         activeBoardId: this.state.activeBoardId,
         icalCache: this.icalCache,
       };
-      localStorage.setItem('klassenboard_v2', JSON.stringify(data));
+      localStorage.setItem('classpuls_v2', JSON.stringify(data));
       AUTH.syncToCloud(); // Cloud-Sync wenn eingeloggt
     } catch(e) { toast('⚠️ Speichern fehlgeschlagen'); }
   },
   load() {
     try {
-      const raw = localStorage.getItem('klassenboard_v2');
+      const raw = localStorage.getItem('classpuls_v2');
       if (!raw) return false;
       const data = JSON.parse(raw);
       this.state.boards = data.boards || [];
@@ -1282,7 +1282,7 @@ const APP = {
     const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'KlassenBoard_' + new Date().toISOString().slice(0,10) + '.json';
+    a.download = 'ClassPuls_' + new Date().toISOString().slice(0,10) + '.json';
     a.click();
     toast('✅ Exportiert');
   },
@@ -1302,7 +1302,7 @@ const APP = {
     } catch(e) { toast('❌ Import fehlgeschlagen: ' + e.message); }
   },
   deleteAllData() {
-    localStorage.removeItem('klassenboard_v2');
+    localStorage.removeItem('classpuls_v2');
     this.state.boards = [];
     this.state.activeBoardId = null;
     this.icalCache = {};
@@ -1497,7 +1497,7 @@ function getDefaultConfig(type) {
     stopwatch: { running: false, elapsed: 0, laps: [] },
     text:      { text: 'Doppelklick zum Bearbeiten' },
     traffic:   { state: 'red' },
-    qr:        { url: 'https://klassenboard.de', label: '' },
+    qr:        { url: 'https://classpuls.de', label: '' },
     names:     { names: 'Anna\nBen\nClara\nDavid\nEva\nFinn\nGreta\nHannes', highlighted: -1 },
     homework:  { subject: 'Fach', items: [] },
     goal:      { text: 'Heutiges Lernziel' },
@@ -2043,7 +2043,7 @@ const WIDGET_RENDERERS = {
     label.textContent = w.config.label || w.config.url || '';
     container.append(qrDiv, label);
     body.appendChild(container);
-    const url = w.config.url || 'https://klassenboard.netlify.app';
+    const url = w.config.url || 'https://classpuls.netlify.app';
     const size = Math.min(w.w - 40, w.h - 60, 160);
     try {
       new QRCode(qrDiv, { text: url, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
@@ -4009,7 +4009,7 @@ function openYoutubeOverlay(videoId) {
   box.style.cssText = 'position:relative;width:min(94vw,1200px);aspect-ratio:16/9;border-radius:12px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.8);background:#000;';
 
   // Direkt-iframe mit origin-Parameter — das ist der entscheidende Fix
-  const origin = encodeURIComponent(window.location.origin || 'https://klassenboard.de');
+  const origin = encodeURIComponent(window.location.origin || 'https://classpuls.de');
   const iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;';
   iframe.src = 'https://www.youtube-nocookie.com/embed/' + videoId
@@ -4266,7 +4266,7 @@ function openLoginModal() {
   const { overlay } = openModal(`
     <div class="modal auth-modal">
       <button class="modal-close" data-close>✕</button>
-      <h2 style="margin-bottom:16px">🏫 KlassenBoard</h2>
+      <h2 style="margin-bottom:16px">ClassPuls</h2>
       <div class="auth-tabs">
         <button class="auth-tab active" id="tab-login"     onclick="switchAuthTab('login')">Anmelden</button>
         <button class="auth-tab"        id="tab-register"  onclick="switchAuthTab('register')">Registrieren</button>
@@ -4705,7 +4705,7 @@ document.getElementById('board').addEventListener('dblclick', e => {
 // ══════════════════════════════════════════════════════════════
 function init() {
   const loaded = APP.load();
-  const isFirstVisit = !loaded && !localStorage.getItem('klassenboard_visited');
+  const isFirstVisit = !loaded && !localStorage.getItem('classpuls_visited');
 
   if (!loaded || APP.state.boards.length === 0) {
     const tpl = BUILT_IN_TEMPLATES[0];
@@ -4721,7 +4721,7 @@ function init() {
   CLASSES.initUI();
 
   if (isFirstVisit) {
-    localStorage.setItem('klassenboard_visited', '1');
+    localStorage.setItem('classpuls_visited', '1');
     setupDemo();
   }
 }
@@ -4802,7 +4802,7 @@ async function showVotingPage(pollId) {
   const page = document.createElement('div'); page.id = 'voting-page';
   const logo = document.createElement('div');
   logo.style.cssText = 'font-size:22px;font-weight:800;color:#fff;margin-bottom:28px;letter-spacing:-0.5px;';
-  logo.innerHTML = '🏫 <span style="color:#818cf8">Klassen</span>Board';
+  logo.innerHTML = '<span style="color:#818cf8">Class</span>Puls';
   const card = document.createElement('div'); card.className = 'voting-card';
   card.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);padding:20px;">Lade Umfrage…</div>';
   page.append(logo, card);
@@ -4863,8 +4863,8 @@ async function showVotingPage(pollId) {
 // KLASSEN-VERWALTUNG
 // ══════════════════════════════════════════════════════════════
 const CLASSES = {
-  STORAGE_KEY: 'klassenboard_classes',
-  CURRENT_KEY: 'klassenboard_current_class',
+  STORAGE_KEY: 'classpuls_classes',
+  CURRENT_KEY: 'classpuls_current_class',
 
   // ── Lokale Daten ──
   _data() {

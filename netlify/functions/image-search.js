@@ -69,7 +69,7 @@ async function searchWikimedia(query) {
       + '&generator=search&gsrnamespace=6&gsrsearch=' + encodeURIComponent(query + ' photo')
       + '&gsrlimit=5&prop=imageinfo&iiprop=url|size'
       + '&iiurlwidth=640&format=json';
-    const res = await fetch(url, { headers: { 'User-Agent': 'KlassenBoard/1.0' } });
+    const res = await fetch(url, { headers: { 'User-Agent': 'ClassPuls/1.0' } });
     if (!res.ok) return null;
     const data = await res.json();
     if (!data.query?.pages) return null;

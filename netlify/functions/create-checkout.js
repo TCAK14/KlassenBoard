@@ -32,7 +32,7 @@ exports.handler = async (event) => {
           price_data: {
             currency: 'eur',
             product_data: {
-              name: 'KlassenBoard Pro',
+              name: 'ClassPuls Pro',
               description: isYearly ? 'Einzellizenz – Jahresabo' : 'Einzellizenz – Monatsabo',
               images: []
             },
@@ -60,7 +60,7 @@ exports.handler = async (event) => {
           price_data: {
             currency: 'eur',
             product_data: {
-              name: 'KlassenBoard Schullizenz',
+              name: 'ClassPuls Schullizenz',
               description: n + ' Lehrkräfte – Jahreslizenz'
             },
             unit_amount: totalCents,
