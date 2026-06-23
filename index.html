@@ -701,7 +701,15 @@ body.fullscreen #board { top:0; }
   #user-email { display:none; }
   #user-avatar { width:22px; height:22px; font-size:10px; }
 
-  #board { touch-action:pan-x pan-y; }
+  #board { overflow:auto; touch-action:pan-x pan-y; -webkit-overflow-scrolling:touch; }
+  #board::-webkit-scrollbar { display:none; }
+  #board-bg { position:fixed; top:var(--toolbar-h); left:0; right:0; bottom:0; z-index:0; }
+  #widgets-layer { position:relative; min-width:900px; min-height:600px; z-index:1; }
+  .widget { z-index:2; }
+
+  #toolbar { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  #toolbar::-webkit-scrollbar { display:none; }
+  #board-tabs { flex-shrink:0; }
 
   #widget-menu { width:calc(100vw - 20px); left:10px !important; right:10px !important; max-height:60vh; border-radius:14px; }
   .wm-grid { grid-template-columns:1fr 1fr 1fr; }
@@ -1659,6 +1667,14 @@ function renderWidgets() {
   const board = APP.activeBoard();
   if (!board) return;
   board.widgets.forEach(w => layer.appendChild(buildWidgetEl(w)));
+  // Size layer to encompass all widgets (for mobile scrolling)
+  let maxR = 900, maxB = 600;
+  board.widgets.forEach(w => {
+    maxR = Math.max(maxR, (w.x || 0) + (w.w || 200) + 20);
+    maxB = Math.max(maxB, (w.y || 0) + (w.h || 100) + 20);
+  });
+  layer.style.minWidth = maxR + 'px';
+  layer.style.minHeight = maxB + 'px';
   // restart timetable refresh
   board.widgets.filter(w=>w.type==='timetable').forEach(w => startTimetableRefresh(w));
 }
