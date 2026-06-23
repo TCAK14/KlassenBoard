@@ -5740,22 +5740,41 @@ function applyToolbarPosition(pos) {
   board.style.top = ''; board.style.bottom = ''; board.style.left = ''; board.style.right = '';
   tb.style.cssText = '';
 
+  // Remove vertical class
+  tb.classList.remove('toolbar-vertical');
+  document.querySelectorAll('#toolbar .tb-btn').forEach(b => b.style.fontSize = '');
+  const logo = document.getElementById('logo');
+  const logoText = document.getElementById('logo-text');
+  const boardTabs = document.getElementById('board-tabs');
+  const classSwitcher = document.getElementById('class-switcher');
+  const addBoardBtn = document.getElementById('add-board-btn');
+  const authArea = document.getElementById('auth-area');
+
   if (pos === 'bottom') {
     tb.dataset.pos = 'bottom';
     tb.style.cssText = 'position:fixed;bottom:0;left:0;right:0;top:auto;height:var(--toolbar-h);display:flex;align-items:center;gap:8px;padding:0 12px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);border-top:1px solid var(--glass-border);overflow-x:auto;scrollbar-width:none';
     board.style.top = '0';
     board.style.bottom = 'var(--toolbar-h)';
-  } else if (pos === 'left') {
-    tb.dataset.pos = 'left';
-    tb.style.cssText = 'position:fixed;top:0;left:0;bottom:0;right:auto;width:var(--toolbar-h);height:auto;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);border-right:1px solid var(--glass-border);overflow-y:auto;scrollbar-width:none';
+  } else if (pos === 'left' || pos === 'right') {
+    tb.dataset.pos = pos;
+    tb.classList.add('toolbar-vertical');
+    const side = pos === 'left' ? 'left' : 'right';
+    const border = pos === 'left' ? 'border-right' : 'border-left';
+    tb.style.cssText = 'position:fixed;top:0;' + side + ':0;bottom:0;width:52px;height:auto;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);' + border + ':1px solid var(--glass-border);overflow-y:auto;scrollbar-width:none';
     board.style.top = '0';
-    board.style.left = 'var(--toolbar-h)';
-  } else if (pos === 'right') {
-    tb.dataset.pos = 'right';
-    tb.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:auto;width:var(--toolbar-h);height:auto;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);border-left:1px solid var(--glass-border);overflow-y:auto;scrollbar-width:none';
-    board.style.top = '0';
-    board.style.right = 'var(--toolbar-h)';
+    board.style[side] = '52px';
+    if (logo) logo.style.display = 'none';
+    if (boardTabs) boardTabs.style.display = 'none';
+    if (classSwitcher) classSwitcher.style.display = 'none';
+    if (addBoardBtn) addBoardBtn.style.display = 'none';
+    if (authArea) authArea.style.display = 'none';
+    document.querySelectorAll('#toolbar .tb-btn').forEach(b => { b.style.fontSize = '0px'; b.style.padding = '6px'; });
   } else {
+    if (logo) logo.style.display = '';
+    if (boardTabs) boardTabs.style.display = '';
+    if (classSwitcher) classSwitcher.style.display = '';
+    if (addBoardBtn) addBoardBtn.style.display = '';
+    if (authArea) authArea.style.display = '';
     board.style.top = 'var(--toolbar-h)';
   }
 }
