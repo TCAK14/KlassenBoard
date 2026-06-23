@@ -2903,6 +2903,8 @@ const WIDGET_RENDERERS = {
   // ── Browser Widget ──
   browser(w, body) {
     body.style.flexDirection = 'column';
+    body.style.alignItems = 'stretch';
+    body.style.justifyContent = 'stretch';
     body.style.padding = '0';
     body.style.overflow = 'hidden';
 
@@ -2945,7 +2947,7 @@ const WIDGET_RENDERERS = {
 
     // Startpage with tiles
     const startpage = document.createElement('div');
-    startpage.style.cssText = 'flex:1;overflow-y:auto;background:rgba(0,0,0,0.1);padding:0;display:none;flex-direction:column';
+    startpage.style.cssText = 'flex:1;overflow:hidden;background:rgba(0,0,0,0.1);padding:0;display:none;flex-direction:column;width:100%';
 
     function renderStartpage() {
       startpage.innerHTML = '';
@@ -5800,7 +5802,7 @@ function openToolbarCustomizer() {
   const posRow = document.createElement('div');
   posRow.style.cssText = 'display:flex;gap:4px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08)';
   const currentPos = localStorage.getItem('kb_toolbar_pos') || 'top';
-  [{id:'top',icon:'↑ Oben'},{id:'bottom',icon:'↓ Unten'}].forEach(p => {
+  [{id:'top',icon:'↑ Oben'},{id:'bottom',icon:'↓ Unten'},{id:'left',icon:'← Links'},{id:'right',icon:'→ Rechts'}].forEach(p => {
     const b = document.createElement('button');
     b.textContent = p.icon;
     b.title = p.id === 'top' ? 'Oben' : 'Unten';
