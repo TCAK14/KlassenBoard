@@ -1,4 +1,4 @@
-const GROQ_KEY = process.env.GROQ_API_KEY;
+const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
 const headers = {
   'Content-Type': 'application/json',
@@ -7,20 +7,6 @@ const headers = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
-async function callGroq(messages, model, maxTokens) {
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + GROQ_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: 0.7 }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || 'Groq ' + res.status);
-  }
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content || '(Keine Antwort)';
-}
-
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers };
@@ -28,8 +14,8 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: 'Method Not Allowed' };
   }
-  if (!GROQ_KEY) {
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'GROQ_API_KEY nicht konfiguriert' }) };
+  if (!GEMINI_KEY) {
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'GEMINI_API_KEY nicht konfiguriert' }) };
   }
 
   try {
@@ -38,29 +24,46 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Ungueltige Anfrage' }) };
     }
 
-    const messages = [
-      {
-        role: 'system',
-        content: 'Du bist ein intelligenter KI-Assistent in KlassenBoard, einer App fuer Lehrkraefte an deutschen Schulen. Du kannst alles beantworten: Unterrichtsfragen, Allgemeinwissen, aktuelle Themen, Texte schreiben, Aufgaben erstellen, Ideen geben. Antworte immer auf Deutsch, klar und hilfreich. Sei konkret und gib echte Antworten statt auszuweichen. Halte dich kurz (max 200 Woerter), ausser der Nutzer will mehr Detail.'
-      }
-    ];
+    const systemInstruction = 'Du bist ein intelligenter KI-Assistent in KlassenBoard, einer App fuer Lehrkraefte an deutschen Schulen. Du kannst alles beantworten: Unterrichtsfragen, Allgemeinwissen, aktuelle Themen, Texte schreiben, Aufgaben erstellen, Ideen geben. Antworte immer auf Deutsch, klar und hilfreich. Sei konkret und gib echte Antworten statt auszuweichen. Nutze deine Web-Suche fuer aktuelle Fragen. Halte dich kurz (max 200 Woerter), ausser der Nutzer will mehr Detail.';
+
+    const contents = [];
 
     if (Array.isArray(history)) {
       history.slice(-6).forEach(h => {
-        if (h.role === 'user' || h.role === 'assistant') {
-          messages.push({ role: h.role, content: String(h.content).slice(0, 1000) });
+        if (h.role === 'user') {
+          contents.push({ role: 'user', parts: [{ text: String(h.content).slice(0, 1000) }] });
+        } else if (h.role === 'assistant') {
+          contents.push({ role: 'model', parts: [{ text: String(h.content).slice(0, 1000) }] });
         }
       });
     }
-    messages.push({ role: 'user', content: question });
 
-    // Try Compound (has web search) first, fall back to GPT-OSS 120B
-    let text;
-    try {
-      text = await callGroq(messages, 'groq/compound', 500);
-    } catch (e) {
-      text = await callGroq(messages, 'openai/gpt-oss-120b', 800);
+    contents.push({ role: 'user', parts: [{ text: question }] });
+
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_KEY;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents,
+        systemInstruction: { parts: [{ text: systemInstruction }] },
+        tools: [{ googleSearch: {} }],
+        generationConfig: {
+          maxOutputTokens: 800,
+          temperature: 0.7,
+        },
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = err.error?.message || 'Gemini Fehler ' + res.status;
+      throw new Error(msg);
     }
+
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '(Keine Antwort)';
 
     return { statusCode: 200, headers, body: JSON.stringify({ text }) };
 
