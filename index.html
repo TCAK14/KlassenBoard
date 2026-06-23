@@ -27,7 +27,12 @@ body { background:#1e293b; color:#fff; touch-action:none; }
 /* Inputs/Textareas müssen immer tippbar sein – touch-action:none auf body überschreiben */
 input, textarea, select, [contenteditable] { touch-action:auto; user-select:text; -webkit-user-select:text; }
 .modal, .modal * { touch-action:auto; }
+.modal-overlay { touch-action:auto; -webkit-overflow-scrolling:touch; }
 .tab-input { touch-action:auto; user-select:text; -webkit-user-select:text; }
+#ki-panel, #ki-panel * { touch-action:auto; }
+#ki-history { -webkit-overflow-scrolling:touch; }
+#class-dropdown { touch-action:auto; }
+#widget-menu { touch-action:auto; -webkit-overflow-scrolling:touch; }
 
 /* ── Klassen-Wechsler ── */
 #class-switcher {
@@ -675,6 +680,70 @@ body.fullscreen #board { top:0; }
 .groups-inner { overflow-y:auto; flex:1; }
 .group-card h4 { font-size:clamp(0.7rem, 2vw, 1.1rem); }
 .group-card li { font-size:clamp(0.65rem, 1.8vw, 1rem); }
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 768px) {
+  :root { --toolbar-h: 48px; }
+  #toolbar { gap:4px; padding:0 6px; }
+  #logo-text { display:none; }
+  #logo { margin-right:4px; }
+  #logo span:first-child { font-size:18px; }
+  .toolbar-sep { height:20px; margin:0 1px; }
+  .tb-btn { padding:5px 8px; font-size:12px; }
+  .tb-icon-btn { width:30px; height:30px; font-size:14px; }
+  #class-btn { padding:4px 8px; font-size:12px; max-width:100px; }
+  #class-btn .class-name { max-width:60px; }
+  #add-board-btn { width:24px; height:24px; font-size:16px; }
+  .tab-btn { padding:4px 10px; font-size:12px; }
+  #edit-mode-btn { padding:4px 8px; font-size:11px; }
+  #auth-login-btn { padding:4px 8px; font-size:11px; }
+  #user-badge { padding:3px 6px; }
+  #user-email { display:none; }
+  #user-avatar { width:22px; height:22px; font-size:10px; }
+
+  #board { touch-action:pan-x pan-y; }
+
+  #widget-menu { width:calc(100vw - 20px); left:10px !important; right:10px !important; max-height:60vh; border-radius:14px; }
+  .wm-grid { grid-template-columns:1fr 1fr 1fr; }
+
+  .modal { width:calc(100vw - 24px) !important; max-height:80vh; padding:18px; }
+  .modal h2 { font-size:16px; }
+  .modal-lg { width:calc(100vw - 24px) !important; }
+  .auth-modal { max-width:calc(100vw - 24px); }
+
+  #ki-fab { width:42px; height:42px; bottom:16px; left:16px; border-radius:12px; }
+  #ki-panel { width:calc(100vw - 20px); height:50vh; bottom:66px; left:10px; border-radius:14px; }
+
+  #draw-toolbar { padding:6px 10px; gap:4px; bottom:16px; }
+  .draw-tool-btn { width:32px; height:32px; font-size:14px; }
+  .draw-color-btn { width:24px; height:24px; }
+  #draw-size-slider { width:50px; }
+
+  .widget { min-width:100px; min-height:60px; }
+  .widget-header { height:28px; }
+  .w-btn { width:20px; height:20px; font-size:11px; }
+
+  #class-dropdown { min-width:200px; }
+  .class-dd-item { padding:7px 10px; font-size:12px; }
+
+  .template-grid { grid-template-columns:1fr; }
+
+  .upgrade-modal { max-width:calc(100vw - 24px) !important; }
+}
+
+@media (max-width: 480px) {
+  :root { --toolbar-h: 44px; }
+  #toolbar { gap:3px; padding:0 4px; }
+  .tb-btn { padding:4px 6px; font-size:11px; gap:3px; }
+  .tb-icon-btn { width:28px; height:28px; font-size:13px; }
+  #btn-add-widget span { display:none; }
+  .tab-btn { padding:3px 8px; font-size:11px; }
+  #class-btn { max-width:80px; font-size:11px; }
+
+  #ki-panel { height:60vh; bottom:62px; }
+
+  .wm-grid { grid-template-columns:1fr 1fr; }
+}
 </style>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -1624,6 +1693,15 @@ function buildWidgetEl(w) {
   renderWidgetContent(w, body);
   shell.appendChild(body);
 
+  // Dblclick to edit (universal for widgets without own dblclick handler)
+  const hasOwnDblclick = new Set(['text','goal','homework','agenda','checklist']);
+  if (APP.state.editMode && !hasOwnDblclick.has(w.type)) {
+    body.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      openWidgetSettings(w.id);
+    });
+  }
+
   // Click to select
   shell.addEventListener('pointerdown', e => {
     if (!APP.state.editMode) return;
@@ -2008,13 +2086,42 @@ const WIDGET_RENDERERS = {
     const text = w.config.text || '';
     const charCount = Math.max(text.length, 1);
     const baseFontSize = Math.min(w.w * 0.085, w.h * 0.38);
-    // shrink if text is long
     const scaledFs = baseFontSize * Math.min(1, Math.pow(30 / charCount, 0.4));
     div.style.fontSize = Math.max(14, Math.min(scaledFs, 64)) + 'px';
     const isEmpty = !text;
     div.style.color = isEmpty ? 'rgba(255,255,255,0.45)' : '#fff';
     div.textContent = text || 'Doppelklick: Lernziel eintragen';
-    if (APP.state.editMode) div.addEventListener('dblclick', () => openGoalEdit(w));
+    if (APP.state.editMode) {
+      div.addEventListener('dblclick', e => {
+        e.stopPropagation();
+        div.contentEditable = 'true';
+        div.style.cursor = 'text';
+        div.style.outline = '2px solid rgba(99,102,241,0.6)';
+        div.style.borderRadius = '6px';
+        div.style.color = '#fff';
+        if (isEmpty) div.textContent = '';
+        div.focus();
+        const sel = window.getSelection();
+        sel.selectAllChildren(div);
+        sel.collapseToEnd();
+        const finish = () => {
+          div.contentEditable = 'false';
+          div.style.cursor = '';
+          div.style.outline = '';
+          w.config.text = div.textContent.trim();
+          APP.save();
+          const shell = div.closest('.widget');
+          if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+          div.removeEventListener('blur', finish);
+        };
+        div.addEventListener('blur', finish);
+        div.addEventListener('keydown', ev => {
+          ev.stopPropagation();
+          if (ev.key === 'Escape') { div.blur(); }
+          if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); div.blur(); }
+        });
+      });
+    }
     body.appendChild(div);
   },
 
@@ -4076,11 +4183,8 @@ document.addEventListener('keydown', e => {
     // Clear selection
     APP.selectedId = null;
     document.querySelectorAll('.widget').forEach(w=>w.classList.remove('selected'));
-    // Nuclear option: remove any stuck fixed overlays (not toolbar/board/toast/ki)
-    const safe = new Set(['toolbar','board','board-bg','widgets-layer','toast','ki-fab','ki-panel','draw-canvas','draw-toolbar','draw-text-input']);
-    document.querySelectorAll('body > *[style*="fixed"], body > *[style*="inset"]').forEach(el => {
-      if (!safe.has(el.id)) el.remove();
-    });
+    // Close KI panel if open
+    document.getElementById('ki-panel')?.classList.remove('open');
   }
 });
 
@@ -4263,7 +4367,7 @@ const VOICE = {
 
     // Show what was heard
     if (this.toastEl) {
-      this.toastEl.innerHTML = `🎙️ "<span class="voice-transcript">${transcript}</span>" — wird verarbeitet…`;
+      this.toastEl.innerHTML = `🎙️ "<span class="voice-transcript">${safeText(transcript)}</span>" — wird verarbeitet…`;
       this.toastEl.style.display = 'flex';
       setTimeout(() => { if (this.toastEl) this.toastEl.style.display = 'none'; }, 4000);
     }
@@ -5591,6 +5695,10 @@ setInterval(() => {
     if (safe.has(el.id)) return;
     if (el.classList.contains('modal-overlay')) return;
     if (el.closest('.modal-overlay')) return;
+    if (el.id === 'rename-modal-overlay') return;
+    if (el.id === 'tb-customize-panel') return;
+    if (el.id === 'widget-menu') return;
+    if (el.id === 'voting-page') return;
     const r = el.getBoundingClientRect();
     const s = window.getComputedStyle(el);
     if (r.top <= 0 && r.height > 40 && r.width > 200 && s.display !== 'none') {
