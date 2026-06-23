@@ -27,7 +27,7 @@ exports.handler = async (event) => {
     const messages = [
       {
         role: 'system',
-        content: 'Du bist ein hilfreicher KI-Assistent für Lehrkräfte an deutschen Schulen. Antworte präzise, freundlich und auf Deutsch. Halte Antworten kurz (max 150 Wörter), es sei denn der Nutzer bittet um mehr Detail.'
+        content: 'Du bist ein intelligenter KI-Assistent in KlassenBoard, einer App für Lehrkräfte an deutschen Schulen. Du kannst alles beantworten — Unterrichtsfragen, Allgemeinwissen, aktuelle Themen, Texte schreiben, Aufgaben erstellen, Ideen geben. Antworte immer auf Deutsch, klar und hilfreich. Sei konkret und gib echte Antworten statt auszuweichen. Halte dich kurz (max 200 Wörter), außer der Nutzer will mehr Detail.'
       }
     ];
 
@@ -45,9 +45,9 @@ exports.handler = async (event) => {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + GROQ_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'openai/gpt-oss-120b',
         messages,
-        max_tokens: 500,
+        max_tokens: 800,
         temperature: 0.7,
       }),
     });

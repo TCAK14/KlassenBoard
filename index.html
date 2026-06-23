@@ -5352,9 +5352,8 @@ const DRAW = {
     const img = document.createElement('img');
     img.alt = subject;
     img.style.cssText = 'max-width:100%;border-radius:7px;display:block;min-height:40px;background:rgba(255,255,255,0.05)';
-    const url = isDraw
-      ? 'https://image.pollinations.ai/prompt/' + encodeURIComponent(subject + ', illustration, colorful, educational') + '?width=600&height=400&nologo=true&seed=' + Math.floor(Math.random()*2e9)
-      : 'https://loremflickr.com/600/400/' + encodeURIComponent(subject) + '?random=' + Date.now();
+    const style = isDraw ? ', illustration, colorful, educational, cartoon style' : ', realistic photograph, high quality, sharp focus, studio lighting';
+    const url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(subject + style) + '?width=600&height=400&nologo=true&seed=' + Math.floor(Math.random()*2e9);
     img.onerror = function() {
       this.onerror = null;
       this.style.display = 'none';
