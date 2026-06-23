@@ -5289,7 +5289,7 @@ const DRAW = {
   if (!fab) return;
 
   const TEXT_AI_KEY = 'kb_text_ai_count';
-  const MAX_FREE_TEXT = 10;
+  const MAX_FREE_TEXT = 50;
   let sending = false;
   const chatHistory = [];
 
@@ -5585,6 +5585,8 @@ setInterval(() => {
   const safe = new Set(['toolbar','board','board-bg','widgets-layer','toast','ki-fab','ki-panel','draw-canvas','draw-toolbar','draw-text-input']);
   document.querySelectorAll('body > *').forEach(el => {
     if (safe.has(el.id)) return;
+    if (el.classList.contains('modal-overlay')) return;
+    if (el.closest('.modal-overlay')) return;
     const r = el.getBoundingClientRect();
     const s = window.getComputedStyle(el);
     if (r.top <= 0 && r.height > 40 && r.width > 200 && s.display !== 'none') {
