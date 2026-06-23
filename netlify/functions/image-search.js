@@ -17,8 +17,8 @@ async function translateToEnglish(query) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: 'Translate this to English search keywords for a photo search. Reply with ONLY the English keywords, nothing else: ' + query }] }],
-          generationConfig: { maxOutputTokens: 30, temperature: 0 }
+          contents: [{ role: 'user', parts: [{ text: 'Convert this to precise English Pixabay search keywords that will find EXACTLY this single object/subject. The photo should show ONLY this item, isolated or clearly as the main subject. Add "isolated" or "close up" if it is a simple object. For cars/phones/products, include the exact model name. Reply with ONLY the keywords, max 5 words, nothing else.\n\nExamples:\nbanane -> single banana fruit isolated\nstift -> pen writing instrument closeup\naudi a5 -> Audi A5 car\niphone 3g -> iPhone 3G phone\nkatze -> cat portrait closeup\nweltkarte -> world map\n\nNow convert: ' + query }] }],
+          generationConfig: { maxOutputTokens: 20, temperature: 0 }
         })
       }
     );
