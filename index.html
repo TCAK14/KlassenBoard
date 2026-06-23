@@ -744,15 +744,17 @@ body.fullscreen #board { top:0; }
 
 @media (max-width: 480px) {
   :root { --toolbar-h: 44px; }
-  #toolbar { gap:3px; padding:0 4px; }
-  .tb-btn { padding:4px 6px; font-size:11px; gap:3px; }
-  .tb-icon-btn { width:28px; height:28px; font-size:13px; }
-  #btn-add-widget span { display:none; }
-  .tab-btn { padding:3px 8px; font-size:11px; }
-  #class-btn { max-width:80px; font-size:11px; }
-
+  #toolbar { gap:2px; padding:0 4px; }
+  .tb-btn { padding:4px 6px; font-size:10px; gap:2px; }
+  .tb-icon-btn { width:26px; height:26px; font-size:12px; }
+  #btn-add-widget { font-size:10px; padding:4px 6px; }
+  .tab-btn { padding:3px 6px; font-size:10px; }
+  #class-btn { max-width:70px; font-size:10px; }
+  #edit-mode-btn { display:none !important; }
+  #auth-area { display:none; }
+  .widget-header { opacity:1 !important; }
+  .resize-handle { opacity:1 !important; }
   #ki-panel { height:60vh; bottom:62px; }
-
   .wm-grid { grid-template-columns:1fr 1fr; }
 }
 </style>
@@ -1263,7 +1265,14 @@ const APP = {
   },
   load() {
     try {
-      const raw = localStorage.getItem('classpuls_v2');
+      let raw = localStorage.getItem('classpuls_v2');
+      if (!raw) {
+        raw = localStorage.getItem('klassenboard_v2');
+        if (raw) {
+          localStorage.setItem('classpuls_v2', raw);
+          localStorage.removeItem('klassenboard_v2');
+        }
+      }
       if (!raw) return false;
       const data = JSON.parse(raw);
       this.state.boards = data.boards || [];
@@ -4703,7 +4712,24 @@ document.getElementById('board').addEventListener('dblclick', e => {
 // ══════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════
+function migrateLocalStorage() {
+  const migrations = [
+    ['klassenboard_classes', 'classpuls_classes'],
+    ['klassenboard_current_class', 'classpuls_current_class'],
+    ['klassenboard_visited', 'classpuls_visited'],
+    ['kb_toolbar_prefs', 'kb_toolbar_prefs'],
+  ];
+  migrations.forEach(([oldKey, newKey]) => {
+    if (oldKey === newKey) return;
+    if (!localStorage.getItem(newKey) && localStorage.getItem(oldKey)) {
+      localStorage.setItem(newKey, localStorage.getItem(oldKey));
+      localStorage.removeItem(oldKey);
+    }
+  });
+}
+
 function init() {
+  migrateLocalStorage();
   const loaded = APP.load();
   const isFirstVisit = !loaded && !localStorage.getItem('classpuls_visited');
 
