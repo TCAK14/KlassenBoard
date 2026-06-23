@@ -2920,31 +2920,28 @@ const WIDGET_RENDERERS = {
     const bar = document.createElement('div');
     bar.style.cssText = 'display:flex;gap:4px;padding:6px;background:rgba(0,0,0,0.3);flex-shrink:0;align-items:center';
 
-    const backBtn = document.createElement('button');
-    backBtn.textContent = '◀';
-    backBtn.style.cssText = 'border:none;background:rgba(255,255,255,0.1);color:#fff;border-radius:5px;padding:4px 7px;cursor:pointer;font-size:12px;flex-shrink:0';
-
-    const fwdBtn = document.createElement('button');
-    fwdBtn.textContent = '▶';
-    fwdBtn.style.cssText = backBtn.style.cssText;
-
-    const urlInp = document.createElement('input');
-    urlInp.type = 'text';
-    urlInp.value = w.config.url || '';
-    urlInp.style.cssText = 'flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;font-size:11px;padding:4px 8px;touch-action:auto;min-width:0';
-    urlInp.addEventListener('click', e => e.stopPropagation());
-
-    const goBtn = document.createElement('button');
-    goBtn.textContent = '→';
-    goBtn.style.cssText = 'border:none;background:var(--brand);color:#fff;border-radius:5px;padding:4px 9px;cursor:pointer;font-size:13px;flex-shrink:0;font-weight:700';
+    const btnStyle = 'border:none;background:rgba(255,255,255,0.1);color:#fff;border-radius:5px;padding:4px 7px;cursor:pointer;font-size:12px;flex-shrink:0';
 
     const homeBtn = document.createElement('button');
     homeBtn.textContent = '🏠';
     homeBtn.title = 'Startseite';
-    homeBtn.style.cssText = backBtn.style.cssText;
+    homeBtn.style.cssText = btnStyle;
     homeBtn.addEventListener('click', function(e) { e.stopPropagation(); showStartpage(); });
 
-    bar.append(homeBtn, backBtn, fwdBtn, urlInp, goBtn);
+    const urlInp = document.createElement('input');
+    urlInp.type = 'text';
+    urlInp.placeholder = 'URL eingeben…';
+    urlInp.value = '';
+    urlInp.style.cssText = 'flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;font-size:11px;padding:4px 8px;touch-action:auto;min-width:0';
+    urlInp.addEventListener('click', e => e.stopPropagation());
+    urlInp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') navigate(urlInp.value); });
+
+    const goBtn = document.createElement('button');
+    goBtn.textContent = '→';
+    goBtn.style.cssText = 'border:none;background:var(--brand);color:#fff;border-radius:5px;padding:4px 9px;cursor:pointer;font-size:13px;flex-shrink:0;font-weight:700';
+    goBtn.addEventListener('click', e => { e.stopPropagation(); navigate(urlInp.value); });
+
+    bar.append(homeBtn, urlInp, goBtn);
 
     // Startpage with tiles
     const startpage = document.createElement('div');
@@ -3004,26 +3001,8 @@ const WIDGET_RENDERERS = {
       startpage.appendChild(grid);
     }
 
-    // iframe
-    const frame = document.createElement('iframe');
-    frame.style.cssText = 'flex:1;border:none;width:100%;background:#fff';
-    frame.sandbox = 'allow-scripts allow-same-origin allow-forms allow-popups';
-    frame.allow = 'fullscreen';
-
-    // Overlay for blocked sites
-    const blocker = document.createElement('div');
-    blocker.style.cssText = 'display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0f0f1a;padding:20px;text-align:center;';
-    blocker.innerHTML = '<div style="font-size:36px">🚫</div><div style="color:#f87171;font-size:14px;font-weight:600">Diese Webseite blockiert die Einbettung</div><div style="color:rgba(255,255,255,0.4);font-size:12px;max-width:260px">Viele Seiten (Google, YouTube, ARD…) erlauben keine iframes aus Sicherheitsgründen.</div>';
-    const openTabBtn = document.createElement('button');
-    openTabBtn.textContent = '↗ In neuem Tab öffnen';
-    openTabBtn.style.cssText = 'border:none;background:rgba(99,102,241,0.8);color:#fff;border-radius:8px;padding:8px 18px;cursor:pointer;font-size:13px;margin-top:4px';
-    openTabBtn.addEventListener('click', () => window.open(urlInp.value, '_blank'));
-    blocker.appendChild(openTabBtn);
 
     const showStartpage = () => {
-      frame.style.display = 'none';
-      frame.src = '';
-      blocker.style.display = 'none';
       startpage.style.display = 'block';
       urlInp.value = '';
       renderStartpage();
@@ -3033,34 +3012,12 @@ const WIDGET_RENDERERS = {
       let u = url.trim();
       if (!u) { showStartpage(); return; }
       if (!u.startsWith('http')) u = 'https://' + u;
-      startpage.style.display = 'none';
-      blocker.style.display = 'none';
-      frame.style.display = 'block';
-      frame.src = u;
+      window.open(u, '_blank');
       urlInp.value = u;
-      w.config.url = u;
-      APP.save();
     };
 
-    // Detect X-Frame-Options / CSP block via load timeout or error
-    frame.addEventListener('load', () => {
-      try {
-        // If we can access contentDocument.body, it loaded fine
-        const b = frame.contentDocument?.body;
-        if (!b || b.innerHTML === '') throw new Error('blocked');
-      } catch(e) {
-        // Cross-origin or blocked — show overlay
-        blocker.style.display = 'flex';
-        frame.style.display = 'none';
-      }
-    });
-
     goBtn.addEventListener('click', e => { e.stopPropagation(); navigate(urlInp.value); });
-    urlInp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') navigate(urlInp.value); });
-    backBtn.addEventListener('click', e => { e.stopPropagation(); try { frame.contentWindow.history.back(); } catch(ee){} });
-    fwdBtn.addEventListener('click', e => { e.stopPropagation(); try { frame.contentWindow.history.forward(); } catch(ee){} });
-
-    body.append(bar, startpage, frame, blocker);
+    body.append(bar, startpage);
     if (w.config.url) {
       navigate(w.config.url);
     } else {
