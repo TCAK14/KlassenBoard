@@ -7,6 +7,20 @@ const headers = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
+async function callGroq(messages, model, maxTokens) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + GROQ_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: 0.7 }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || 'Groq ' + res.status);
+  }
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || '(Keine Antwort)';
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers };
@@ -21,13 +35,13 @@ exports.handler = async (event) => {
   try {
     const { question, history } = JSON.parse(event.body);
     if (!question || typeof question !== 'string' || question.length > 2000) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Ungültige Anfrage' }) };
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Ungueltige Anfrage' }) };
     }
 
     const messages = [
       {
         role: 'system',
-        content: 'Du bist ein intelligenter KI-Assistent in KlassenBoard, einer App für Lehrkräfte an deutschen Schulen. Du kannst alles beantworten — Unterrichtsfragen, Allgemeinwissen, aktuelle Themen, Texte schreiben, Aufgaben erstellen, Ideen geben. Antworte immer auf Deutsch, klar und hilfreich. Sei konkret und gib echte Antworten statt auszuweichen. Halte dich kurz (max 200 Wörter), außer der Nutzer will mehr Detail.'
+        content: 'Du bist ein intelligenter KI-Assistent in KlassenBoard, einer App fuer Lehrkraefte an deutschen Schulen. Du kannst alles beantworten: Unterrichtsfragen, Allgemeinwissen, aktuelle Themen, Texte schreiben, Aufgaben erstellen, Ideen geben. Antworte immer auf Deutsch, klar und hilfreich. Sei konkret und gib echte Antworten statt auszuweichen. Halte dich kurz (max 200 Woerter), ausser der Nutzer will mehr Detail.'
       }
     ];
 
@@ -38,27 +52,16 @@ exports.handler = async (event) => {
         }
       });
     }
-
     messages.push({ role: 'user', content: question });
 
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + GROQ_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'openai/gpt-oss-120b',
-        messages,
-        max_tokens: 800,
-        temperature: 0.7,
-      }),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || 'Groq Fehler ' + res.status);
+    // Try Compound (has web search) first, fall back to GPT-OSS 120B
+    let text;
+    try {
+      text = await callGroq(messages, 'groq/compound', 500);
+    } catch (e) {
+      text = await callGroq(messages, 'openai/gpt-oss-120b', 800);
     }
 
-    const data = await res.json();
-    const text = data.choices?.[0]?.message?.content || '(Keine Antwort)';
     return { statusCode: 200, headers, body: JSON.stringify({ text }) };
 
   } catch (err) {
