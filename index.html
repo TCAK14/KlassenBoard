@@ -5150,7 +5150,15 @@ const DRAW = {
     });
 
     // Exit
-    btn('dt-exit')?.addEventListener('click', () => this.toggle());
+    btn('dt-exit')?.addEventListener('click', () => {
+      const choice = confirm('Zeichnungen behalten?\n\nOK = Zeichnungen bleiben auf der Tafel\nAbbrechen = Alles löschen');
+      if (!choice) {
+        this.history = [];
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        delete this.boardDrawings[APP.state.activeBoardId];
+      }
+      this.toggle();
+    });
 
     // ── Text tool: double-click on canvas ──
     this._initTextTool();
