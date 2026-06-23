@@ -2945,21 +2945,17 @@ const WIDGET_RENDERERS = {
 
     // Startpage with tiles
     const startpage = document.createElement('div');
-    startpage.style.cssText = 'flex:1;overflow-y:auto;background:rgba(0,0,0,0.15);padding:16px;display:none';
+    startpage.style.cssText = 'flex:1;overflow-y:auto;background:rgba(0,0,0,0.1);padding:0;display:none;flex-direction:column';
 
     function renderStartpage() {
       startpage.innerHTML = '';
-      const title = document.createElement('div');
-      title.style.cssText = 'text-align:center;font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:14px';
-      title.textContent = '🌐 Startseite';
-      startpage.appendChild(title);
       const grid = document.createElement('div');
-      grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:10px';
+      grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:0;flex:1;align-content:stretch';
       bookmarkList.forEach((bm, i) => {
         const tile = document.createElement('div');
-        tile.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);transition:all .15s';
-        tile.addEventListener('mouseenter', function() { this.style.background='rgba(255,255,255,0.12)'; this.style.borderColor='rgba(99,102,241,0.4)'; });
-        tile.addEventListener('mouseleave', function() { this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='rgba(255,255,255,0.08)'; });
+        tile.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px 4px;cursor:pointer;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);transition:all .15s';
+        tile.addEventListener('mouseenter', function() { this.style.background='rgba(255,255,255,0.12)'; });
+        tile.addEventListener('mouseleave', function() { this.style.background='rgba(255,255,255,0.05)'; });
         const icon = document.createElement('img');
         icon.src = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(new URL(bm.url).hostname) + '&sz=32';
         icon.style.cssText = 'width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.1)';
@@ -2984,7 +2980,7 @@ const WIDGET_RENDERERS = {
       // Add-Tile
       if (APP.state.editMode) {
         const addTile = document.createElement('div');
-        addTile.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 4px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.15);transition:all .15s;min-height:60px';
+        addTile.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 4px;cursor:pointer;background:rgba(255,255,255,0.02);border:0.5px dashed rgba(255,255,255,0.15);transition:all .15s';
         addTile.innerHTML = '<div style="font-size:20px;color:rgba(255,255,255,0.3)">+</div><div style="font-size:9px;color:rgba(255,255,255,0.25)">Seite hinzufügen</div>';
         addTile.addEventListener('click', function(e) {
           e.stopPropagation();
@@ -3003,7 +2999,7 @@ const WIDGET_RENDERERS = {
 
 
     const showStartpage = () => {
-      startpage.style.display = 'block';
+      startpage.style.display = 'flex';
       urlInp.value = '';
       renderStartpage();
     };
