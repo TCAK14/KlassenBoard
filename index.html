@@ -2958,30 +2958,33 @@ const WIDGET_RENDERERS = {
       grid.style.cssText = 'display:grid;grid-template-columns:repeat(' + cols + ',1fr);grid-template-rows:repeat(' + rows + ',1fr);gap:0;flex:1;width:100%;height:100%';
       bookmarkList.forEach((bm, i) => {
         const tile = document.createElement('div');
-        tile.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px 4px;cursor:pointer;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);transition:all .15s';
+        tile.style.cssText = 'position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);transition:all .15s;overflow:hidden';
         tile.addEventListener('mouseenter', function() { this.style.background='rgba(255,255,255,0.12)'; });
         tile.addEventListener('mouseleave', function() { this.style.background='rgba(255,255,255,0.05)'; });
         const icon = document.createElement('img');
-        try { icon.src = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(new URL(bm.url).hostname) + '&sz=64'; } catch(e) {}
-        icon.style.cssText = 'width:48px;height:48px;border-radius:10px;background:rgba(255,255,255,0.1)';
-        icon.onerror = function() { this.textContent='🌐'; this.style.cssText='font-size:36px'; };
+        try { icon.src = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(new URL(bm.url).hostname) + '&sz=128'; } catch(e) {}
+        icon.style.cssText = 'width:100%;height:100%;object-fit:contain;padding:15%;';
+        icon.onerror = function() { this.style.display='none'; const fb=document.createElement('div'); fb.textContent='🌐'; fb.style.cssText='font-size:clamp(24px,40%,64px)'; tile.insertBefore(fb,lbl); };
         const lbl = document.createElement('div');
-        lbl.style.cssText = 'font-size:11px;color:rgba(255,255,255,0.7);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;padding:0 4px';
+        lbl.style.cssText = 'position:absolute;bottom:0;left:0;right:0;font-size:10px;color:rgba(255,255,255,0.85);text-align:center;padding:3px 4px;background:rgba(0,0,0,0.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
         lbl.textContent = bm.label;
-        if (APP.state.editMode) {
-          lbl.addEventListener('dblclick', function(ev) {
-            ev.stopPropagation();
-            const newName = prompt('Name umbenennen:', bm.label);
-            if (newName && newName.trim()) { bm.label = newName.trim(); APP.save(); renderStartpage(); }
-          });
-        }
+        let clickTimer = null;
+        tile.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; return; }
+          clickTimer = setTimeout(function() { clickTimer = null; navigate(bm.url); }, 300);
+        });
+        tile.addEventListener('dblclick', function(e) {
+          e.stopPropagation();
+          if (!APP.state.editMode) return;
+          const newName = prompt('Name umbenennen:', bm.label);
+          if (newName && newName.trim()) { bm.label = newName.trim(); APP.save(); renderStartpage(); }
+        });
         tile.append(icon, lbl);
-        tile.addEventListener('click', function(e) { e.stopPropagation(); navigate(bm.url); });
         if (APP.state.editMode) {
           const del = document.createElement('button');
           del.textContent = '✕';
-          del.style.cssText = 'position:absolute;top:2px;right:2px;background:rgba(239,68,68,0.6);border:none;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;cursor:pointer;display:none;line-height:1';
-          tile.style.position = 'relative';
+          del.style.cssText = 'position:absolute;top:4px;right:4px;background:rgba(239,68,68,0.7);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;display:none;line-height:1;z-index:2';
           tile.addEventListener('mouseenter', function() { del.style.display='block'; });
           tile.addEventListener('mouseleave', function() { del.style.display='none'; });
           del.addEventListener('click', function(ev) { ev.stopPropagation(); bookmarkList.splice(i,1); APP.save(); renderStartpage(); });
@@ -5775,15 +5778,37 @@ function applyToolbarPosition(pos) {
     tb.classList.add('toolbar-vertical');
     const side = pos === 'left' ? 'left' : 'right';
     const border = pos === 'left' ? 'border-right' : 'border-left';
-    tb.style.cssText = 'position:fixed;top:0;' + side + ':0;bottom:0;width:var(--toolbar-h);height:auto;display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:6px 4px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);' + border + ':1px solid var(--glass-border);overflow-y:auto;scrollbar-width:none';
+    const collapsed = localStorage.getItem('kb_toolbar_collapsed') === '1';
+    const sideW = collapsed ? '42px' : '180px';
+    tb.style.cssText = 'position:fixed;top:0;' + side + ':0;bottom:0;width:' + sideW + ';height:auto;display:flex;flex-direction:column;align-items:stretch;gap:2px;padding:4px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);' + border + ':1px solid var(--glass-border);overflow-y:auto;scrollbar-width:none;transition:width .2s';
     board.style.top = '0';
-    board.style[side] = 'var(--toolbar-h)';
-    if (logoText) logoText.style.display = 'none';
+    board.style[side] = sideW;
+    board.style.transition = 'all .2s';
+    if (logoText) logoText.style.display = collapsed ? 'none' : '';
     if (boardTabs) { boardTabs.style.display = 'flex'; boardTabs.style.flexDirection = 'column'; boardTabs.style.flex = '0'; boardTabs.style.overflow = 'visible'; }
-    if (classSwitcher) classSwitcher.style.display = 'none';
-    if (addBoardBtn) addBoardBtn.style.display = 'none';
+    if (classSwitcher) { classSwitcher.style.display = collapsed ? 'none' : ''; }
+    if (addBoardBtn) addBoardBtn.style.display = collapsed ? 'none' : '';
     if (authArea) authArea.style.display = 'none';
-    document.querySelectorAll('#toolbar .tb-btn').forEach(b => { b.style.fontSize = '0px'; b.style.padding = '6px'; b.style.width = '100%'; });
+    document.querySelectorAll('#toolbar .tb-btn').forEach(b => {
+      if (collapsed) { b.style.fontSize = '0px'; b.style.padding = '6px'; b.style.width = '100%'; }
+      else { b.style.fontSize = '12px'; b.style.padding = '6px 8px'; b.style.width = '100%'; }
+    });
+    document.querySelectorAll('#toolbar .tb-icon-btn').forEach(b => { b.style.width = collapsed ? '100%' : ''; });
+    // Collapse toggle button
+    let colBtn = document.getElementById('tb-collapse-btn');
+    if (!colBtn) {
+      colBtn = document.createElement('button');
+      colBtn.id = 'tb-collapse-btn';
+      colBtn.style.cssText = 'border:none;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);border-radius:6px;padding:4px;cursor:pointer;font-size:12px;margin-top:auto;flex-shrink:0;transition:all .15s';
+      colBtn.addEventListener('click', function() {
+        const isCol = localStorage.getItem('kb_toolbar_collapsed') === '1';
+        localStorage.setItem('kb_toolbar_collapsed', isCol ? '0' : '1');
+        applyToolbarPosition(localStorage.getItem('kb_toolbar_pos') || 'top');
+      });
+      tb.appendChild(colBtn);
+    }
+    colBtn.textContent = collapsed ? '»' : '«';
+    colBtn.title = collapsed ? 'Leiste aufklappen' : 'Leiste zuklappen';
   } else {
     if (logo) logo.style.display = '';
     if (logoText) logoText.style.display = '';
@@ -5792,7 +5817,11 @@ function applyToolbarPosition(pos) {
     if (addBoardBtn) addBoardBtn.style.display = '';
     if (authArea) authArea.style.display = '';
     document.querySelectorAll('#toolbar .tb-btn').forEach(b => { b.style.fontSize = ''; b.style.padding = ''; b.style.width = ''; });
+    document.querySelectorAll('#toolbar .tb-icon-btn').forEach(b => { b.style.width = ''; });
     board.style.top = 'var(--toolbar-h)';
+    board.style.transition = '';
+    const colBtn = document.getElementById('tb-collapse-btn');
+    if (colBtn) colBtn.remove();
   }
 }
 
