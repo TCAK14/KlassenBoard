@@ -5775,27 +5775,47 @@ function applyToolbarPosition(pos) {
     board.style.bottom = 'var(--toolbar-h)';
   } else if (pos === 'autohide') {
     tb.dataset.pos = 'autohide';
-    board.style.top = '0';
-    tb.style.cssText = 'position:fixed;top:0;left:0;right:0;height:var(--toolbar-h);display:flex;align-items:center;gap:8px;padding:0 12px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.6);backdrop-filter:blur(16px);border-bottom:1px solid var(--glass-border);overflow-x:auto;scrollbar-width:none;transform:translateY(-100%);transition:transform .25s ease;opacity:0.97';
+    const side = localStorage.getItem('kb_toolbar_side') || 'top';
+    const isBottom = side === 'bottom';
+    board.style.top = '0'; board.style.bottom = '0';
+    if (isBottom) {
+      tb.style.cssText = 'position:fixed;bottom:0;left:0;right:0;top:auto;height:var(--toolbar-h);display:flex;align-items:center;gap:8px;padding:0 12px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.6);backdrop-filter:blur(16px);border-top:1px solid var(--glass-border);overflow-x:auto;scrollbar-width:none;transform:translateY(100%);transition:transform .25s ease';
+    } else {
+      tb.style.cssText = 'position:fixed;top:0;left:0;right:0;height:var(--toolbar-h);display:flex;align-items:center;gap:8px;padding:0 12px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.6);backdrop-filter:blur(16px);border-bottom:1px solid var(--glass-border);overflow-x:auto;scrollbar-width:none;transform:translateY(-100%);transition:transform .25s ease';
+    }
     let pullTab = document.getElementById('tb-pull-tab');
-    if (!pullTab) {
-      pullTab = document.createElement('div');
-      pullTab.id = 'tb-pull-tab';
+    if (pullTab) pullTab.remove();
+    pullTab = document.createElement('div');
+    pullTab.id = 'tb-pull-tab';
+    if (isBottom) {
+      pullTab.style.cssText = 'position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:99998;cursor:pointer;background:rgba(99,102,241,0.5);border-radius:10px 10px 0 0;padding:2px 20px;font-size:10px;color:rgba(255,255,255,0.7);transition:all .2s;backdrop-filter:blur(8px)';
+      pullTab.textContent = '▲ Leiste';
+    } else {
       pullTab.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99998;cursor:pointer;background:rgba(99,102,241,0.5);border-radius:0 0 10px 10px;padding:2px 20px;font-size:10px;color:rgba(255,255,255,0.7);transition:all .2s;backdrop-filter:blur(8px)';
       pullTab.textContent = '▼ Leiste';
-      document.body.appendChild(pullTab);
-      let tbVisible = false;
-      function toggleTb() {
-        tbVisible = !tbVisible;
+    }
+    document.body.appendChild(pullTab);
+    let tbVisible = false;
+    pullTab.addEventListener('click', function() {
+      tbVisible = !tbVisible;
+      if (isBottom) {
+        tb.style.transform = tbVisible ? 'translateY(0)' : 'translateY(100%)';
+        pullTab.textContent = tbVisible ? '▼ Leiste' : '▲ Leiste';
+        pullTab.style.bottom = tbVisible ? 'var(--toolbar-h)' : '0';
+      } else {
         tb.style.transform = tbVisible ? 'translateY(0)' : 'translateY(-100%)';
         pullTab.textContent = tbVisible ? '▲ Leiste' : '▼ Leiste';
         pullTab.style.top = tbVisible ? 'var(--toolbar-h)' : '0';
       }
-      pullTab.addEventListener('click', toggleTb);
-      board.addEventListener('click', function() {
-        if (tb.dataset.pos === 'autohide' && tbVisible) { toggleTb(); }
-      });
-    }
+    });
+    board.addEventListener('click', function hideHandler() {
+      if (tb.dataset.pos === 'autohide' && tbVisible) {
+        tbVisible = false;
+        tb.style.transform = isBottom ? 'translateY(100%)' : 'translateY(-100%)';
+        pullTab.textContent = isBottom ? '▲ Leiste' : '▼ Leiste';
+        if (isBottom) pullTab.style.bottom = '0'; else pullTab.style.top = '0';
+      }
+    });
     pullTab.style.display = 'block';
   } else {
     if (logo) logo.style.display = '';
@@ -5833,7 +5853,7 @@ function openToolbarCustomizer() {
   const prefs = getToolbarPrefs() || {};
   const panel = document.createElement('div');
   panel.id = 'tb-customize-panel';
-  panel.style.cssText = 'position:fixed;top:56px;right:12px;z-index:9990;background:rgba(18,18,38,0.97);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:16px 18px;min-width:220px;box-shadow:0 8px 40px rgba(0,0,0,0.6);backdrop-filter:blur(12px);';
+  panel.style.cssText = 'position:fixed;top:56px;right:12px;z-index:9990;background:rgba(18,18,38,0.97);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:16px 18px;min-width:220px;max-height:calc(100vh - 80px);overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.6);backdrop-filter:blur(12px);scrollbar-width:thin;';
   panel.innerHTML = '<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px;letter-spacing:0.3px">⚙ Leiste anpassen</div>';
 
   // Toolbar position selector
@@ -5846,6 +5866,7 @@ function openToolbarCustomizer() {
     b.title = p.icon;
     b.style.cssText = 'flex:1;padding:6px;border-radius:8px;border:1px solid ' + (currentPos === p.id ? '#6366f1' : 'rgba(255,255,255,0.1)') + ';background:' + (currentPos === p.id ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.05)') + ';color:#fff;font-size:14px;cursor:pointer';
     b.addEventListener('click', function() {
+      if (p.id === 'top' || p.id === 'bottom') localStorage.setItem('kb_toolbar_side', p.id);
       localStorage.setItem('kb_toolbar_pos', p.id);
       applyToolbarPosition(p.id);
       panel.remove();
