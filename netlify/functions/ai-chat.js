@@ -40,7 +40,7 @@ exports.handler = async (event) => {
 
     contents.push({ role: 'user', parts: [{ text: question }] });
 
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_KEY;
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + GEMINI_KEY;
 
     const res = await fetch(url, {
       method: 'POST',
