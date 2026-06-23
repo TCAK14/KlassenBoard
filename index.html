@@ -23,7 +23,7 @@
 }
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html,body { height:100%; overflow:hidden; font-family:'Segoe UI',system-ui,sans-serif; }
-body { background:#1e293b; color:#fff; touch-action:none; }
+body { background:#1e293b; color:#fff; touch-action:manipulation; }
 /* Inputs/Textareas müssen immer tippbar sein – touch-action:none auf body überschreiben */
 input, textarea, select, [contenteditable] { touch-action:auto; user-select:text; -webkit-user-select:text; }
 .modal, .modal * { touch-action:auto; }
@@ -1712,12 +1712,29 @@ function buildWidgetEl(w) {
   renderWidgetContent(w, body);
   shell.appendChild(body);
 
-  // Dblclick to edit (universal for widgets without own dblclick handler)
-  const hasOwnDblclick = new Set(['text','goal','homework','agenda','checklist']);
-  if (APP.state.editMode && !hasOwnDblclick.has(w.type)) {
-    body.addEventListener('dblclick', e => {
-      e.stopPropagation();
-      openWidgetSettings(w.id);
+  // Double-tap / dblclick to edit (works on both desktop and mobile)
+  if (APP.state.editMode) {
+    const hasOwnEdit = new Set(['text','goal','homework','agenda','checklist']);
+    if (!hasOwnEdit.has(w.type)) {
+      body.addEventListener('dblclick', e => { e.stopPropagation(); openWidgetSettings(w.id); });
+    }
+    let lastTap = 0;
+    body.addEventListener('touchend', e => {
+      const now = Date.now();
+      if (now - lastTap < 350) {
+        e.preventDefault();
+        if (hasOwnEdit.has(w.type)) {
+          if (w.type === 'text' || w.type === 'goal') {
+            const target = e.target.closest('.w-text-display, .w-goal-text');
+            if (target) target.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+          } else {
+            openWidgetSettings(w.id);
+          }
+        } else {
+          openWidgetSettings(w.id);
+        }
+      }
+      lastTap = now;
     });
   }
 
