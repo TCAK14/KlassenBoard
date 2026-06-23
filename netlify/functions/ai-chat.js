@@ -45,7 +45,7 @@ exports.handler = async (event) => {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + GROQ_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'groq/compound',
+        model: 'openai/gpt-oss-120b',
         messages,
         max_tokens: 800,
         temperature: 0.7,
