@@ -2949,8 +2949,11 @@ const WIDGET_RENDERERS = {
 
     function renderStartpage() {
       startpage.innerHTML = '';
+      const totalItems = bookmarkList.length + (APP.state.editMode ? 1 : 0);
+      const cols = Math.max(2, Math.ceil(Math.sqrt(totalItems)));
+      const rows = Math.ceil(totalItems / cols);
       const grid = document.createElement('div');
-      grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:0;flex:1;align-content:stretch';
+      grid.style.cssText = 'display:grid;grid-template-columns:repeat(' + cols + ',1fr);grid-template-rows:repeat(' + rows + ',1fr);gap:0;flex:1;width:100%;height:100%';
       bookmarkList.forEach((bm, i) => {
         const tile = document.createElement('div');
         tile.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px 4px;cursor:pointer;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);transition:all .15s';
@@ -5797,10 +5800,10 @@ function openToolbarCustomizer() {
   const posRow = document.createElement('div');
   posRow.style.cssText = 'display:flex;gap:4px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08)';
   const currentPos = localStorage.getItem('kb_toolbar_pos') || 'top';
-  [{id:'top',icon:'↑'},{id:'bottom',icon:'↓'},{id:'left',icon:'←'},{id:'right',icon:'→'}].forEach(p => {
+  [{id:'top',icon:'↑ Oben'},{id:'bottom',icon:'↓ Unten'}].forEach(p => {
     const b = document.createElement('button');
     b.textContent = p.icon;
-    b.title = p.id === 'top' ? 'Oben' : p.id === 'bottom' ? 'Unten' : p.id === 'left' ? 'Links' : 'Rechts';
+    b.title = p.id === 'top' ? 'Oben' : 'Unten';
     b.style.cssText = 'flex:1;padding:6px;border-radius:8px;border:1px solid ' + (currentPos === p.id ? '#6366f1' : 'rgba(255,255,255,0.1)') + ';background:' + (currentPos === p.id ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.05)') + ';color:#fff;font-size:14px;cursor:pointer';
     b.addEventListener('click', function() {
       localStorage.setItem('kb_toolbar_pos', p.id);
