@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>KlassenBoard – Das digitale Klassenzimmer</title>
 <meta name="description" content="KlassenBoard ist das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer. Widgets, KI-Assistent, Live-Umfragen, Sprachsteuerung und mehr.">
 <meta name="theme-color" content="#6366f1">
@@ -684,22 +684,25 @@ body.fullscreen #board { top:0; }
 /* ── MOBILE RESPONSIVE ── */
 @media (max-width: 768px) {
   :root { --toolbar-h: 48px; }
-  #toolbar { gap:4px; padding:0 6px; }
+  #toolbar { gap:3px; padding:0 6px; flex-wrap:nowrap; }
   #logo-text { display:none; }
-  #logo { margin-right:4px; }
+  #logo { margin-right:2px; flex-shrink:0; }
   #logo span:first-child { font-size:18px; }
-  .toolbar-sep { height:20px; margin:0 1px; }
-  .tb-btn { padding:5px 8px; font-size:12px; }
-  .tb-icon-btn { width:30px; height:30px; font-size:14px; }
-  #class-btn { padding:4px 8px; font-size:12px; max-width:100px; }
-  #class-btn .class-name { max-width:60px; }
-  #add-board-btn { width:24px; height:24px; font-size:16px; }
-  .tab-btn { padding:4px 10px; font-size:12px; }
-  #edit-mode-btn { padding:4px 8px; font-size:11px; }
-  #auth-login-btn { padding:4px 8px; font-size:11px; }
-  #user-badge { padding:3px 6px; }
+  .toolbar-sep { display:none; }
+  .tb-btn { padding:4px 7px; font-size:11px; }
+  .tb-icon-btn { width:28px; height:28px; font-size:13px; }
+  #class-btn { padding:3px 6px; font-size:11px; max-width:90px; }
+  #class-btn .class-name { max-width:50px; }
+  #add-board-btn { width:22px; height:22px; font-size:14px; }
+  #board-tabs { flex:1; min-width:60px; flex-shrink:1; overflow-x:auto; }
+  .tab-btn { padding:3px 8px; font-size:11px; }
+  #btn-template, #btn-bg, #btn-ical, #btn-export, #btn-voice, #btn-fullscreen, #btn-customize-toolbar { display:none !important; }
+  #edit-mode-btn { padding:3px 6px; font-size:10px; }
+  #auth-login-btn { padding:3px 6px; font-size:10px; }
+  #auth-area { margin-left:0; }
+  #user-badge { padding:2px 4px; }
   #user-email { display:none; }
-  #user-avatar { width:22px; height:22px; font-size:10px; }
+  #user-avatar { width:20px; height:20px; font-size:9px; }
 
   #board { overflow:auto; touch-action:pan-x pan-y; -webkit-overflow-scrolling:touch; }
   #board::-webkit-scrollbar { display:none; }
