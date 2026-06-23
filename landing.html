@@ -575,7 +575,7 @@ body.yearly .save-badge { opacity:1; }
   <div class="mockup-wrap">
     <div class="mockup-chrome">
       <div class="mc-dots"><span></span><span></span><span></span></div>
-      <div class="mc-addr">🔒 classpuls.netlify.app</div>
+      <div class="mc-addr">🔒 klassenboard.netlify.app</div>
     </div>
     <div class="mockup-body">
       <div class="mw">
@@ -1064,9 +1064,7 @@ body.yearly .save-badge { opacity:1; }
     <div class="footer-bottom">
       <p>© 2025–2026 ClassPuls · Alle Rechte vorbehalten · Made in Germany 🇩🇪</p>
       <div class="footer-social">
-        <a href="#" title="Instagram">📸</a>
-        <a href="#" title="LinkedIn">💼</a>
-        <a href="#" title="YouTube">▶️</a>
+        <a href="mailto:info@classpuls.de" title="Kontakt">✉️</a>
       </div>
     </div>
   </div>
@@ -1217,4 +1215,35 @@ const observer = new IntersectionObserver(entries => {
 }, { threshold: 0.4 });
 sections.forEach(s => observer.observe(s));
 
+// ── SUCCESS PAGE HANDLING ──
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const success = params.get('success');
+  if (success) {
+    const msg = success === 'school'
+      ? 'Deine Schullizenz ist aktiv! Wir melden uns in Kürze per E-Mail.'
+      : 'Dein Pro-Abo ist aktiv! Logge dich jetzt ein und nutze alle Features.';
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:16px 28px;background:#22c55e;color:#fff;font-size:15px;font-weight:700;text-align:center;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.3)';
+    banner.textContent = '🎉 ' + msg;
+    const close = document.createElement('button');
+    close.textContent = '✕';
+    close.style.cssText = 'position:absolute;right:16px;top:50%;transform:translateY(-50%);background:none;border:none;color:#fff;font-size:18px;cursor:pointer';
+    close.addEventListener('click', function() { banner.remove(); });
+    banner.appendChild(close);
+    document.body.appendChild(banner);
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+})();
+
+// ── MOBILE MENU ──
+document.querySelectorAll('.mobile-menu a[href^="#"]').forEach(function(link) {
+  link.addEventListener('click', function() {
+    document.getElementById('mobile-menu').classList.remove('open');
+    document.getElementById('nav-burger').classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>
 // ── SUCCESS PAGE �
