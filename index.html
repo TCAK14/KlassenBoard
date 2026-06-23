@@ -5342,33 +5342,55 @@ const DRAW = {
     return b;
   }
 
-  function addImageBubble(subject, isDraw) {
+  async function addImageBubble(subject, isDraw) {
     const b = document.createElement('div');
     b.className = 'ki-bubble ai';
     b.style.padding = '6px';
     const lbl = document.createElement('div');
     lbl.style.cssText = 'font-size:10px;opacity:0.5;margin-bottom:4px;padding:0 4px';
-    lbl.textContent = (isDraw ? '🎨 ' : '🖼 ' ) + subject;
+    lbl.textContent = (isDraw ? '🎨 ' : '🖼 ') + subject;
+    const spinner = document.createElement('div');
+    spinner.style.cssText = 'text-align:center;padding:16px;font-size:12px;color:rgba(255,255,255,0.4)';
+    spinner.textContent = '⏳ Bild wird gesucht…';
+    b.append(lbl, spinner);
+    historyEl.appendChild(b);
+    historyEl.scrollTop = historyEl.scrollHeight;
+
+    let imgUrl;
+    if (isDraw) {
+      imgUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(subject + ', illustration, colorful, educational') + '?width=600&height=400&nologo=true&seed=' + Math.floor(Math.random()*2e9);
+    } else {
+      try {
+        const res = await fetch('/.netlify/functions/image-search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: subject })
+        });
+        const data = await res.json();
+        if (data.url) {
+          imgUrl = data.url;
+        } else {
+          imgUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(subject + ', realistic photograph') + '?width=600&height=400&nologo=true&seed=' + Math.floor(Math.random()*2e9);
+        }
+      } catch (e) {
+        imgUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(subject + ', realistic photograph') + '?width=600&height=400&nologo=true&seed=' + Math.floor(Math.random()*2e9);
+      }
+    }
+
+    spinner.remove();
     const img = document.createElement('img');
     img.alt = subject;
+    img.src = imgUrl;
     img.style.cssText = 'max-width:100%;border-radius:7px;display:block;min-height:40px;background:rgba(255,255,255,0.05)';
-    const style = isDraw ? ', illustration, colorful, educational, cartoon style' : ', realistic photograph, high quality, sharp focus, studio lighting';
-    const url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(subject + style) + '?width=600&height=400&nologo=true&seed=' + Math.floor(Math.random()*2e9);
     img.onerror = function() {
       this.onerror = null;
       this.style.display = 'none';
       const err = document.createElement('div');
       err.style.cssText = 'padding:8px;font-size:12px;color:#fca5a5;text-align:center';
       err.textContent = '❌ Bild konnte nicht geladen werden';
-      const retry = document.createElement('button');
-      retry.textContent = '🔄 Nochmal';
-      retry.style.cssText = 'margin-top:6px;padding:5px 12px;border-radius:8px;border:none;background:rgba(99,102,241,0.3);color:#a5b4fc;font-size:11px;cursor:pointer;font-weight:600';
-      retry.addEventListener('click', function() { err.remove(); retry.remove(); img.style.display='block'; img.src=url+'&r='+Date.now(); });
-      b.append(err, retry);
+      b.appendChild(err);
     };
-    img.src = url;
-    b.append(lbl, img);
-    historyEl.appendChild(b);
+    b.appendChild(img);
     historyEl.scrollTop = historyEl.scrollHeight;
     return b;
   }
