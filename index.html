@@ -5342,55 +5342,38 @@ const DRAW = {
     return b;
   }
 
-  async function addImageBubble(subject, isDraw) {
+  function addImageBubble(subject, isDraw) {
     const b = document.createElement('div');
     b.className = 'ki-bubble ai';
-    b.style.padding = '6px';
-    const lbl = document.createElement('div');
-    lbl.style.cssText = 'font-size:10px;opacity:0.5;margin-bottom:4px;padding:0 4px';
-    lbl.textContent = (isDraw ? '🎨 ' : '🖼 ') + subject;
-    const spinner = document.createElement('div');
-    spinner.style.cssText = 'text-align:center;padding:16px;font-size:12px;color:rgba(255,255,255,0.4)';
-    spinner.textContent = '⏳ Bild wird gesucht…';
-    b.append(lbl, spinner);
-    historyEl.appendChild(b);
-    historyEl.scrollTop = historyEl.scrollHeight;
+    b.style.padding = '8px 10px';
 
-    let imgUrl;
     if (isDraw) {
-      imgUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(subject + ', illustration, colorful, educational') + '?width=600&height=400&nologo=true&seed=' + Math.floor(Math.random()*2e9);
+      const lbl = document.createElement('div');
+      lbl.style.cssText = 'font-size:10px;opacity:0.5;margin-bottom:4px';
+      lbl.textContent = '🎨 ' + subject;
+      const img = document.createElement('img');
+      img.alt = subject;
+      img.src = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(subject + ', illustration, colorful, educational') + '?width=600&height=400&nologo=true&seed=' + Math.floor(Math.random()*2e9);
+      img.style.cssText = 'max-width:100%;border-radius:7px;display:block';
+      img.onerror = function() { this.style.display='none'; };
+      b.append(lbl, img);
     } else {
-      try {
-        const res = await fetch('/.netlify/functions/image-search', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: subject })
-        });
-        const data = await res.json();
-        if (data.url) {
-          imgUrl = data.url;
-        } else {
-          imgUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(subject + ', realistic photograph') + '?width=600&height=400&nologo=true&seed=' + Math.floor(Math.random()*2e9);
-        }
-      } catch (e) {
-        imgUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(subject + ', realistic photograph') + '?width=600&height=400&nologo=true&seed=' + Math.floor(Math.random()*2e9);
-      }
+      const googleUrl = 'https://www.google.com/search?q=' + encodeURIComponent(subject) + '&tbm=isch';
+      const text = document.createElement('div');
+      text.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.85);margin-bottom:10px;line-height:1.5';
+      text.textContent = '🖼 Bilder zu: "' + subject + '"';
+      const link = document.createElement('a');
+      link.href = googleUrl;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;font-size:13px;font-weight:600;text-decoration:none;transition:all .15s';
+      link.textContent = '🔍 Google Bilder öffnen';
+      link.addEventListener('mouseenter', function() { this.style.background='rgba(99,102,241,0.25)'; });
+      link.addEventListener('mouseleave', function() { this.style.background='rgba(99,102,241,0.15)'; });
+      b.append(text, link);
     }
 
-    spinner.remove();
-    const img = document.createElement('img');
-    img.alt = subject;
-    img.src = imgUrl;
-    img.style.cssText = 'max-width:100%;border-radius:7px;display:block;min-height:40px;background:rgba(255,255,255,0.05)';
-    img.onerror = function() {
-      this.onerror = null;
-      this.style.display = 'none';
-      const err = document.createElement('div');
-      err.style.cssText = 'padding:8px;font-size:12px;color:#fca5a5;text-align:center';
-      err.textContent = '❌ Bild konnte nicht geladen werden';
-      b.appendChild(err);
-    };
-    b.appendChild(img);
+    historyEl.appendChild(b);
     historyEl.scrollTop = historyEl.scrollHeight;
     return b;
   }
