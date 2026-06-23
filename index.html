@@ -710,7 +710,7 @@ body.fullscreen #board { top:0; }
   #widgets-layer { position:relative; min-width:900px; min-height:600px; z-index:1; }
   .widget { z-index:2; }
 
-  #toolbar { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  #toolbar { overflow-x:auto; -webkit-overflow-scrolling:touch; touch-action:pan-x; }
   #toolbar::-webkit-scrollbar { display:none; }
   #board-tabs { flex-shrink:0; }
 
@@ -2906,13 +2906,15 @@ const WIDGET_RENDERERS = {
     body.style.padding = '0';
     body.style.overflow = 'hidden';
 
-    const defaultUrls = w.config.bookmarks || [
-      { label:'FragFinn', url:'https://www.fragfinn.de' },
-      { label:'ARD', url:'https://www.ard.de' },
-      { label:'ZDF', url:'https://www.zdf.de' },
-      { label:'Planet Schule', url:'https://www.planet-schule.de' },
-      { label:'Spiegel Kids', url:'https://www.spiegel.de/thema/kinder' },
-    ];
+    if (!w.config.bookmarks) {
+      w.config.bookmarks = [
+        { label:'FragFinn', url:'https://www.fragfinn.de' },
+        { label:'ARD', url:'https://www.ard.de' },
+        { label:'ZDF', url:'https://www.zdf.de' },
+        { label:'Planet Schule', url:'https://www.planet-schule.de' },
+      ];
+    }
+    const bookmarkList = w.config.bookmarks;
 
     // URL bar
     const bar = document.createElement('div');
@@ -2936,18 +2938,71 @@ const WIDGET_RENDERERS = {
     goBtn.textContent = '→';
     goBtn.style.cssText = 'border:none;background:var(--brand);color:#fff;border-radius:5px;padding:4px 9px;cursor:pointer;font-size:13px;flex-shrink:0;font-weight:700';
 
-    bar.append(backBtn, fwdBtn, urlInp, goBtn);
+    const homeBtn = document.createElement('button');
+    homeBtn.textContent = '🏠';
+    homeBtn.title = 'Startseite';
+    homeBtn.style.cssText = backBtn.style.cssText;
+    homeBtn.addEventListener('click', function(e) { e.stopPropagation(); showStartpage(); });
 
-    // Bookmarks bar
-    const bookmarks = document.createElement('div');
-    bookmarks.style.cssText = 'display:flex;gap:4px;padding:4px 6px;background:rgba(0,0,0,0.2);flex-shrink:0;flex-wrap:wrap';
-    defaultUrls.forEach(b => {
-      const bBtn = document.createElement('button');
-      bBtn.textContent = b.label;
-      bBtn.style.cssText = 'border:none;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:10.5px;';
-      bBtn.addEventListener('click', e => { e.stopPropagation(); navigate(b.url); });
-      bookmarks.appendChild(bBtn);
-    });
+    bar.append(homeBtn, backBtn, fwdBtn, urlInp, goBtn);
+
+    // Startpage with tiles
+    const startpage = document.createElement('div');
+    startpage.style.cssText = 'flex:1;overflow-y:auto;background:rgba(0,0,0,0.15);padding:16px;display:none';
+
+    function renderStartpage() {
+      startpage.innerHTML = '';
+      const title = document.createElement('div');
+      title.style.cssText = 'text-align:center;font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:14px';
+      title.textContent = '🌐 Startseite';
+      startpage.appendChild(title);
+      const grid = document.createElement('div');
+      grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:10px';
+      bookmarkList.forEach((bm, i) => {
+        const tile = document.createElement('div');
+        tile.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);transition:all .15s';
+        tile.addEventListener('mouseenter', function() { this.style.background='rgba(255,255,255,0.12)'; this.style.borderColor='rgba(99,102,241,0.4)'; });
+        tile.addEventListener('mouseleave', function() { this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='rgba(255,255,255,0.08)'; });
+        const icon = document.createElement('img');
+        icon.src = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(new URL(bm.url).hostname) + '&sz=32';
+        icon.style.cssText = 'width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.1)';
+        icon.onerror = function() { this.style.display='none'; };
+        const lbl = document.createElement('div');
+        lbl.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.7);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%';
+        lbl.textContent = bm.label;
+        tile.append(icon, lbl);
+        tile.addEventListener('click', function(e) { e.stopPropagation(); navigate(bm.url); });
+        if (APP.state.editMode) {
+          const del = document.createElement('button');
+          del.textContent = '✕';
+          del.style.cssText = 'position:absolute;top:2px;right:2px;background:rgba(239,68,68,0.6);border:none;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;cursor:pointer;display:none;line-height:1';
+          tile.style.position = 'relative';
+          tile.addEventListener('mouseenter', function() { del.style.display='block'; });
+          tile.addEventListener('mouseleave', function() { del.style.display='none'; });
+          del.addEventListener('click', function(ev) { ev.stopPropagation(); bookmarkList.splice(i,1); APP.save(); renderStartpage(); });
+          tile.appendChild(del);
+        }
+        grid.appendChild(tile);
+      });
+      // Add-Tile
+      if (APP.state.editMode) {
+        const addTile = document.createElement('div');
+        addTile.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 4px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.15);transition:all .15s;min-height:60px';
+        addTile.innerHTML = '<div style="font-size:20px;color:rgba(255,255,255,0.3)">+</div><div style="font-size:9px;color:rgba(255,255,255,0.25)">Seite hinzufügen</div>';
+        addTile.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const name = prompt('Name der Webseite:');
+          if (!name) return;
+          const url = prompt('URL (z.B. https://www.zdf.de):');
+          if (!url) return;
+          bookmarkList.push({ label: name, url: url.startsWith('http') ? url : 'https://' + url });
+          APP.save();
+          renderStartpage();
+        });
+        grid.appendChild(addTile);
+      }
+      startpage.appendChild(grid);
+    }
 
     // iframe
     const frame = document.createElement('iframe');
@@ -2965,10 +3020,20 @@ const WIDGET_RENDERERS = {
     openTabBtn.addEventListener('click', () => window.open(urlInp.value, '_blank'));
     blocker.appendChild(openTabBtn);
 
+    const showStartpage = () => {
+      frame.style.display = 'none';
+      frame.src = '';
+      blocker.style.display = 'none';
+      startpage.style.display = 'block';
+      urlInp.value = '';
+      renderStartpage();
+    };
+
     const navigate = (url) => {
       let u = url.trim();
-      if (!u) return;
+      if (!u) { showStartpage(); return; }
       if (!u.startsWith('http')) u = 'https://' + u;
+      startpage.style.display = 'none';
       blocker.style.display = 'none';
       frame.style.display = 'block';
       frame.src = u;
@@ -2995,8 +3060,12 @@ const WIDGET_RENDERERS = {
     backBtn.addEventListener('click', e => { e.stopPropagation(); try { frame.contentWindow.history.back(); } catch(ee){} });
     fwdBtn.addEventListener('click', e => { e.stopPropagation(); try { frame.contentWindow.history.forward(); } catch(ee){} });
 
-    navigate(w.config.url || defaultUrls[0].url);
-    body.append(bar, bookmarks, frame, blocker);
+    body.append(bar, startpage, frame, blocker);
+    if (w.config.url) {
+      navigate(w.config.url);
+    } else {
+      showStartpage();
+    }
   },
 
   // ── Datei-Anzeige Widget ──
@@ -4080,7 +4149,9 @@ function openWidgetMenu() {
 
   setTimeout(() => {
     document.addEventListener('pointerdown', function closeMenu(e) {
-      if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('pointerdown', closeMenu); }
+      if (!menu.contains(e.target) && e.target.id !== 'btn-add-widget' && !e.target.closest('#btn-add-widget')) {
+        menu.remove(); document.removeEventListener('pointerdown', closeMenu);
+      }
     });
   }, 0);
 }
@@ -5704,6 +5775,34 @@ function getToolbarPrefs() {
 function saveToolbarPrefs(prefs) {
   localStorage.setItem('kb_toolbar_prefs', JSON.stringify(prefs));
 }
+function applyToolbarPosition(pos) {
+  const tb = document.getElementById('toolbar');
+  const board = document.getElementById('board');
+  if (!tb || !board) return;
+  tb.removeAttribute('data-pos');
+  board.style.top = ''; board.style.bottom = ''; board.style.left = ''; board.style.right = '';
+  tb.style.cssText = '';
+
+  if (pos === 'bottom') {
+    tb.dataset.pos = 'bottom';
+    tb.style.cssText = 'position:fixed;bottom:0;left:0;right:0;top:auto;height:var(--toolbar-h);display:flex;align-items:center;gap:8px;padding:0 12px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);border-top:1px solid var(--glass-border);overflow-x:auto;scrollbar-width:none';
+    board.style.top = '0';
+    board.style.bottom = 'var(--toolbar-h)';
+  } else if (pos === 'left') {
+    tb.dataset.pos = 'left';
+    tb.style.cssText = 'position:fixed;top:0;left:0;bottom:0;right:auto;width:var(--toolbar-h);height:auto;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);border-right:1px solid var(--glass-border);overflow-y:auto;scrollbar-width:none';
+    board.style.top = '0';
+    board.style.left = 'var(--toolbar-h)';
+  } else if (pos === 'right') {
+    tb.dataset.pos = 'right';
+    tb.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:auto;width:var(--toolbar-h);height:auto;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);border-left:1px solid var(--glass-border);overflow-y:auto;scrollbar-width:none';
+    board.style.top = '0';
+    board.style.right = 'var(--toolbar-h)';
+  } else {
+    board.style.top = 'var(--toolbar-h)';
+  }
+}
+
 function applyToolbarPrefs() {
   const prefs = getToolbarPrefs();
   TOOLBAR_ITEMS.forEach(item => {
@@ -5721,6 +5820,25 @@ function openToolbarCustomizer() {
   panel.id = 'tb-customize-panel';
   panel.style.cssText = 'position:fixed;top:56px;right:12px;z-index:9990;background:rgba(18,18,38,0.97);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:16px 18px;min-width:220px;box-shadow:0 8px 40px rgba(0,0,0,0.6);backdrop-filter:blur(12px);';
   panel.innerHTML = '<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px;letter-spacing:0.3px">⚙ Leiste anpassen</div>';
+
+  // Toolbar position selector
+  const posRow = document.createElement('div');
+  posRow.style.cssText = 'display:flex;gap:4px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08)';
+  const currentPos = localStorage.getItem('kb_toolbar_pos') || 'top';
+  [{id:'top',icon:'↑'},{id:'bottom',icon:'↓'},{id:'left',icon:'←'},{id:'right',icon:'→'}].forEach(p => {
+    const b = document.createElement('button');
+    b.textContent = p.icon;
+    b.title = p.id === 'top' ? 'Oben' : p.id === 'bottom' ? 'Unten' : p.id === 'left' ? 'Links' : 'Rechts';
+    b.style.cssText = 'flex:1;padding:6px;border-radius:8px;border:1px solid ' + (currentPos === p.id ? '#6366f1' : 'rgba(255,255,255,0.1)') + ';background:' + (currentPos === p.id ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.05)') + ';color:#fff;font-size:14px;cursor:pointer';
+    b.addEventListener('click', function() {
+      localStorage.setItem('kb_toolbar_pos', p.id);
+      applyToolbarPosition(p.id);
+      panel.remove();
+      openToolbarCustomizer();
+    });
+    posRow.appendChild(b);
+  });
+  panel.appendChild(posRow);
 
   TOOLBAR_ITEMS.forEach(item => {
     const visible = prefs[item.id] !== false;
@@ -5801,6 +5919,7 @@ if (_pollParam) {
   AUTH.init();
   DRAW.init();
   applyToolbarPrefs();
+  applyToolbarPosition(localStorage.getItem('kb_toolbar_pos') || 'top');
   init();
 }
 </script>
