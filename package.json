@@ -1,6 +1,9 @@
 {
   "name": "klassenboard",
   "version": "1.0.0",
+  "scripts": {
+    "check": "sh -c 'for f in js/*.js netlify/functions/*.js; do node --check \"$f\" || exit 1; done; echo \"✅ SYNTAX OK — Push erlaubt\"'"
+  },
   "dependencies": {
     "stripe": "^14.0.0"
   }
