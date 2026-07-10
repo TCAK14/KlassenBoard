@@ -14,6 +14,12 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: 'Method Not Allowed' };
   }
+  // Fremde Seiten dürfen den Endpoint nicht aufrufen (verursacht Gemini-Kosten).
+  // CORS verhindert nur das Lesen der Antwort, nicht die Ausführung.
+  const origin = event.headers.origin || event.headers.Origin || '';
+  if (origin && origin !== 'https://klassenboard.netlify.app') {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Nicht erlaubt' }) };
+  }
   if (!GEMINI_KEY) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'GEMINI_API_KEY nicht konfiguriert' }) };
   }
@@ -52,6 +58,9 @@ exports.handler = async (event) => {
         generationConfig: {
           maxOutputTokens: 800,
           temperature: 0.7,
+          // Gemini 2.5 "denkt" sonst intern und verbraucht dabei das komplette
+          // Token-Budget — die Antwort käme leer zurück
+          thinkingConfig: { thinkingBudget: 0 },
         },
       }),
     });

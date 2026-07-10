@@ -90,6 +90,11 @@ async function searchWikimedia(query) {
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: 'Method Not Allowed' };
+  // Fremde Seiten dürfen den Endpoint nicht aufrufen (Gemini-Kosten)
+  const origin = event.headers.origin || event.headers.Origin || '';
+  if (origin && origin !== 'https://klassenboard.netlify.app') {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Nicht erlaubt' }) };
+  }
 
   try {
     const { query } = JSON.parse(event.body);

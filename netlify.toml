@@ -8,6 +8,49 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
+# ── Interne Dateien niemals ausliefern (publish = "." veröffentlicht sonst alles) ──
+[[redirects]]
+  from = "/CLAUDE.md"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/package.json"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/package-lock.json"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/netlify.toml"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/netlify/*"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/supabase/*"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.claude/*"
+  to = "/index.html"
+  status = 404
+  force = true
+
 [[redirects]]
   from = "/landing"
   to = "/landing.html"

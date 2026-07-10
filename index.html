@@ -9,7 +9,11 @@
 <meta property="og:title" content="ClassPuls">
 <meta property="og:description" content="Das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>">
+<meta property="og:image" content="https://klassenboard.netlify.app/og-image.png">
+<meta property="og:url" content="https://klassenboard.netlify.app/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 :root {
   --brand: #6366f1;
@@ -187,6 +191,14 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
 #board {
   position:fixed; top:var(--toolbar-h); left:0; right:0; bottom:0;
   overflow:hidden; background:#1e293b;
+}
+/* Tablets & Touch: Board scroll-/schwenkbar, sonst sind Widgets außerhalb
+   des Viewports (z.B. Demo-Board auf 900px Breite angelegt) unerreichbar */
+@media (max-width: 1180px), (pointer: coarse) {
+  #board { overflow:auto; touch-action:pan-x pan-y pinch-zoom; -webkit-overflow-scrolling:touch; }
+  #board::-webkit-scrollbar { width:0; height:0; }
+  #widgets-layer { position:relative; min-width:900px; min-height:600px; }
+  #board-bg { position:fixed; top:var(--toolbar-h); left:0; right:0; bottom:0; z-index:0; }
 }
 #board-bg {
   position:absolute; inset:0;
@@ -425,9 +437,11 @@ label { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-botto
   position:absolute; inset:0; z-index:500; touch-action:none;
   display:none; cursor:crosshair;
 }
-body.draw-mode #draw-canvas { display:block; }
+/* Behaltene Zeichnung bleibt außerhalb des Zeichenmodus sichtbar, blockiert aber keine Klicks */
+#draw-canvas.keep-visible { display:block; pointer-events:none; cursor:default; }
+body.draw-mode #draw-canvas { display:block; pointer-events:auto; cursor:crosshair; }
 body.draw-mode .widget { pointer-events:none; }
-body.draw-mode #toolbar { z-index:1900; }
+body.draw-mode #toolbar { z-index:1900 !important; } /* !important nötig — Basisregel setzt 99999 !important */
 
 /* ── Toast ── */
 #toast {
@@ -518,6 +532,8 @@ body.draw-mode #toolbar { z-index:1900; }
 
 /* Fullscreen hide toolbar */
 body.fullscreen #toolbar { display:none; }
+body.fullscreen #board { top:0 !important; bottom:0 !important; } /* kein toter Streifen bei Bottom-Toolbar */
+body.fullscreen #tb-pull-tab { display:none !important; }
 body.fullscreen #board { top:0; }
 
 /* Scrollbar */
@@ -742,6 +758,12 @@ body.fullscreen #board { top:0; }
   .upgrade-modal { max-width:calc(100vw - 24px) !important; }
 }
 
+/* iOS Safari zoomt beim Fokussieren von Feldern mit Schrift < 16px unerwünscht hinein */
+@supports (-webkit-touch-callout: none) {
+  input[type="text"], input[type="url"], input[type="email"], input[type="password"],
+  input[type="number"], input[type="search"], textarea, select { font-size:16px !important; }
+}
+
 @media (max-width: 480px) {
   :root { --toolbar-h: 44px; }
   #toolbar { gap:2px; padding:0 4px; }
@@ -953,7 +975,7 @@ const AUTH = {
         this.user = session?.user || null;
         this._updateUI();
         if (event === 'SIGNED_IN')  this.loadFromCloud();
-        if (event === 'SIGNED_OUT') { APP.load(); renderAll(); toast('👋 Abgemeldet'); }
+        if (event === 'SIGNED_OUT') { this._cloudLoaded = false; APP.load(); renderAll(); toast('👋 Abgemeldet'); }
       });
     } catch(e) { console.warn('Supabase init error:', e); }
   },
@@ -982,16 +1004,25 @@ const AUTH = {
   async _doSync() {
     if (!this.client || !this.user) return;
     try {
+      const dirtyBefore = localStorage.getItem('classpuls_dirty_at');
+      const now = new Date().toISOString();
       const data = {
         boards: APP.state.boards,
         activeBoardId: APP.state.activeBoardId,
         icalCache: APP.icalCache,
+        classes: CLASSES._data(),
+        currentClass: CLASSES.current(),
       };
       const { error } = await this.client
         .from('boards')
-        .upsert({ user_id: this.user.id, data, updated_at: new Date().toISOString() });
+        .upsert({ user_id: this.user.id, data, updated_at: now });
       if (error) throw error;
       this._setSyncDot('ok');
+      localStorage.setItem('classpuls_synced_at', now);
+      // dirty nur löschen, wenn währenddessen nichts Neues gespeichert wurde
+      if (localStorage.getItem('classpuls_dirty_at') === dirtyBefore) {
+        localStorage.removeItem('classpuls_dirty_at');
+      }
     } catch(e) {
       console.warn('Cloud-Sync fehlgeschlagen:', e);
       this._setSyncDot('error');
@@ -1000,24 +1031,74 @@ const AUTH = {
 
   async loadFromCloud() {
     if (!this.client || !this.user) return;
+    // SIGNED_IN feuert bei supabase-js auch beim Tab-Refokus — nur einmal pro Session laden
+    if (this._cloudLoaded) return;
+    this._cloudLoaded = true;
     try {
       const { data, error } = await this.client
         .from('boards')
-        .select('data')
+        .select('data, updated_at')
         .eq('user_id', this.user.id)
         .maybeSingle();
       if (error) throw error;
-      if (!data) return; // Erster Login – localStorage bleibt
-      APP.state.boards      = data.data.boards || [];
+      if (!data) {
+        // Erster Login: lokalen Stand als initialen Cloud-Stand hochladen
+        if (APP.state.boards.length > 0) this.syncToCloud();
+        return;
+      }
+      // Konfliktprüfung: gibt es lokale Änderungen, die noch nicht in der Cloud sind?
+      const t = s => s ? Date.parse(s) : 0;
+      const dirtyAt  = t(localStorage.getItem('classpuls_dirty_at'));
+      const syncedAt = t(localStorage.getItem('classpuls_synced_at'));
+      const cloudAt  = t(data.updated_at);
+      if (dirtyAt && dirtyAt > syncedAt) {
+        const cloudNewer = cloudAt && cloudAt > syncedAt;
+        if (!cloudNewer) {
+          // Lokal ist strikt neuer (z.B. Offline-Edits) → hochladen statt überschreiben
+          this.syncToCloud();
+          return;
+        }
+        // Echter Konflikt: beide Seiten haben sich geändert → Nutzer entscheidet
+        const wann = data.updated_at ? new Date(data.updated_at).toLocaleString('de-DE') : 'unbekannt';
+        const cloudLaden = confirm(
+          'Auf diesem Gerät gibt es Änderungen, die noch nicht in der Cloud gespeichert sind.\n\n' +
+          'OK = Cloud-Stand laden (vom ' + wann + ') — lokale Änderungen gehen verloren\n' +
+          'Abbrechen = lokale Version behalten und in die Cloud hochladen'
+        );
+        if (!cloudLaden) { this.syncToCloud(); return; }
+      }
+      APP.state.boards        = data.data.boards || [];
       APP.state.activeBoardId = data.data.activeBoardId || null;
-      APP.icalCache          = data.data.icalCache || {};
+      APP.icalCache           = data.data.icalCache || {};
+      // Klassen aus der Cloud übernehmen (Dropdown auf Zweitgerät sonst leer)
+      if (data.data.classes && Object.keys(data.data.classes).length > 0) {
+        try {
+          localStorage.setItem('classpuls_classes', JSON.stringify(data.data.classes));
+          if (data.data.currentClass) {
+            localStorage.setItem('classpuls_current_class', data.data.currentClass);
+            const nameEl = document.getElementById('class-btn-name');
+            if (nameEl) nameEl.textContent = data.data.currentClass;
+          }
+          CLASSES.renderDropdown();
+        } catch(_) {}
+      }
       if (!APP.state.boards.find(b => b.id === APP.state.activeBoardId)) {
         APP.state.activeBoardId = APP.state.boards[0]?.id || null;
       }
       if (APP.state.boards.length === 0) createBoard('Meine Tafel');
       else renderAll();
+      DRAW.loadBoard(APP.state.activeBoardId);
+      // Geladenen Cloud-Stand lokal persistieren — sonst zeigt ein Offline-Neustart alte Daten
+      localStorage.setItem('classpuls_v2', JSON.stringify({
+        boards: APP.state.boards, activeBoardId: APP.state.activeBoardId, icalCache: APP.icalCache
+      }));
+      localStorage.removeItem('classpuls_dirty_at');
+      localStorage.setItem('classpuls_synced_at', data.updated_at || new Date().toISOString());
       toast('☁️ Boards aus der Cloud geladen');
-    } catch(e) { console.warn('Cloud-Load fehlgeschlagen:', e); }
+    } catch(e) {
+      console.warn('Cloud-Load fehlgeschlagen:', e);
+      this._cloudLoaded = false;
+    }
   },
 
   _updateUI() {
@@ -1099,7 +1180,11 @@ const WIDGET_CATS = [
 const FREE_LIMITS = { maxClasses: 1, maxBoards: 3 };
 
 function isPro() {
-  return !!AUTH.user;
+  // Pro/School nur bei gesetztem Plan in app_metadata — das kann NUR serverseitig
+  // gesetzt werden (Supabase Dashboard bzw. später Stripe-Webhook), nicht vom Nutzer selbst.
+  // user_metadata zählt bewusst NICHT: das könnte sich jeder Nutzer per API selbst setzen.
+  const plan = AUTH.user?.app_metadata?.plan || '';
+  return plan === 'pro' || plan === 'school';
 }
 
 function checkBoardLimit() {
@@ -1260,8 +1345,11 @@ const APP = {
         icalCache: this.icalCache,
       };
       localStorage.setItem('classpuls_v2', JSON.stringify(data));
+      // Merker: lokale Änderungen, die noch nicht (erfolgreich) in der Cloud sind
+      localStorage.setItem('classpuls_dirty_at', new Date().toISOString());
       AUTH.syncToCloud(); // Cloud-Sync wenn eingeloggt
     } catch(e) { toast('⚠️ Speichern fehlgeschlagen'); }
+    this.saveTimer = null;
   },
   load() {
     try {
@@ -1298,7 +1386,8 @@ const APP = {
   importAll(json) {
     try {
       const data = JSON.parse(json);
-      if (!data.boards) throw new Error('Ungültiges Format');
+      if (!Array.isArray(data.boards) || data.boards.length === 0) throw new Error('Ungültiges Format');
+      if (!data.boards.every(b => b && typeof b === 'object' && b.id && Array.isArray(b.widgets))) throw new Error('Ungültiges Format');
       this.snapshotUndo();
       this.state.boards = data.boards;
       this.icalCache = data.icalCache || {};
@@ -1311,12 +1400,23 @@ const APP = {
     } catch(e) { toast('❌ Import fehlgeschlagen: ' + e.message); }
   },
   deleteAllData() {
-    localStorage.removeItem('classpuls_v2');
+    ['classpuls_v2','classpuls_classes','classpuls_current_class','classpuls_drawings',
+     'classpuls_dirty_at','classpuls_synced_at'].forEach(k => localStorage.removeItem(k));
     this.state.boards = [];
     this.state.activeBoardId = null;
     this.icalCache = {};
     this.intervals = {};
+    DRAW.boardDrawings = {};
+    // Cloud-Kopie ebenfalls entfernen, sonst kommt alles beim nächsten Login zurück
+    if (AUTH.user && AUTH.client) {
+      AUTH.client.from('boards').delete().eq('user_id', AUTH.user.id).then(() => {});
+      AUTH.client.from('class_boards').delete().eq('user_id', AUTH.user.id).then(() => {});
+    }
+    const nameEl = document.getElementById('class-btn-name');
+    if (nameEl) nameEl.textContent = 'Klasse wählen';
+    CLASSES.renderDropdown();
     createBoard('Tafel 1', null, [], true);
+    DRAW.loadBoard(this.state.activeBoardId);
   },
 
   // ── Undo ──
@@ -1333,6 +1433,7 @@ const APP = {
     }
     this.save();
     renderAll();
+    DRAW.loadBoard(this.state.activeBoardId); // Zeichenebene zum ggf. gewechselten Board holen
     toast('↩ Rückgängig');
   },
 
@@ -1436,6 +1537,10 @@ function deleteBoard(id) {
     const newIdx = Math.min(delIdx, APP.state.boards.length - 1);
     APP.state.activeBoardId = APP.state.boards[newIdx].id;
   }
+  // Zeichnung des gelöschten Boards entsorgen und die des neuen Boards anzeigen
+  delete DRAW.boardDrawings[id];
+  DRAW._persistDrawings();
+  DRAW.loadBoard(APP.state.activeBoardId);
   APP.save();
   renderAll();
 }
@@ -1481,6 +1586,8 @@ function removeWidget(id) {
   APP.snapshotUndo();
   board.widgets = board.widgets.filter(w => w.id !== id);
   stopInterval(id);
+  stopAudioStream(id);
+  stopPollChannel(id);
   APP.selectedId = null;
   APP.save();
   renderWidgets();
@@ -1506,7 +1613,7 @@ function getDefaultConfig(type) {
     stopwatch: { running: false, elapsed: 0, laps: [] },
     text:      { text: 'Doppelklick zum Bearbeiten' },
     traffic:   { state: 'red' },
-    qr:        { url: 'https://classpuls.de', label: '' },
+    qr:        { url: 'https://klassenboard.netlify.app', label: '' },
     names:     { names: 'Anna\nBen\nClara\nDavid\nEva\nFinn\nGreta\nHannes', highlighted: -1 },
     homework:  { subject: 'Fach', items: [] },
     goal:      { text: 'Heutiges Lernziel' },
@@ -1558,6 +1665,14 @@ function stopAudioStream(wid) {
 }
 function stopAllAudioStreams() {
   Object.keys(AUDIO_STREAMS).forEach(stopAudioStream);
+}
+function stopPollChannel(wid) {
+  if (!POLL_CHANNELS[wid]) return;
+  try { AUTH.client?.removeChannel(POLL_CHANNELS[wid]); } catch(e) {}
+  delete POLL_CHANNELS[wid];
+}
+function stopAllPollChannels() {
+  Object.keys(POLL_CHANNELS).forEach(stopPollChannel);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1665,7 +1780,14 @@ function renderBoardBg() {
   const bg = board.background;
   if (bg.type === 'gradient') bgEl.style.background = bg.value;
   else if (bg.type === 'color') bgEl.style.background = bg.value;
-  else if (bg.type === 'image') bgEl.style.cssText = `background:url(${bg.value}) center/cover no-repeat;`;
+  else if (bg.type === 'image') {
+    // URL nicht in cssText interpolieren (CSS-Injection) — Properties einzeln setzen
+    bgEl.style.cssText = '';
+    bgEl.style.backgroundImage = 'url("' + String(bg.value).replace(/["\\]/g, '') + '")';
+    bgEl.style.backgroundSize = 'cover';
+    bgEl.style.backgroundPosition = 'center';
+    bgEl.style.backgroundRepeat = 'no-repeat';
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1674,6 +1796,7 @@ function renderBoardBg() {
 function renderWidgets() {
   stopAllIntervals();
   stopAllAudioStreams();
+  stopAllPollChannels(); // Poll-Renderer abonniert neu — alte Realtime-Channels nicht leaken
   const layer = document.getElementById('widgets-layer');
   layer.innerHTML = '';
   const board = APP.activeBoard();
@@ -1727,11 +1850,18 @@ function buildWidgetEl(w) {
     if (!hasOwnEdit.has(w.type)) {
       body.addEventListener('dblclick', e => { e.stopPropagation(); openWidgetSettings(w.id); });
     }
-    let lastTap = 0;
+    let lastTap = 0, lastTapX = 0, lastTapY = 0;
     body.addEventListener('touchend', e => {
+      // Zwei-Finger-Tap ist kein Doppel-Tap
+      if (e.touches.length > 0 || e.changedTouches.length !== 1) { lastTap = 0; return; }
+      // Schnelle Taps auf Bedienelemente (Timer-Buttons etc.) nicht kapern
+      if (e.target.closest('button, input, select, textarea, a')) { lastTap = 0; return; }
+      const t = e.changedTouches[0];
       const now = Date.now();
-      if (now - lastTap < 350) {
+      const near = Math.abs(t.clientX - lastTapX) < 40 && Math.abs(t.clientY - lastTapY) < 40;
+      if (now - lastTap < 350 && near) {
         e.preventDefault();
+        lastTap = 0;
         if (hasOwnEdit.has(w.type)) {
           if (w.type === 'text' || w.type === 'goal') {
             const target = e.target.closest('.w-text-display, .w-goal-text');
@@ -1742,8 +1872,9 @@ function buildWidgetEl(w) {
         } else {
           openWidgetSettings(w.id);
         }
+        return;
       }
-      lastTap = now;
+      lastTap = now; lastTapX = t.clientX; lastTapY = t.clientY;
     });
   }
 
@@ -1770,6 +1901,9 @@ function buildWidgetEl(w) {
 // ══════════════════════════════════════════════════════════════
 function initDrag(shell, handle, w) {
   let startX, startY, startLeft, startTop;
+  // Ohne touch-action:none übernimmt der Browser den Touch fürs Board-Scrollen
+  // und feuert pointercancel mitten im Drag
+  handle.style.touchAction = 'none';
   handle.addEventListener('pointerdown', e => {
     if (!APP.state.editMode) return;
     if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
@@ -1778,7 +1912,8 @@ function initDrag(shell, handle, w) {
     startX = e.clientX; startY = e.clientY;
     startLeft = w.x; startTop = w.y;
     handle.addEventListener('pointermove', onMove);
-    handle.addEventListener('pointerup', onUp, {once:true});
+    handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', onUp);
   });
   function onMove(e) {
     const dx = e.clientX - startX, dy = e.clientY - startY;
@@ -1789,19 +1924,23 @@ function initDrag(shell, handle, w) {
   }
   function onUp() {
     handle.removeEventListener('pointermove', onMove);
+    handle.removeEventListener('pointerup', onUp);
+    handle.removeEventListener('pointercancel', onUp);
     APP.save();
   }
 }
 
 function initResize(shell, handle, w) {
   let startX, startY, startW, startH;
+  handle.style.touchAction = 'none';
   handle.addEventListener('pointerdown', e => {
     e.preventDefault(); e.stopPropagation();
     handle.setPointerCapture(e.pointerId);
     startX = e.clientX; startY = e.clientY;
     startW = w.w; startH = w.h;
     handle.addEventListener('pointermove', onMove);
-    handle.addEventListener('pointerup', onUp, {once:true});
+    handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', onUp);
   });
   function onMove(e) {
     const dx = e.clientX - startX, dy = e.clientY - startY;
@@ -1812,6 +1951,8 @@ function initResize(shell, handle, w) {
   }
   function onUp() {
     handle.removeEventListener('pointermove', onMove);
+    handle.removeEventListener('pointerup', onUp);
+    handle.removeEventListener('pointercancel', onUp);
     APP.save();
     // re-render content so QR etc. resizes
     const body = shell.querySelector('.widget-body');
@@ -1867,9 +2008,20 @@ const WIDGET_RENDERERS = {
     row.append(startBtn, resetBtn);
     body.append(display, row);
 
-    let remaining = (w.config.minutes||5)*60 + (w.config.seconds||0);
-    let running = false;
-    let endAt = null;
+    // Laufzeit-Zustand liegt auf dem Widget-Objekt, damit ein Re-Render
+    // (Ansicht wechseln, Widget hinzufügen, iCal-Refresh) den Timer nicht zurücksetzt
+    const full = (w.config.minutes||5)*60 + (w.config.seconds||0);
+    let running = !!w._timerRunning;
+    let endAt = w._timerEndAt || null;
+    let remaining;
+    if (running && endAt) {
+      remaining = Math.max(0, Math.round((endAt - Date.now())/1000));
+      if (remaining <= 0) { running = false; w._timerRunning = false; }
+    } else if (typeof w._timerRemaining === 'number') {
+      remaining = w._timerRemaining;
+    } else {
+      remaining = full;
+    }
 
     function fmt(s) {
       const m = Math.floor(s/60), sec = s%60;
@@ -1878,7 +2030,7 @@ const WIDGET_RENDERERS = {
     function updateDisplay() {
       display.textContent = fmt(Math.max(0,remaining));
       display.classList.toggle('urgent', remaining <= 30 && running);
-      startBtn.textContent = running ? '⏸ Pause' : (remaining < (w.config.minutes||5)*60+(w.config.seconds||0) ? '▶ Weiter' : '▶ Start');
+      startBtn.textContent = running ? '⏸ Pause' : (remaining < full ? '▶ Weiter' : '▶ Start');
     }
     function tick() {
       if (!running) return;
@@ -1886,7 +2038,8 @@ const WIDGET_RENDERERS = {
       updateDisplay();
       if (remaining <= 0) {
         running = false;
-        startInterval(w.id+'_', ()=>{}, 99999);
+        w._timerRunning = false;
+        w._timerRemaining = 0;
         stopInterval(w.id);
         toast('⏰ Zeit abgelaufen!', 5000);
       }
@@ -1896,17 +2049,21 @@ const WIDGET_RENDERERS = {
       running = !running;
       if (running) {
         endAt = Date.now() + remaining*1000;
+        w._timerRunning = true; w._timerEndAt = endAt;
         startInterval(w.id, tick, 250);
       } else {
+        w._timerRunning = false; w._timerRemaining = remaining;
         stopInterval(w.id);
       }
       updateDisplay();
     });
     resetBtn.addEventListener('click', () => {
       running = false; stopInterval(w.id);
-      remaining = (w.config.minutes||5)*60 + (w.config.seconds||0);
+      delete w._timerRunning; delete w._timerEndAt; delete w._timerRemaining;
+      remaining = full;
       updateDisplay();
     });
+    if (running) startInterval(w.id, tick, 250); // laufenden Timer nach Re-Render fortsetzen
     updateDisplay();
   },
 
@@ -1925,31 +2082,39 @@ const WIDGET_RENDERERS = {
     const lapsDiv = el('div'); lapsDiv.style.cssText='width:100%;overflow-y:auto;max-height:70px;margin-top:6px;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.5)';
     body.append(display, row, lapsDiv);
 
-    let elapsed = 0, running = false, startedAt = null, laps = [];
+    // Laufzeit-Zustand auf dem Widget-Objekt — überlebt Re-Renders (siehe Timer)
+    let running = !!w._swRunning;
+    let startedAt = w._swStartedAt || null;
+    let elapsed = running && startedAt ? Date.now() - startedAt : (w._swElapsed || 0);
+    let laps = w._swLaps || [];
     function fmt(ms) {
       const m=Math.floor(ms/60000), s=Math.floor((ms%60000)/1000), cs=Math.floor((ms%1000)/10);
       return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(cs).padStart(2,'0')}`;
     }
-    function update() {
-      if (running) elapsed = Date.now() - startedAt + (elapsed);
-      // handled via tick
-      display.textContent = fmt(elapsed);
-      startBtn.textContent = running ? '⏸ Pause' : '▶ Start';
+    function renderLaps() {
+      lapsDiv.innerHTML = '';
+      laps.forEach((l, i) => {
+        const d = el('div');
+        d.textContent = `Runde ${i+1}: ${fmt(l)}`;
+        lapsDiv.prepend(d);
+      });
     }
     startBtn.addEventListener('click', () => {
       if (!running) {
-        const base = elapsed;
-        startedAt = Date.now() - base;
+        startedAt = Date.now() - elapsed;
         running = true;
+        w._swRunning = true; w._swStartedAt = startedAt;
         startInterval(w.id, () => { elapsed = Date.now() - startedAt; display.textContent = fmt(elapsed); }, 50);
       } else {
         running = false; stopInterval(w.id);
+        w._swRunning = false; w._swElapsed = elapsed;
       }
       startBtn.textContent = running ? '⏸ Pause' : '▶ Start';
     });
     lapBtn.addEventListener('click', () => {
       if (!running) return;
       laps.push(elapsed);
+      w._swLaps = laps;
       const d = el('div');
       d.textContent = `Runde ${laps.length}: ${fmt(laps[laps.length-1])}`;
       lapsDiv.prepend(d);
@@ -1957,11 +2122,15 @@ const WIDGET_RENDERERS = {
     resetBtn.addEventListener('click', () => {
       running = false; stopInterval(w.id);
       elapsed = 0; laps = [];
+      delete w._swRunning; delete w._swStartedAt; delete w._swElapsed; delete w._swLaps;
       display.textContent = fmt(0);
       lapsDiv.innerHTML = '';
       startBtn.textContent = '▶ Start';
     });
-    display.textContent = fmt(0);
+    if (running) startInterval(w.id, () => { elapsed = Date.now() - startedAt; display.textContent = fmt(elapsed); }, 50);
+    display.textContent = fmt(elapsed);
+    startBtn.textContent = running ? '⏸ Pause' : '▶ Start';
+    renderLaps();
   },
 
   // ── Text ──
@@ -2052,7 +2221,7 @@ const WIDGET_RENDERERS = {
     label.textContent = w.config.label || w.config.url || '';
     container.append(qrDiv, label);
     body.appendChild(container);
-    const url = w.config.url || 'https://classpuls.netlify.app';
+    const url = w.config.url || 'https://klassenboard.netlify.app';
     const size = Math.min(w.w - 40, w.h - 60, 160);
     try {
       new QRCode(qrDiv, { text: url, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
@@ -2096,6 +2265,11 @@ const WIDGET_RENDERERS = {
   // ── Homework ──
   homework(w, body) {
     const div = el('div','w-homework');
+    // Altdaten-Migration: frühere Versionen speicherten {text,done}-Objekte statt Strings
+    if (Array.isArray(w.config.items) && w.config.items.some(it => typeof it === 'object')) {
+      w.config.items = w.config.items.map(it => typeof it === 'string' ? it : (it && (it.text || it.label)) || '').filter(Boolean);
+      APP.save();
+    }
     const items = w.config.items || [];
     const itemFs = Math.max(13, Math.min(28, (w.h - 60) / Math.max(items.length, 1) * 0.65));
     const h3 = document.createElement('h3');
@@ -2328,6 +2502,8 @@ const WIDGET_RENDERERS = {
 
       navigator.mediaDevices.getUserMedia({ audio: true, video: false })
         .then(stream => {
+          // Widget wurde entfernt/neu gerendert, während die Freigabe lief → Mikro sofort schließen
+          if (!body.isConnected) { stream.getTracks().forEach(t => t.stop()); return; }
           const ctx = new (window.AudioContext || window.webkitAudioContext)();
           const source = ctx.createMediaStreamSource(stream);
           const analyser = ctx.createAnalyser();
@@ -2337,6 +2513,7 @@ const WIDGET_RENDERERS = {
           const data = new Uint8Array(analyser.frequencyBinCount);
 
           function tick() {
+            if (!body.isConnected) { stopAudioStream(w.id); return; } // Widget weg → Mikro freigeben
             analyser.getByteFrequencyData(data);
             const avg = data.reduce((a,b) => a+b, 0) / data.length / 128;
             const multiplier = (w.config.sensitivity ?? 3) / 3 * 2.5;
@@ -2713,6 +2890,7 @@ const WIDGET_RENDERERS = {
 
     const openAddDialog = () => {
       const overlay = document.createElement('div');
+      overlay.setAttribute('data-kb-keep', '1'); // Toolbar-Guardian darf diesen Dialog nicht entfernen
       overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
       const box = document.createElement('div');
       box.style.cssText = 'background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:14px;padding:20px;width:300px;box-shadow:0 20px 60px rgba(0,0,0,0.7)';
@@ -2815,7 +2993,7 @@ const WIDGET_RENDERERS = {
       w.h = isLarge ? 300 : 520;
       expandBtn.textContent = isLarge ? '⛶ Vergrößern' : '⊡ Verkleinern';
       // re-render widget with new size
-      const wEl = document.querySelector('.widget[data-id="' + w.id + '"]');
+      const wEl = document.querySelector('.widget[data-wid="' + w.id + '"]');
       if (wEl) {
         wEl.style.width  = w.w + 'px';
         wEl.style.height = w.h + 'px';
@@ -2941,7 +3119,6 @@ const WIDGET_RENDERERS = {
     const goBtn = document.createElement('button');
     goBtn.textContent = '→';
     goBtn.style.cssText = 'border:none;background:var(--brand);color:#fff;border-radius:5px;padding:4px 9px;cursor:pointer;font-size:13px;flex-shrink:0;font-weight:700';
-    goBtn.addEventListener('click', e => { e.stopPropagation(); navigate(urlInp.value); });
 
     bar.append(homeBtn, urlInp, goBtn);
 
@@ -2974,21 +3151,27 @@ const WIDGET_RENDERERS = {
           if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; return; }
           clickTimer = setTimeout(function() { clickTimer = null; navigate(bm.url); }, 300);
         });
-        tile.addEventListener('dblclick', function(e) {
+        const rename = function(e) {
           e.stopPropagation();
           if (!APP.state.editMode) return;
           const newName = prompt('Name umbenennen:', bm.label);
           if (newName && newName.trim()) { bm.label = newName.trim(); APP.save(); renderStartpage(); }
-        });
+        };
+        tile.addEventListener('dblclick', rename);
         tile.append(icon, lbl);
         if (APP.state.editMode) {
+          // Buttons im Edit-Modus immer sichtbar — Hover existiert auf Touch-Geräten nicht
           const del = document.createElement('button');
           del.textContent = '✕';
-          del.style.cssText = 'position:absolute;top:4px;right:4px;background:rgba(239,68,68,0.7);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;display:none;line-height:1;z-index:2';
-          tile.addEventListener('mouseenter', function() { del.style.display='block'; });
-          tile.addEventListener('mouseleave', function() { del.style.display='none'; });
+          del.title = 'Entfernen';
+          del.style.cssText = 'position:absolute;top:4px;right:4px;background:rgba(239,68,68,0.7);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1;z-index:2';
           del.addEventListener('click', function(ev) { ev.stopPropagation(); bookmarkList.splice(i,1); APP.save(); renderStartpage(); });
-          tile.appendChild(del);
+          const edit = document.createElement('button');
+          edit.textContent = '✏️';
+          edit.title = 'Umbenennen';
+          edit.style.cssText = 'position:absolute;top:4px;right:28px;background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:10px;cursor:pointer;line-height:1;z-index:2';
+          edit.addEventListener('click', rename);
+          tile.append(edit, del);
         }
         grid.appendChild(tile);
       });
@@ -3030,17 +3213,15 @@ const WIDGET_RENDERERS = {
       let u = url.trim();
       if (!u) { showStartpage(); return; }
       if (!u.startsWith('http')) u = 'https://' + u;
-      window.open(u, '_blank');
+      window.open(u, '_blank', 'noopener');
       urlInp.value = u;
     };
 
     goBtn.addEventListener('click', e => { e.stopPropagation(); navigate(urlInp.value); });
     body.append(bar, startpage);
-    if (w.config.url) {
-      navigate(w.config.url);
-    } else {
-      showStartpage();
-    }
+    // Altlast: frühere Versionen speicherten config.url — nicht bei jedem Render einen Tab öffnen
+    if (w.config.url) { delete w.config.url; APP.save(); }
+    showStartpage();
   },
 
   // ── Datei-Anzeige Widget ──
@@ -3065,6 +3246,14 @@ const WIDGET_RENDERERS = {
       fileInp.addEventListener('change', () => {
         const f = fileInp.files[0];
         if (!f) return;
+        // localStorage fasst insgesamt nur ~5 MB — größere Dateien würden das
+        // Speichern ALLER Boards dauerhaft blockieren
+        const MAX_FILE = 2 * 1024 * 1024;
+        if (f.size > MAX_FILE) {
+          toast('⚠️ Datei zu groß (max. 2 MB). Tipp: Bilder vorher verkleinern.');
+          fileInp.value = '';
+          return;
+        }
         const reader = new FileReader();
         reader.onload = e => {
           w.config.fileData = { name: f.name, type: f.type, data: e.target.result };
@@ -3112,7 +3301,14 @@ const WIDGET_RENDERERS = {
     const viewer = document.createElement('div');
     viewer.style.cssText = 'flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;background:#000;';
 
-    if (file.type.startsWith('image/')) {
+    if (file.type.startsWith('text/')) {
+      // Textdateien wurden als Roh-Text gespeichert (readAsText) — direkt anzeigen
+      const pre = document.createElement('pre');
+      pre.style.cssText = 'width:100%;height:100%;margin:0;padding:12px;overflow:auto;font-size:12.5px;line-height:1.5;color:rgba(255,255,255,0.85);background:#0f172a;white-space:pre-wrap;word-break:break-word;box-sizing:border-box;text-align:left';
+      pre.textContent = file.data;
+      viewer.style.alignItems = 'stretch';
+      viewer.appendChild(pre);
+    } else if (file.type.startsWith('image/')) {
       const img = document.createElement('img');
       img.src = file.data;
       img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain';
@@ -3364,6 +3560,12 @@ const WIDGET_RENDERERS = {
 function renderTimetableEntries(inner, entries) {
   inner.innerHTML = '';
   const now = new Date();
+  // Nach Reload kommen start/end als ISO-Strings aus dem JSON-Cache — re-hydrieren
+  entries = (entries || []).map(e => ({
+    ...e,
+    start: e.start instanceof Date ? e.start : new Date(e.start),
+    end:   e.end   instanceof Date ? e.end   : new Date(e.end),
+  })).filter(e => !isNaN(e.start) && !isNaN(e.end));
 
   let current = null, upcoming = [];
   entries.forEach(e => {
@@ -4056,6 +4258,7 @@ function openPhasesEdit(w) {
 // Nutzt blob:-URL als Wrapper, damit YouTube nicht file:// als Herkunft sieht
 function openYoutubeOverlay(videoId) {
   const overlay = document.createElement('div');
+  overlay.setAttribute('data-kb-keep', '1'); // Toolbar-Guardian darf den Player nicht entfernen
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;animation:fadeIn .2s;';
 
   const box = document.createElement('div');
@@ -4117,9 +4320,21 @@ function openWidgetMenu() {
     menu.appendChild(grid);
   });
 
-  // position near button
+  // position near button — je nach Toolbar-Lage nach unten oder oben aufklappen
   const btnRect = document.getElementById('btn-add-widget').getBoundingClientRect();
-  menu.style.cssText = `top:${btnRect.bottom+6}px;right:${window.innerWidth-btnRect.right}px`;
+  const btnVisible = btnRect.width > 0 && btnRect.bottom > 0 && btnRect.top < window.innerHeight;
+  const tbPos = document.getElementById('toolbar')?.dataset.pos;
+  if (!btnVisible) {
+    // Vollbild / versteckte Auto-Hide-Leiste: Menü mittig oben öffnen
+    menu.style.cssText = 'top:60px;left:50%;transform:translateX(-50%)';
+    menu.style.maxHeight = (window.innerHeight - 120) + 'px';
+  } else if (tbPos === 'bottom' || btnRect.top > window.innerHeight / 2) {
+    menu.style.cssText = `bottom:${window.innerHeight - btnRect.top + 6}px;right:${window.innerWidth - btnRect.right}px`;
+    menu.style.maxHeight = Math.max(200, btnRect.top - 18) + 'px'; // nicht oben aus dem Bild ragen
+  } else {
+    menu.style.cssText = `top:${btnRect.bottom+6}px;right:${window.innerWidth-btnRect.right}px`;
+    menu.style.maxHeight = Math.max(200, window.innerHeight - btnRect.bottom - 18) + 'px';
+  }
   document.body.appendChild(menu);
 
   setTimeout(() => {
@@ -4256,7 +4471,10 @@ document.addEventListener('keydown', e => {
   if (e.key === 'f' || e.key === 'F') toggleFullscreen();
   if (e.key === 'e' || e.key === 'E') toggleEditMode();
   if (e.key === 'w' || e.key === 'W') openWidgetMenu();
-  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); APP.undo(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+    e.preventDefault();
+    if (!DRAW.active) APP.undo(); // im Zeichenmodus macht DRAW sein eigenes Undo
+  }
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); APP._persist(); toast('💾 Gespeichert'); }
   if ((e.key === 'Delete' || e.key === 'Backspace') && APP.selectedId && e.target === document.body) {
     removeWidget(APP.selectedId);
@@ -4629,6 +4847,17 @@ function openAiBoardGenerator() {
       const rest       = widgets.filter(d => d.type !== 'clock' && d.type !== 'goal');
 
       let zIdx = 1;
+      // KI-Antworten normalisieren: das Modell liefert teils andere Config-Keys als die Renderer erwarten
+      function normalizeConfig(type, cfg) {
+        cfg = cfg || {};
+        if (type === 'text' && !cfg.text && cfg.content) cfg.text = cfg.content;
+        if (type === 'homework') {
+          if (!cfg.items && cfg.text) cfg.items = [cfg.text];
+          if (Array.isArray(cfg.items)) cfg.items = cfg.items.map(it => typeof it === 'string' ? it : (it && (it.text || it.label)) || '').filter(Boolean);
+        }
+        if (type === 'goal' && !cfg.text && cfg.content) cfg.text = cfg.content;
+        return cfg;
+      }
       function placeWidget(def, x, y, wOverride, hOverride) {
         const reg = REGISTRY[def.type];
         const ww = wOverride || reg.w, hh = hOverride || reg.h;
@@ -4636,7 +4865,7 @@ function openAiBoardGenerator() {
           id: uid(), type: def.type,
           x: Math.round(x), y: Math.round(y),
           w: ww, h: hh,
-          config: def.config || {},
+          config: normalizeConfig(def.type, def.config),
           zIndex: zIdx++, locked: false,
           createdAt: new Date().toISOString(),
         });
@@ -4739,10 +4968,13 @@ document.getElementById('board').addEventListener('dblclick', e => {
     const board = APP.state.boards.find(b => b.id === APP.state.activeBoardId);
     if (!board) return;
     const def = REGISTRY.text;
+    // Klick-Position in Widget-Layer-Koordinaten umrechnen (Toolbar-Höhe + Board-Scroll)
+    const wlRect = document.getElementById('widgets-layer').getBoundingClientRect();
     board.widgets.push({
       id: 'w_' + Date.now(),
       type: 'text',
-      x: e.clientX - 160, y: e.clientY - 20,
+      x: Math.max(0, e.clientX - wlRect.left - 160),
+      y: Math.max(0, e.clientY - wlRect.top - 20),
       w: def.w, h: def.h,
       config: { text: txt, fontSize: 18, bold: false, align: 'left' }
     });
@@ -4791,6 +5023,7 @@ function init() {
   btn.textContent = APP.state.editMode ? '✏️ Edit' : '👁 Ansicht';
   btn.classList.toggle('active', APP.state.editMode);
   CLASSES.initUI();
+  DRAW.restoreDrawings();
 
   if (isFirstVisit) {
     localStorage.setItem('classpuls_visited', '1');
@@ -4820,9 +5053,9 @@ function setupDemo() {
         {time:'10:25', text:'Deutsch: Lesezeit'}
       ]}},
       { type:'homework', x:350, y:180, w:300, h:260, config:{ subject:'Hausaufgaben', items:[
-        {text:'Sachbuch S. 34 lesen', done:false},
-        {text:'Einmaleins-Blatt fertig', done:false},
-        {text:'Lesebuch: Geschichte zu Ende lesen', done:false}
+        'Sachbuch S. 34 lesen',
+        'Einmaleins-Blatt fertig',
+        'Lesebuch: Geschichte zu Ende lesen'
       ]}},
     ], true);
 
@@ -4942,7 +5175,10 @@ const CLASSES = {
   _data() {
     try { return JSON.parse(localStorage.getItem(this.STORAGE_KEY)) || {}; } catch(e) { return {}; }
   },
-  _save(data) { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data)); },
+  _save(data) {
+    try { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data)); }
+    catch(e) { toast('⚠️ Speicher voll — Klassendaten konnten nicht gesichert werden'); }
+  },
   current() { return localStorage.getItem(this.CURRENT_KEY) || null; },
   _setCurrent(name) { localStorage.setItem(this.CURRENT_KEY, name); },
 
@@ -4974,10 +5210,13 @@ const CLASSES = {
 
   // ── Klassen-Tafeln laden ──
   async loadClass(className) {
+    // Schneller Doppel-Wechsel: nur der letzte Aufruf darf den Zustand setzen
+    const token = (this._loadToken = (this._loadToken || 0) + 1);
     // 1. Versuche Supabase wenn angemeldet
     if (AUTH.user && AUTH.client) {
       const { data, error } = await AUTH.client.from('class_boards')
         .select('*').eq('user_id', AUTH.user.id).eq('class_name', className).maybeSingle();
+      if (token !== this._loadToken) return;
       if (!error && data) {
         APP.snapshotUndo();
         APP.state.boards = data.boards || [];
@@ -4985,6 +5224,7 @@ const CLASSES = {
         if (APP.state.boards.length === 0) this._createDefaultBoard(className);
         APP.save();
         renderAll();
+        DRAW.loadBoard(APP.state.activeBoardId);
         return;
       }
     }
@@ -4996,6 +5236,7 @@ const CLASSES = {
     if (APP.state.boards.length === 0) this._createDefaultBoard(className);
     APP.save();
     renderAll();
+    DRAW.loadBoard(APP.state.activeBoardId);
   },
 
   _createDefaultBoard(className) {
@@ -5010,6 +5251,7 @@ const CLASSES = {
     if (current) {
       this.saveCurrentBoards(current); // auto-save current
     }
+    DRAW.saveBoard(APP.state.activeBoardId); // Zeichnung des alten Boards sichern
     this._setCurrent(className);
     await this.loadClass(className);
     this.renderDropdown();
@@ -5023,7 +5265,16 @@ const CLASSES = {
     if (!name.trim()) return;
     if (!skipLimit && !checkClassLimit()) return;
     const data = this._data();
-    if (!data[name]) data[name] = { boards: [], savedAt: new Date().toISOString() };
+    if (!data[name]) {
+      // Hatte der Nutzer bisher keine Klasse, würden seine Tafeln beim Wechsel
+      // in die leere neue Klasse unwiederbringlich verworfen — deshalb übernehmen.
+      const adopt = !this.current() && APP.state.boards.length > 0;
+      data[name] = {
+        boards: adopt ? APP.state.boards : [],
+        activeBoardId: adopt ? APP.state.activeBoardId : null,
+        savedAt: new Date().toISOString()
+      };
+    }
     this._save(data);
     this.switchTo(name);
   },
@@ -5043,7 +5294,17 @@ const CLASSES = {
       document.getElementById('class-dropdown')?.classList.remove('open');
       const remaining = this.list();
       if (remaining.length > 0) this.switchTo(remaining[0]);
-      else { this.renderDropdown(); }
+      else {
+        // Letzte Klasse gelöscht: ihre Tafeln nicht weiter anzeigen, frische Standard-Tafel laden
+        APP.snapshotUndo();
+        this._createDefaultBoard();
+        APP.save();
+        renderAll();
+        DRAW.loadBoard(APP.state.activeBoardId);
+        const nameEl = document.getElementById('class-btn-name');
+        if (nameEl) nameEl.textContent = 'Klasse wählen';
+        this.renderDropdown();
+      }
     } else {
       this.renderDropdown();
     }
@@ -5067,7 +5328,7 @@ const CLASSES = {
       item.className = 'class-dd-item' + (cls === current ? ' active' : '');
       item.innerHTML = `
         <span style="font-size:16px">${this._emoji(cls)}</span>
-        <span class="class-dd-name">${cls}</span>
+        <span class="class-dd-name">${safeText(cls)}</span>
         <button class="class-dd-del" title="Klasse löschen">✕</button>
       `;
       item.addEventListener('click', e => {
@@ -5268,6 +5529,7 @@ const DRAW = {
       // Turning ON — restore drawing for this board
       this.loadBoard(APP.state.activeBoardId);
     }
+    this._updateKeepVisible();
   },
 
   _setTool(tool) {
@@ -5341,7 +5603,10 @@ const DRAW = {
 
   _resize() {
     if (!this.canvas) return;
-    const W = window.innerWidth, H = window.innerHeight;
+    // Canvas wächst nur — beim Verkleinern des Fensters würde die Zeichnung
+    // sonst irreversibel abgeschnitten (Orientierungswechsel auf Tablets!)
+    const W = Math.max(window.innerWidth, this.canvas.width);
+    const H = Math.max(window.innerHeight, this.canvas.height);
     if (this.canvas.width === W && this.canvas.height === H) return; // no change — don't clear
     const dataURL = this.canvas.width > 0 ? this.canvas.toDataURL() : null;
     this.canvas.width  = W;
@@ -5359,6 +5624,8 @@ const DRAW = {
 
   _start(e) {
     if (!this.active) return;
+    // Nur der erste Finger zeichnet — zweiter Finger/Handballen erzeugt sonst Querstriche
+    if (!e.isPrimary) return;
     if (this.tool === 'text') {
       this._showTextInput(e.clientX, e.clientY);
       return;
@@ -5386,6 +5653,7 @@ const DRAW = {
 
   _move(e) {
     if (!this.active || !this.drawing) return;
+    if (!e.isPrimary) return;
     e.preventDefault();
 
     // Collect all coalesced points for stylus/high-freq input
@@ -5491,20 +5759,55 @@ const DRAW = {
   // Save drawing of current board before switching
   saveBoard(boardId) {
     if (!this.canvas || !boardId) return;
-    this.boardDrawings[boardId] = this.canvas.toDataURL();
+    if (this._isCanvasEmpty()) delete this.boardDrawings[boardId];
+    else this.boardDrawings[boardId] = this.canvas.toDataURL();
+    this._persistDrawings();
+    this._updateKeepVisible();
   },
 
   // Load drawing for new board (clear canvas if none)
   loadBoard(boardId) {
     if (!this.canvas || !boardId) return;
+    // Race-Schutz: bei schnellem Doppel-Wechsel darf nur der letzte Load zeichnen
+    const token = (this._loadToken = (this._loadToken || 0) + 1);
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.history = [];
     const dataURL = this.boardDrawings[boardId];
     if (dataURL) {
       const img = new Image();
-      img.onload = () => this.ctx.drawImage(img, 0, 0);
+      img.onload = () => { if (token === this._loadToken) this.ctx.drawImage(img, 0, 0); };
       img.src = dataURL;
     }
+    this._updateKeepVisible();
+  },
+
+  // Zeichnung außerhalb des Zeichenmodus sichtbar lassen (nicht interaktiv)
+  _updateKeepVisible() {
+    if (!this.canvas) return;
+    const has = !!(APP.state && this.boardDrawings[APP.state.activeBoardId]);
+    this.canvas.classList.toggle('keep-visible', !this.active && has);
+  },
+
+  _isCanvasEmpty() {
+    if (!this.canvas || this.canvas.width === 0) return true;
+    const d = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height).data;
+    for (let i = 3; i < d.length; i += 4) if (d[i] !== 0) return false;
+    return true;
+  },
+
+  // Zeichnungen überleben Reload — separater Key, damit Board-Daten bei vollem Speicher Vorrang behalten
+  _persistDrawings() {
+    try {
+      localStorage.setItem('classpuls_drawings', JSON.stringify(this.boardDrawings));
+    } catch(e) {
+      try { localStorage.removeItem('classpuls_drawings'); } catch(_) {}
+    }
+  },
+
+  restoreDrawings() {
+    try { this.boardDrawings = JSON.parse(localStorage.getItem('classpuls_drawings') || '{}') || {}; }
+    catch(e) { this.boardDrawings = {}; }
+    if (APP.state && APP.state.activeBoardId) this.loadBoard(APP.state.activeBoardId);
   }
 };
 
@@ -5678,7 +5981,13 @@ const DRAW = {
       }
     } catch (e) {
       thinking.remove();
-      const msg = e.name === 'AbortError' ? 'Zeitüberschreitung - bitte nochmal versuchen.' : e.message;
+      // Technische Details nur in die Konsole — der Lehrkraft eine verständliche Meldung zeigen
+      console.warn('KI-Chat-Fehler:', e);
+      let msg;
+      if (e.name === 'AbortError') msg = 'Zeitüberschreitung — bitte nochmal versuchen.';
+      else if (!navigator.onLine) msg = 'Keine Internetverbindung.';
+      else if (/quota|rate|429|überlastet|resource.?exhausted/i.test(e.message)) msg = 'Der KI-Dienst ist gerade ausgelastet — bitte in einer Minute nochmal versuchen.';
+      else msg = 'Der KI-Assistent ist gerade nicht erreichbar. Bitte später nochmal versuchen.';
       addBubble('ai', '❌ ' + msg);
     } finally {
       sending = false;
@@ -5744,6 +6053,15 @@ const TOOLBAR_ITEMS = [
   });
 })();
 
+// Ausstehende (debounced) Speicherungen sofort schreiben, wenn der Tab verschwindet —
+// sonst gehen die letzten ~2 Sekunden Arbeit beim Schließen verloren
+function flushPendingSaves() {
+  if (APP.saveTimer) { clearTimeout(APP.saveTimer); APP._persist(); }
+  if (AUTH._syncTimer) { clearTimeout(AUTH._syncTimer); AUTH._syncTimer = null; AUTH._doSync(); }
+}
+window.addEventListener('pagehide', flushPendingSaves);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushPendingSaves(); });
+
 function getToolbarPrefs() {
   try { return JSON.parse(localStorage.getItem('kb_toolbar_prefs') || 'null'); } catch { return null; }
 }
@@ -5773,6 +6091,7 @@ function applyToolbarPosition(pos) {
     tb.style.cssText = 'position:fixed;bottom:0;left:0;right:0;top:auto;height:var(--toolbar-h);display:flex;align-items:center;gap:8px;padding:0 12px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);border-top:1px solid var(--glass-border);overflow-x:auto;scrollbar-width:none';
     board.style.top = '0';
     board.style.bottom = 'var(--toolbar-h)';
+    document.getElementById('tb-pull-tab')?.remove();
   } else if (pos === 'autohide') {
     tb.dataset.pos = 'autohide';
     const side = localStorage.getItem('kb_toolbar_side') || 'top';
@@ -5808,14 +6127,17 @@ function applyToolbarPosition(pos) {
         pullTab.style.top = tbVisible ? 'var(--toolbar-h)' : '0';
       }
     });
-    board.addEventListener('click', function hideHandler() {
+    // Alten Listener entfernen — sonst stapelt sich bei jedem Umschalten einer
+    if (window._kbAutohideHider) board.removeEventListener('click', window._kbAutohideHider);
+    window._kbAutohideHider = function() {
       if (tb.dataset.pos === 'autohide' && tbVisible) {
         tbVisible = false;
         tb.style.transform = isBottom ? 'translateY(100%)' : 'translateY(-100%)';
         pullTab.textContent = isBottom ? '▲ Leiste' : '▼ Leiste';
         if (isBottom) pullTab.style.bottom = '0'; else pullTab.style.top = '0';
       }
-    });
+    };
+    board.addEventListener('click', window._kbAutohideHider);
     pullTab.style.display = 'block';
   } else {
     if (logo) logo.style.display = '';
@@ -5833,8 +6155,7 @@ function applyToolbarPosition(pos) {
     if (colBtn) colBtn.remove();
     const hoverZone = document.getElementById('tb-hover-zone');
     if (hoverZone) hoverZone.style.display = 'none';
-    const pullTab = document.getElementById('tb-pull-tab');
-    if (pullTab) pullTab.style.display = 'none';
+    document.getElementById('tb-pull-tab')?.remove();
   }
 }
 
@@ -5877,7 +6198,8 @@ function openToolbarCustomizer() {
   panel.appendChild(posRow);
 
   TOOLBAR_ITEMS.forEach(item => {
-    const visible = prefs[item.id] !== false;
+    // gleiche Logik wie applyToolbarPrefs — sonst zeigt der Toggle AN für versteckte Buttons
+    const visible = item.id in prefs ? prefs[item.id] : item.default;
     const row = document.createElement('label');
     row.style.cssText = 'display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 4px;border-radius:8px;transition:.15s;';
     row.innerHTML = `
@@ -5936,6 +6258,7 @@ setInterval(() => {
     if (el.id === 'tb-customize-panel') return;
     if (el.id === 'widget-menu') return;
     if (el.id === 'voting-page') return;
+    if (el.hasAttribute('data-kb-keep')) return; // ausdrücklich erlaubte Overlays
     const r = el.getBoundingClientRect();
     const s = window.getComputedStyle(el);
     if (r.top <= 0 && r.height > 40 && r.width > 200 && s.display !== 'none') {

@@ -17,7 +17,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { plan, teachers = 5, email } = JSON.parse(event.body);
+    const { plan, teachers = 5, email, schoolName = '' } = JSON.parse(event.body);
     const isYearly = plan === 'pro-yearly';
     const BASE_URL = 'https://klassenboard.netlify.app';
 
@@ -49,13 +49,15 @@ exports.handler = async (event) => {
       });
 
     } else if (plan === 'school') {
-      const n = Math.max(1, parseInt(teachers));
+      // NaN/negativ/übergroß abfangen — parseInt('abc') wäre NaN und Math.max(1, NaN) = NaN
+      const n = Math.min(500, Math.max(1, parseInt(teachers, 10) || 5));
       const totalCents = (88 + Math.max(0, n - 5) * 15) * 100;
 
       session = await stripe.checkout.sessions.create({
         mode: 'subscription',
         locale: 'de',
         customer_email: email || undefined,
+        metadata: { school_name: String(schoolName).slice(0, 200), teachers: String(n) },
         line_items: [{
           price_data: {
             currency: 'eur',
@@ -82,11 +84,11 @@ exports.handler = async (event) => {
     };
 
   } catch (err) {
-    console.error('Stripe error:', err.message);
+    console.error('Stripe error:', err);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: err.message })
+      body: JSON.stringify({ error: 'Checkout konnte nicht gestartet werden. Bitte später erneut versuchen.' })
     };
   }
 };
