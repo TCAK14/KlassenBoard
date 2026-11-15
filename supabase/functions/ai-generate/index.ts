@@ -48,21 +48,19 @@ Erstelle einen optimalen Board-Plan als reines JSON — kein Text davor oder dan
 
 Verfügbare Widgets (nur diese):
 - "clock": Uhr — config: {}
-- "timer": Countdown — config: { "seconds": <zahl> }
+- "timer": Countdown für Gruppenarbeit/Pausen — config: { "minutes": <zahl>, "seconds": 0 }
 - "goal": Stundenziel — config: { "text": "<prägnantes Ziel, max 80 Zeichen>" }
-- "text": Hinweis/Info — config: { "content": "<text, max 120 Zeichen>" }
-- "phases": Unterrichtsphasen — config: { "items": [{"label":"<name>","minutes":<min>}] }
+- "text": Hinweis/Info — config: { "text": "<text, max 120 Zeichen>" }
+- "phases": Unterrichtsphasen — config: { "phases": [{"name":"<name>","minutes":<min>}] }
 - "checklist": Aufgabenliste — config: { "items": [{"text":"<aufgabe>","done":false}] }
-- "homework": Hausaufgaben — config: { "text": "<aufgabe>" }
+- "homework": Hausaufgaben — config: { "subject": "<fach>", "items": ["<aufgabe>", "<aufgabe>"] }
 - "names": Schüler-Zufallsaufruf — config: {}
 - "noise": Lautstärkemesser — config: {}
-- "timer": Timer für Gruppenarbeit/Pausen
 - "agenda": Stundenablauf — config: { "items": [{"time":"<uhrzeit>","text":"<punkt>"}] }
 
 Antworte NUR mit diesem JSON (exakt):
 {
   "boardName": "<thema> – Klasse <klasse>",
-  "imagePrompt": "<Detaillierter englischer Prompt für KI-Bildgenerator, 10-20 Wörter. Beschreibe das Thema visuell, historische Szene, Personen, Landschaft, Stil. Beispiele: 'french revolution 1789 storming bastille napoleon dramatic oil painting cinematic epic lighting' oder 'photosynthesis plant cell biology microscope nature vibrant colors scientific illustration' oder 'roman empire colosseum gladiators ancient rome dramatic sunset historical'>",
   "widgets": [
     { "type": "<typ>", "config": { ... } }
   ]
@@ -80,7 +78,7 @@ Alle Texte in Deutsch, inhaltlich auf das Thema angepasst.`;
       maxTokens = 250;
       temperature = 0.1;
 
-      systemPrompt = `Du interpretierst Sprachbefehle für KlassenBoard (ein digitales Klassenzimmer-Tool).
+      systemPrompt = `Du interpretierst Sprachbefehle für ClassPuls (ein digitales Klassenzimmer-Tool).
 Antworte NUR mit JSON — kein Text.
 
 Widget-Typen: clock, timer, stopwatch, text, traffic, qr, names, homework, goal, timetable, image, youtube, dice, randomnum, groups, agenda, checklist, phases, status, noise, poll, ai, ask
@@ -97,8 +95,8 @@ JSON-Format: { "action": "...", "widgetType": "...", "config": {}, "name": "..."
 Beispiele:
 "Öffne Stoppuhr" → { "action": "add-widget", "widgetType": "stopwatch", "config": {} }
 "Öffne YouTube" → { "action": "add-widget", "widgetType": "youtube", "config": {} }
-"Timer 5 Minuten" → { "action": "add-widget", "widgetType": "timer", "config": { "seconds": 300 } }
-"Timer 10 Minuten" → { "action": "add-widget", "widgetType": "timer", "config": { "seconds": 600 } }
+"Timer 5 Minuten" → { "action": "add-widget", "widgetType": "timer", "config": { "minutes": 5, "seconds": 0 } }
+"Timer 10 Minuten" → { "action": "add-widget", "widgetType": "timer", "config": { "minutes": 10, "seconds": 0 } }
 "Öffne Gruppenarbeit mit den Namen Lena, Lisa, Charlotte" → { "action": "add-and-configure", "widgetType": "groups", "config": { "names": "Lena\nLisa\nCharlotte", "size": 2 } }
 "Füge Namen ein: Max, Anna, Tom" → { "action": "configure-widget", "widgetType": "names", "config": { "names": "Max\nAnna\nTom" } }
 "Neue Tafel" → { "action": "new-board", "name": "Neue Tafel" }

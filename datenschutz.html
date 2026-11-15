@@ -106,7 +106,7 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
 
 <div class="legal">
   <h1>Datenschutzerklärung</h1>
-  <p class="subtitle">Stand: Juni 2026</p>
+  <p class="subtitle">Stand: November 2026</p>
 
   <h2>1. Verantwortlicher</h2>
   <p>
@@ -183,12 +183,35 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
     für Tracking oder Werbezwecke gesetzt.
   </p>
 
-  <h2>8. KI-Assistent</h2>
+  <h2>8. KI-Funktionen</h2>
   <p>
-    Der KI-Assistent nutzt externe KI-Dienste zur Text- und Bildgenerierung. Dabei wird
-    ausschließlich die von dir eingegebene Anfrage an den KI-Dienst übermittelt. Es werden
-    keine personenbezogenen Daten oder Board-Inhalte automatisch an KI-Dienste gesendet.
+    Die KI-Funktionen sind freiwillig. Wenn du sie nutzt, wird <strong>nur der von dir eingegebene
+    Text</strong> (bzw. dein Sprachbefehl) zur Beantwortung an einen KI-Anbieter übermittelt. Deine
+    Tafeln, Klassenlisten oder Kontodaten werden dabei nicht mitgesendet.
   </p>
+  <ul>
+    <li><strong>KI-Assistent (Chat):</strong> Google Gemini API (Google Ireland Ltd. / Google LLC, USA), inklusive Web-Suche für aktuelle Fragen. Die Anfrage läuft über unseren Server, nicht direkt aus deinem Browser.</li>
+    <li><strong>KI-Tafel-Generator, KI-Widgets und Sprachbefehle:</strong> Groq, Inc. (USA), angebunden über eine Server-Funktion bei Supabase.</li>
+    <li><strong>Spracherkennung:</strong> übernimmt dein Browser. In Chrome und Edge wird die Sprachaufnahme dafür an den Browser-Hersteller (Google bzw. Microsoft) gesendet.</li>
+    <li><strong>KI-Bilder („Male …"):</strong> Pollinations.ai – der Bildwunsch wird als Teil der Bildadresse an den Dienst übertragen.</li>
+  </ul>
+  <p>
+    Bitte gib in KI-Funktionen <strong>keine personenbezogenen Daten von Schülerinnen und Schülern</strong>
+    ein (Namen, Noten, Gesundheitsangaben). Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO; bei
+    Anbietern in den USA erfolgt die Übermittlung auf Grundlage des EU-U.S. Data Privacy Framework
+    bzw. von Standardvertragsklauseln.
+  </p>
+
+  <h2>8a. Eingebundene Inhalte und Dienste</h2>
+  <p>Einige Elemente laden Inhalte von Drittanbietern. Dabei erfährt der jeweilige Anbieter technisch bedingt deine IP-Adresse.</p>
+  <ul>
+    <li><strong>YouTube-Element:</strong> Vorschaubild und Video werden von YouTube (Google) geladen, das Video im „erweiterten Datenschutzmodus" (youtube-nocookie.com). Ohne YouTube-Element findet kein Abruf statt.</li>
+    <li><strong>Browser- und Favoriten-Element:</strong> Die Symbole der gespeicherten Webseiten werden über den Favicon-Dienst von Google geladen; dabei wird der Name der jeweiligen Webseite übertragen.</li>
+    <li><strong>Stundenplan (iCal):</strong> Dein Kalender-Link wird über unsere Server-Funktion (Netlify) beim Kalender-Server deiner Schule abgerufen und zusammen mit deinen Tafeln gespeichert.</li>
+    <li><strong>Live-Umfrage:</strong> Stimmen werden ohne Namen in unserer Datenbank (Supabase) gespeichert.</li>
+    <li><strong>Lautstärke-Element:</strong> Das Mikrofonsignal wird ausschließlich in deinem Browser ausgewertet – es wird nichts aufgezeichnet oder übertragen.</li>
+    <li><strong>Programmbibliotheken:</strong> Zwei technische Bibliotheken werden von den Verteilnetzen cdnjs (Cloudflare) und jsDelivr geladen.</li>
+  </ul>
 
   <h2>9. Deine Rechte</h2>
   <p>Du hast jederzeit das Recht auf:</p>
@@ -216,9 +239,14 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
       <tr><th>Dienst</th><th>Zweck</th><th>Serverstandort</th></tr>
     </thead>
     <tbody>
-      <tr><td>Netlify</td><td>Hosting</td><td>Global CDN (DPF-zertifiziert)</td></tr>
-      <tr><td>Supabase</td><td>Auth & Datenbank</td><td>EU (Frankfurt)</td></tr>
+      <tr><td>Netlify</td><td>Hosting, Server-Funktionen</td><td>Global CDN (DPF-zertifiziert)</td></tr>
+      <tr><td>Supabase</td><td>Anmeldung, Datenbank, Live-Umfragen</td><td>EU (Frankfurt)</td></tr>
       <tr><td>Stripe</td><td>Zahlungen</td><td>USA (DPF-zertifiziert)</td></tr>
+      <tr><td>Google (Gemini API)</td><td>KI-Assistent – nur bei Nutzung</td><td>EU/USA (DPF-zertifiziert)</td></tr>
+      <tr><td>Groq</td><td>KI-Tafel-Generator, Sprachbefehle – nur bei Nutzung</td><td>USA</td></tr>
+      <tr><td>Pollinations.ai</td><td>KI-Bilder – nur bei Nutzung</td><td>EU/USA</td></tr>
+      <tr><td>Google (YouTube, Favicons)</td><td>Videos und Webseiten-Symbole – nur mit entsprechendem Element</td><td>EU/USA (DPF-zertifiziert)</td></tr>
+      <tr><td>Cloudflare (cdnjs), jsDelivr</td><td>Auslieferung von Programmbibliotheken</td><td>Global CDN</td></tr>
     </tbody>
   </table>
 

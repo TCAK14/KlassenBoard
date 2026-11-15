@@ -51,12 +51,14 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
 }
 #class-btn:hover { background:rgba(255,255,255,0.18); }
 #class-btn .class-name { overflow:hidden; text-overflow:ellipsis; max-width:90px; }
+/* Hängt direkt an <body> (siehe CLASSES.initUI): innerhalb der horizontal
+   scrollbaren Toolbar würde das Menü abgeschnitten und wäre unsichtbar */
 #class-dropdown {
-  position:absolute; top:calc(100% + 8px); left:0;
-  min-width:220px; background:rgba(15,15,25,0.97);
+  position:fixed; top:64px; left:8px;
+  min-width:220px; max-width:calc(100vw - 16px); background:rgba(15,15,25,0.97);
   backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.12);
   border-radius:12px; box-shadow:0 16px 48px rgba(0,0,0,0.6);
-  z-index:2000; display:none; overflow:hidden;
+  z-index:100000; display:none; overflow-x:hidden; overflow-y:auto;
 }
 #class-dropdown.open { display:block; }
 .class-dd-header {
@@ -78,6 +80,8 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
   transition:opacity .15s;
 }
 .class-dd-item:hover .class-dd-del { opacity:1; }
+/* Touch-Geräte kennen kein Hover — Löschen-Button dort immer zeigen */
+@media (hover:none) { .class-dd-item .class-dd-del { opacity:0.7; } }
 .class-dd-item .class-dd-del:hover { background:rgba(239,68,68,0.2); color:#fca5a5; }
 .class-dd-divider { height:1px; background:rgba(255,255,255,0.07); margin:4px 0; }
 .class-dd-add {
@@ -116,7 +120,7 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
 #logo { display:flex; align-items:center; gap:6px; margin-right:8px; flex-shrink:0; }
 #logo span:first-child { font-size:22px; }
 #logo-text { font-weight:700; font-size:15px; letter-spacing:-0.3px; }
-#board-tabs { display:flex; align-items:center; gap:4px; flex:1; min-width:0; overflow-x:auto; scrollbar-width:none; }
+#board-tabs { display:flex; align-items:center; gap:4px; flex:1; min-width:150px; overflow-x:auto; scrollbar-width:none; }
 #board-tabs::-webkit-scrollbar { display:none; }
 .tab-btn {
   flex-shrink:0; padding:6px 14px; border-radius:var(--radius-sm); font-size:13px; font-weight:500;
@@ -135,6 +139,12 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
 }
 .tab-btn:hover .tab-action { opacity:0.6; }
 .tab-btn:hover .tab-action:hover { opacity:1; background:rgba(255,255,255,0.2); }
+/* Touch: Umbenennen/Löschen nur am aktiven Tab und dort sichtbar — unsichtbare,
+   aber antippbare Buttons an inaktiven Tabs würden versehentlich auslösen */
+@media (hover:none) {
+  .tab-btn.active .tab-action { opacity:0.7; }
+  .tab-btn:not(.active) .tab-action { display:none; }
+}
 .tab-edit { font-size:10px; }
 .tab-close { font-size:11px; margin-left:1px; }
 .tab-input { background:transparent; border:none; outline:none; color:#fff; font:inherit; width:100px; }
@@ -188,24 +198,22 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
 #edit-mode-btn { padding:6px 10px; width:auto; font-size:12px; font-weight:600; letter-spacing:.3px; }
 
 /* ── Board Canvas ── */
+/* Das Board ist auf allen Geräten scrollbar: Tafeln werden oft am Laptop vorbereitet
+   und am Smartboard mit anderer Auflösung gezeigt — Widgets außerhalb des sichtbaren
+   Bereichs müssen erreichbar bleiben. Der Hintergrund liegt direkt auf dem
+   Scroll-Container und bleibt deshalb beim Scrollen stehen. */
 #board {
   position:fixed; top:var(--toolbar-h); left:0; right:0; bottom:0;
-  overflow:hidden; background:#1e293b;
+  overflow:auto; background:linear-gradient(135deg,#667eea,#764ba2);
+  touch-action:pan-x pan-y pinch-zoom; -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.3) transparent;
 }
-/* Tablets & Touch: Board scroll-/schwenkbar, sonst sind Widgets außerhalb
-   des Viewports (z.B. Demo-Board auf 900px Breite angelegt) unerreichbar */
-@media (max-width: 1180px), (pointer: coarse) {
-  #board { overflow:auto; touch-action:pan-x pan-y pinch-zoom; -webkit-overflow-scrolling:touch; }
+@media (pointer: coarse) {
+  #board { scrollbar-width:none; }
   #board::-webkit-scrollbar { width:0; height:0; }
-  #widgets-layer { position:relative; min-width:900px; min-height:600px; }
-  #board-bg { position:fixed; top:var(--toolbar-h); left:0; right:0; bottom:0; z-index:0; }
 }
-#board-bg {
-  position:absolute; inset:0;
-  background:linear-gradient(135deg,#667eea,#764ba2);
-  transition:background .3s;
-}
-#widgets-layer { position:absolute; inset:0; }
+#board-bg { display:none; } /* Alt-Element: Hintergrund liegt jetzt auf #board selbst */
+#widgets-layer { position:relative; min-width:100%; min-height:100%; }
 
 /* ── Widget Shell ── */
 .widget {
@@ -433,9 +441,10 @@ label { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-botto
 #draw-size-slider {
   width:70px; accent-color:var(--brand); cursor:pointer;
 }
+/* Liegt bei (0,0) und wird per transform mit dem Board mitgescrollt (DRAW._syncScroll) */
 #draw-canvas {
-  position:absolute; inset:0; z-index:500; touch-action:none;
-  display:none; cursor:crosshair;
+  position:absolute; top:0; left:0; z-index:500; touch-action:none;
+  display:none; cursor:crosshair; max-width:none; transform-origin:0 0;
 }
 /* Behaltene Zeichnung bleibt außerhalb des Zeichenmodus sichtbar, blockiert aber keine Klicks */
 #draw-canvas.keep-visible { display:block; pointer-events:none; cursor:default; }
@@ -534,6 +543,17 @@ body.draw-mode #toolbar { z-index:1900 !important; } /* !important nötig — Ba
 body.fullscreen #toolbar { display:none; }
 body.fullscreen #board { top:0 !important; bottom:0 !important; } /* kein toter Streifen bei Bottom-Toolbar */
 body.fullscreen #tb-pull-tab { display:none !important; }
+/* Vollbild verlassen ohne Tastatur (Touch-Smartboards, iPads) */
+#fs-exit {
+  display:none; position:fixed; top:10px; right:10px; z-index:9000;
+  width:40px; height:40px; border-radius:50%; border:1px solid rgba(255,255,255,0.25);
+  background:rgba(0,0,0,0.45); color:#fff; font-size:16px; cursor:pointer;
+  opacity:0.35; transition:opacity .2s; backdrop-filter:blur(8px);
+}
+#fs-exit:hover, #fs-exit:focus-visible { opacity:1; }
+body.fullscreen #fs-exit { display:block; }
+.widget.alarm { animation:alarmFlash .5s ease 6; }
+@keyframes alarmFlash { 0%,100% { box-shadow:var(--shadow); } 50% { box-shadow:0 0 0 6px rgba(248,113,113,0.85), var(--shadow); } }
 body.fullscreen #board { top:0; }
 
 /* Scrollbar */
@@ -697,6 +717,19 @@ body.fullscreen #board { top:0; }
 .group-card h4 { font-size:clamp(0.7rem, 2vw, 1.1rem); }
 .group-card li { font-size:clamp(0.65rem, 1.8vw, 1rem); }
 
+/* ── KOMPAKTE TOOLBAR (iPad quer, kleine Laptops, viele Smartboard-Browser) ──
+   Ohne das bleiben für die Tafel-Tabs bei 1024px nur ~40px übrig */
+@media (min-width: 769px) and (max-width: 1280px) {
+  #toolbar { gap:5px; padding:0 8px; }
+  #logo { margin-right:2px; }
+  #logo-text, #logo span:last-child { display:none; }
+  .toolbar-sep { display:none; }
+  #class-btn { max-width:104px; padding:5px 8px; }
+  #class-btn .class-name { max-width:70px; }
+  .tab-btn { padding:6px 10px; }
+  #auth-login-btn { padding:6px 9px; }
+}
+
 /* ── MOBILE RESPONSIVE ── */
 @media (max-width: 768px) {
   :root { --toolbar-h: 48px; }
@@ -720,10 +753,8 @@ body.fullscreen #board { top:0; }
   #user-email { display:none; }
   #user-avatar { width:20px; height:20px; font-size:9px; }
 
-  #board { overflow:auto; touch-action:pan-x pan-y pinch-zoom; -webkit-overflow-scrolling:touch; }
   #board::-webkit-scrollbar { display:none; }
-  #board-bg { position:fixed; top:var(--toolbar-h); left:0; right:0; bottom:0; z-index:0; }
-  #widgets-layer { position:relative; min-width:900px; min-height:600px; z-index:1; }
+  #widgets-layer { min-width:900px; min-height:600px; z-index:1; }
   .widget { z-index:2; }
 
   #toolbar { overflow-x:auto; -webkit-overflow-scrolling:touch; touch-action:pan-x; }
@@ -844,7 +875,10 @@ body.fullscreen #board { top:0; }
 </div>
 
 <!-- Toast -->
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<!-- Vollbild verlassen (nur im Vollbild sichtbar) -->
+<button id="fs-exit" title="Vollbild beenden" aria-label="Vollbild beenden">✕</button>
 
 <!-- Zeichnen-Canvas -->
 <canvas id="draw-canvas"></canvas>
@@ -954,6 +988,12 @@ const AUTH = {
   user: null,
   _syncTimer: null,
   _configured: false,
+  _cloudReady: false,     // Cloud-Stand wurde in dieser Sitzung abgeglichen → erst dann darf hochgeladen werden
+  _cloudLoading: null,
+  _syncing: false,
+  _syncAgain: false,
+  _wipeOnSignOut: false,
+  _lastRemoteCheck: 0,
 
   init() {
     if (!window.supabase || SUPABASE_URL.includes('DEINE')) {
@@ -972,10 +1012,16 @@ const AUTH = {
         }
       });
       this.client.auth.onAuthStateChange((event, session) => {
+        const prevId = this.user?.id || null;
         this.user = session?.user || null;
         this._updateUI();
-        if (event === 'SIGNED_IN')  this.loadFromCloud();
-        if (event === 'SIGNED_OUT') { this._cloudLoaded = false; APP.load(); renderAll(); toast('👋 Abgemeldet'); }
+        if (event === 'PASSWORD_RECOVERY') { openNewPasswordModal(); return; }
+        if (event === 'SIGNED_IN') {
+          // SIGNED_IN feuert bei supabase-js auch beim Tab-Refokus — nur bei Kontowechsel neu abgleichen
+          if (prevId !== (this.user?.id || null)) this._cloudReady = false;
+          if (!this._cloudReady) this.loadFromCloud();
+        }
+        if (event === 'SIGNED_OUT') this._onSignedOut();
       });
     } catch(e) { console.warn('Supabase init error:', e); }
   },
@@ -986,119 +1032,264 @@ const AUTH = {
   },
 
   async register(email, password) {
-    const { error } = await this.client.auth.signUp({ email, password });
+    const { data, error } = await this.client.auth.signUp({ email, password });
+    if (error) throw error;
+    return data;
+  },
+
+  async resetPassword(email) {
+    const { error } = await this.client.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname,
+    });
     if (error) throw error;
   },
 
   async logout() {
-    if (this.client) await this.client.auth.signOut();
+    if (!this.client) return;
+    // Ausstehende Änderungen zuerst hochladen — danach wird die lokale Kopie vom Gerät entfernt
+    if (APP.saveTimer) APP._persist();
+    clearTimeout(this._syncTimer); this._syncTimer = null;
+    let clean = false;
+    if (this.user && this._cloudReady) {
+      // Immer hochladen (nicht nur bei offenen Änderungen): stellt sicher, dass der komplette
+      // Stand inkl. Klassenliste wirklich in der Cloud liegt, bevor das Gerät geleert wird
+      for (let i = 0; this._syncing && i < 50; i++) await new Promise(r => setTimeout(r, 100));
+      await this._doSync();
+      clean = this._lastSyncOk === true && !localStorage.getItem('classpuls_dirty_at');
+    }
+    if (!clean && this.user) {
+      const ok = confirm(
+        'Der aktuelle Stand konnte nicht in der Cloud gesichert werden.\n\n' +
+        'Trotzdem abmelden? Deine Tafeln bleiben dann auf diesem Gerät gespeichert.'
+      );
+      if (!ok) return;
+    }
+    this._wipeOnSignOut = clean;
+    try { await this.client.auth.signOut(); }
+    catch(e) { this._wipeOnSignOut = false; toast('⚠️ Abmelden fehlgeschlagen'); }
+  },
+
+  _onSignedOut() {
+    this._cloudReady = false;
+    clearTimeout(this._syncTimer); this._syncTimer = null;
+    if (this._wipeOnSignOut) {
+      // Sauber abgemeldet: Konto-Daten vom (oft geteilten) Schul-Gerät entfernen
+      this._wipeOnSignOut = false;
+      resetLocalData();
+      toast('👋 Abgemeldet — deine Tafeln sind sicher in der Cloud gespeichert', 4000);
+    } else {
+      APP.load();
+      renderAll();
+      DRAW.loadBoard(APP.state.activeBoardId);
+      toast('👋 Abgemeldet');
+    }
   },
 
   syncToCloud() {
     if (!this.client || !this.user) return;
+    // Nie blind hochladen: erst prüfen, was in der Cloud liegt (sonst überschreibt ein
+    // veralteter lokaler Stand beim Start die neueren Tafeln eines anderen Geräts)
+    if (!this._cloudReady) { this.loadFromCloud(); return; }
     clearTimeout(this._syncTimer);
     this._setSyncDot('syncing');
-    this._syncTimer = setTimeout(() => this._doSync(), 1500);
+    this._syncTimer = setTimeout(() => { this._syncTimer = null; this._doSync(); }, 1500);
   },
 
-  async _doSync() {
+  async _doSync(force) {
     if (!this.client || !this.user) return;
+    if (this._syncing) { this._syncAgain = true; return; }
+    this._syncing = true;
+    this._lastSyncOk = false;
+    this._setSyncDot('syncing');
+    const uidNow = this.user.id;
     try {
       const dirtyBefore = localStorage.getItem('classpuls_dirty_at');
-      const now = new Date().toISOString();
-      const data = {
+      if (!force) {
+        // Hat inzwischen ein anderes Gerät gespeichert? Dann abgleichen statt überschreiben.
+        const { data: head, error: headErr } = await this.client
+          .from('boards').select('updated_at').eq('user_id', uidNow).maybeSingle();
+        if (headErr) throw headErr;
+        const known = Date.parse(localStorage.getItem('classpuls_synced_at') || '') || 0;
+        if (head && (Date.parse(head.updated_at) || 0) !== known) {
+          this._syncing = false;
+          this._cloudReady = false;
+          await this.loadFromCloud();
+          // Abgleich erfolgreich (Cloud übernommen oder zusammengeführt + hochgeladen)?
+          this._lastSyncOk = this._cloudReady && !localStorage.getItem('classpuls_dirty_at');
+          return;
+        }
+      }
+      const payload = {
         boards: APP.state.boards,
         activeBoardId: APP.state.activeBoardId,
         icalCache: APP.icalCache,
         classes: CLASSES._data(),
         currentClass: CLASSES.current(),
       };
-      const { error } = await this.client
+      const { data: saved, error } = await this.client
         .from('boards')
-        .upsert({ user_id: this.user.id, data, updated_at: now });
+        .upsert({ user_id: uidNow, data: payload, updated_at: new Date().toISOString() })
+        .select('updated_at')
+        .single();
       if (error) throw error;
-      this._setSyncDot('ok');
-      localStorage.setItem('classpuls_synced_at', now);
+      // Den von der Datenbank bestätigten Zeitstempel als Versionsmarke merken
+      localStorage.setItem('classpuls_synced_at', saved?.updated_at || '');
+      localStorage.setItem('classpuls_owner', uidNow);
       // dirty nur löschen, wenn währenddessen nichts Neues gespeichert wurde
       if (localStorage.getItem('classpuls_dirty_at') === dirtyBefore) {
         localStorage.removeItem('classpuls_dirty_at');
       }
+      this._lastSyncOk = true;
+      this._setSyncDot('ok');
     } catch(e) {
       console.warn('Cloud-Sync fehlgeschlagen:', e);
       this._setSyncDot('error');
+    } finally {
+      this._syncing = false;
+      if (this._syncAgain) { this._syncAgain = false; this.syncToCloud(); }
     }
   },
 
-  async loadFromCloud() {
-    if (!this.client || !this.user) return;
-    // SIGNED_IN feuert bei supabase-js auch beim Tab-Refokus — nur einmal pro Session laden
-    if (this._cloudLoaded) return;
-    this._cloudLoaded = true;
-    try {
-      const { data, error } = await this.client
-        .from('boards')
-        .select('data, updated_at')
-        .eq('user_id', this.user.id)
-        .maybeSingle();
-      if (error) throw error;
-      if (!data) {
-        // Erster Login: lokalen Stand als initialen Cloud-Stand hochladen
-        if (APP.state.boards.length > 0) this.syncToCloud();
+  // Beim Zurückkehren in den Tab prüfen, ob ein anderes Gerät Neues gespeichert hat
+  checkRemote() {
+    if (!this.client || !this.user || this._syncing) return;
+    const now = Date.now();
+    if (now - this._lastRemoteCheck < 30000) return;
+    this._lastRemoteCheck = now;
+    this.loadFromCloud();
+  },
+
+  loadFromCloud() {
+    if (!this.client || !this.user) return Promise.resolve();
+    if (this._cloudLoading) return this._cloudLoading;
+    this._cloudLoading = this._reconcile()
+      .catch(e => { console.warn('Cloud-Abgleich fehlgeschlagen:', e); this._setSyncDot('error'); })
+      .finally(() => { this._cloudLoading = null; });
+    return this._cloudLoading;
+  },
+
+  // Gleicht lokalen und Cloud-Stand ab, ohne je stillschweigend Arbeit zu überschreiben
+  async _reconcile() {
+    const uidNow = this.user.id;
+    const stillSameUser = () => this.user && this.user.id === uidNow;
+    const ts = s => (s ? Date.parse(s) || 0 : 0);
+
+    // Erst nur die Versionsmarke holen — der (evtl. große) Datensatz wird nur bei Bedarf geladen
+    const { data: head, error } = await this.client
+      .from('boards').select('updated_at').eq('user_id', uidNow).maybeSingle();
+    if (error) throw error;
+    if (!stillSameUser()) return;
+
+    const owner     = localStorage.getItem('classpuls_owner');
+    const foreign   = !!owner && owner !== uidNow;   // lokale Tafeln gehören einem anderen Konto
+    const anonymous = !owner;                        // lokale Tafeln entstanden ohne Anmeldung
+    const dirty     = !foreign && (!!localStorage.getItem('classpuls_dirty_at') || !!APP._dirtyPending);
+    const known     = foreign ? 0 : ts(localStorage.getItem('classpuls_synced_at'));
+
+    if (!head) {
+      // Für dieses Konto gibt es noch keinen Cloud-Stand
+      if (foreign) resetLocalData();                 // fremde Tafeln nie in dieses Konto hochladen
+      localStorage.setItem('classpuls_owner', uidNow);
+      this._cloudReady = true;
+      if (APP.state.boards.length > 0) await this._doSync(true);
+      return;
+    }
+
+    if (ts(head.updated_at) === known) {
+      // Cloud unverändert seit unserem letzten Stand
+      localStorage.setItem('classpuls_owner', uidNow);
+      this._cloudReady = true;
+      if (dirty) await this._doSync(true); else this._setSyncDot('ok');
+      return;
+    }
+
+    // Die Cloud hat einen anderen Stand → vollständig laden
+    const { data: row, error: rowErr } = await this.client
+      .from('boards').select('data, updated_at').eq('user_id', uidNow).maybeSingle();
+    if (rowErr) throw rowErr;
+    if (!stillSameUser()) return;
+    if (!row) { this._cloudReady = true; return; }
+
+    if (dirty) {
+      // Beide Seiten haben sich geändert → der Nutzer entscheidet (Standard: nichts verlieren)
+      const when = row.updated_at ? new Date(row.updated_at).toLocaleString('de-DE') : '';
+      const choice = await askSyncConflict(when, anonymous);
+      if (!stillSameUser()) return;
+      if (choice !== 'cloud') {
+        if (choice === 'merge') this._mergeCloud(row);
+        localStorage.setItem('classpuls_owner', uidNow);
+        this._cloudReady = true;
+        await this._doSync(true);
+        if (choice === 'merge') toast('🔀 Beide Stände wurden zusammengeführt');
         return;
       }
-      // Konfliktprüfung: gibt es lokale Änderungen, die noch nicht in der Cloud sind?
-      const t = s => s ? Date.parse(s) : 0;
-      const dirtyAt  = t(localStorage.getItem('classpuls_dirty_at'));
-      const syncedAt = t(localStorage.getItem('classpuls_synced_at'));
-      const cloudAt  = t(data.updated_at);
-      if (dirtyAt && dirtyAt > syncedAt) {
-        const cloudNewer = cloudAt && cloudAt > syncedAt;
-        if (!cloudNewer) {
-          // Lokal ist strikt neuer (z.B. Offline-Edits) → hochladen statt überschreiben
-          this.syncToCloud();
-          return;
-        }
-        // Echter Konflikt: beide Seiten haben sich geändert → Nutzer entscheidet
-        const wann = data.updated_at ? new Date(data.updated_at).toLocaleString('de-DE') : 'unbekannt';
-        const cloudLaden = confirm(
-          'Auf diesem Gerät gibt es Änderungen, die noch nicht in der Cloud gespeichert sind.\n\n' +
-          'OK = Cloud-Stand laden (vom ' + wann + ') — lokale Änderungen gehen verloren\n' +
-          'Abbrechen = lokale Version behalten und in die Cloud hochladen'
-        );
-        if (!cloudLaden) { this.syncToCloud(); return; }
-      }
-      APP.state.boards        = data.data.boards || [];
-      APP.state.activeBoardId = data.data.activeBoardId || null;
-      APP.icalCache           = data.data.icalCache || {};
-      // Klassen aus der Cloud übernehmen (Dropdown auf Zweitgerät sonst leer)
-      if (data.data.classes && Object.keys(data.data.classes).length > 0) {
-        try {
-          localStorage.setItem('classpuls_classes', JSON.stringify(data.data.classes));
-          if (data.data.currentClass) {
-            localStorage.setItem('classpuls_current_class', data.data.currentClass);
-            const nameEl = document.getElementById('class-btn-name');
-            if (nameEl) nameEl.textContent = data.data.currentClass;
-          }
-          CLASSES.renderDropdown();
-        } catch(_) {}
-      }
-      if (!APP.state.boards.find(b => b.id === APP.state.activeBoardId)) {
-        APP.state.activeBoardId = APP.state.boards[0]?.id || null;
-      }
-      if (APP.state.boards.length === 0) createBoard('Meine Tafel');
-      else renderAll();
-      DRAW.loadBoard(APP.state.activeBoardId);
-      // Geladenen Cloud-Stand lokal persistieren — sonst zeigt ein Offline-Neustart alte Daten
-      localStorage.setItem('classpuls_v2', JSON.stringify({
-        boards: APP.state.boards, activeBoardId: APP.state.activeBoardId, icalCache: APP.icalCache
-      }));
-      localStorage.removeItem('classpuls_dirty_at');
-      localStorage.setItem('classpuls_synced_at', data.updated_at || new Date().toISOString());
-      toast('☁️ Boards aus der Cloud geladen');
-    } catch(e) {
-      console.warn('Cloud-Load fehlgeschlagen:', e);
-      this._cloudLoaded = false;
     }
+    this._applyCloud(row, foreign);
+    this._cloudReady = true;
+  },
+
+  // Cloud-Tafeln ergänzen, lokale behalten (bei gleicher Tafel gewinnt dieses Gerät)
+  _mergeCloud(row) {
+    const d = row.data || {};
+    const cloudBoards = Array.isArray(d.boards) ? d.boards : [];
+    const localIds = new Set(APP.state.boards.map(b => b.id));
+    APP.state.boards = APP.state.boards.concat(cloudBoards.filter(b => b && b.id && !localIds.has(b.id)));
+    const localClasses = CLASSES._data();
+    let added = false;
+    Object.keys(d.classes || {}).forEach(name => {
+      if (!localClasses[name]) { localClasses[name] = d.classes[name]; added = true; }
+    });
+    if (added) { CLASSES._save(localClasses); CLASSES.renderDropdown(); }
+    renderAll();
+    APP._persistLocal();
+  },
+
+  _applyCloud(row, foreign) {
+    const d = row.data || {};
+    if (foreign) {
+      ['classpuls_classes', 'classpuls_current_class', 'classpuls_drawings'].forEach(k => localStorage.removeItem(k));
+      DRAW.boardDrawings = {};
+    }
+    clearTimeout(APP.saveTimer); APP.saveTimer = null;   // ausstehendes Speichern des alten Stands verwerfen
+    APP._dirtyPending = false;
+    APP.state.boards        = Array.isArray(d.boards) ? d.boards : [];
+    APP.state.activeBoardId = d.activeBoardId || null;
+    APP.state.undo          = null;
+    APP.icalCache           = d.icalCache || {};
+    // Klassen gehören zum Gesamtstand (ältere Cloud-Stände ohne den Schlüssel lassen lokale Klassen unberührt)
+    if ('classes' in d || foreign) {
+      try {
+        const classes = d.classes || {};
+        const has = Object.keys(classes).length > 0;
+        if (has) localStorage.setItem('classpuls_classes', JSON.stringify(classes));
+        else localStorage.removeItem('classpuls_classes');
+        const cur = has && d.currentClass && classes[d.currentClass] ? d.currentClass : null;
+        if (cur) localStorage.setItem('classpuls_current_class', cur);
+        else localStorage.removeItem('classpuls_current_class');
+        const nameEl = document.getElementById('class-btn-name');
+        if (nameEl) nameEl.textContent = cur || 'Klasse wählen';
+        CLASSES.renderDropdown();
+      } catch(_) {}
+    }
+    if (!APP.state.boards.find(b => b.id === APP.state.activeBoardId)) {
+      APP.state.activeBoardId = APP.state.boards[0]?.id || null;
+    }
+    if (APP.state.boards.length === 0) {
+      APP._booting = true;
+      createBoard('Meine Tafel', null, [], true);
+      APP._booting = false;
+    } else {
+      renderAll();
+    }
+    DRAW.loadBoard(APP.state.activeBoardId);
+    // Geladenen Cloud-Stand lokal sichern — sonst zeigt ein Offline-Neustart alte Daten
+    clearTimeout(APP.saveTimer); APP.saveTimer = null;
+    APP._persistLocal();
+    localStorage.removeItem('classpuls_dirty_at');
+    localStorage.setItem('classpuls_synced_at', row.updated_at || '');
+    localStorage.setItem('classpuls_owner', this.user.id);
+    this._setSyncDot('ok');
+    toast('☁️ Tafeln aus der Cloud geladen');
   },
 
   _updateUI() {
@@ -1333,23 +1524,45 @@ const APP = {
   icalCache: {},   // boardId -> { url, entries, lastFetched }
 
   // ── Persistence ──
+  _booting: false,       // true während automatischer Start-Speicherungen (zählen nicht als Nutzer-Änderung)
+  _dirtyPending: false,  // es gibt Nutzer-Änderungen, die noch nicht als "dirty" vermerkt sind
+  _quotaWarned: false,
+
   save() {
+    if (!this._booting) this._dirtyPending = true;
     clearTimeout(this.saveTimer);
     this.saveTimer = setTimeout(() => this._persist(), 500);
   },
+  // Schreibt den Stand in den Browser-Speicher. Ist der voll, haben die Tafeln
+  // Vorrang vor den (ebenfalls dort liegenden) Zeichnungen.
+  _persistLocal() {
+    const json = JSON.stringify({
+      boards: this.state.boards,
+      activeBoardId: this.state.activeBoardId,
+      icalCache: this.icalCache,
+    });
+    try { localStorage.setItem('classpuls_v2', json); return true; }
+    catch(e) {
+      try {
+        localStorage.removeItem('classpuls_drawings');
+        localStorage.setItem('classpuls_v2', json);
+        return true;
+      } catch(e2) { return false; }
+    }
+  },
   _persist() {
-    try {
-      const data = {
-        boards: this.state.boards,
-        activeBoardId: this.state.activeBoardId,
-        icalCache: this.icalCache,
-      };
-      localStorage.setItem('classpuls_v2', JSON.stringify(data));
-      // Merker: lokale Änderungen, die noch nicht (erfolgreich) in der Cloud sind
-      localStorage.setItem('classpuls_dirty_at', new Date().toISOString());
-      AUTH.syncToCloud(); // Cloud-Sync wenn eingeloggt
-    } catch(e) { toast('⚠️ Speichern fehlgeschlagen'); }
+    clearTimeout(this.saveTimer);
     this.saveTimer = null;
+    if (!this._persistLocal() && !this._quotaWarned) {
+      this._quotaWarned = true;
+      toast('⚠️ Browser-Speicher voll — bitte große Bilder/Dateien von den Tafeln entfernen', 6000);
+    }
+    if (this._dirtyPending) {
+      this._dirtyPending = false;
+      // Merker: lokale Änderungen, die noch nicht (erfolgreich) in der Cloud sind
+      try { localStorage.setItem('classpuls_dirty_at', new Date().toISOString()); } catch(e) {}
+      AUTH.syncToCloud(); // Cloud-Sync wenn eingeloggt
+    }
   },
   load() {
     try {
@@ -1363,7 +1576,8 @@ const APP = {
       }
       if (!raw) return false;
       const data = JSON.parse(raw);
-      this.state.boards = data.boards || [];
+      this.state.boards = Array.isArray(data.boards) ? data.boards.filter(b => b && b.id) : [];
+      this.state.boards.forEach(b => { if (!Array.isArray(b.widgets)) b.widgets = []; });
       this.state.activeBoardId = data.activeBoardId || null;
       this.icalCache = data.icalCache || {};
       return true;
@@ -1400,23 +1614,14 @@ const APP = {
     } catch(e) { toast('❌ Import fehlgeschlagen: ' + e.message); }
   },
   deleteAllData() {
-    ['classpuls_v2','classpuls_classes','classpuls_current_class','classpuls_drawings',
-     'classpuls_dirty_at','classpuls_synced_at'].forEach(k => localStorage.removeItem(k));
-    this.state.boards = [];
-    this.state.activeBoardId = null;
-    this.icalCache = {};
-    this.intervals = {};
-    DRAW.boardDrawings = {};
     // Cloud-Kopie ebenfalls entfernen, sonst kommt alles beim nächsten Login zurück
     if (AUTH.user && AUTH.client) {
+      clearTimeout(AUTH._syncTimer); AUTH._syncTimer = null;
       AUTH.client.from('boards').delete().eq('user_id', AUTH.user.id).then(() => {});
       AUTH.client.from('class_boards').delete().eq('user_id', AUTH.user.id).then(() => {});
     }
-    const nameEl = document.getElementById('class-btn-name');
-    if (nameEl) nameEl.textContent = 'Klasse wählen';
-    CLASSES.renderDropdown();
-    createBoard('Tafel 1', null, [], true);
-    DRAW.loadBoard(this.state.activeBoardId);
+    resetLocalData();
+    if (AUTH.user) localStorage.setItem('classpuls_owner', AUTH.user.id);
   },
 
   // ── Undo ──
@@ -1454,10 +1659,172 @@ function toast(msg, dur=2500) {
   el._t = setTimeout(() => el.classList.remove('show'), dur);
 }
 
+// Escaped für HTML-Text UND Attribute. Ohne die Anführungszeichen wurden Werte wie
+// «Was bedeutet "Demokratie"?» in value="…" abgeschnitten und gingen beim Speichern verloren.
 function safeText(str) {
-  const el = document.createElement('span');
-  el.textContent = str || '';
-  return el.innerHTML;
+  return String(str ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Setzt das Gerät auf einen leeren Ausgangszustand zurück (Abmelden, "Alle Daten löschen")
+function resetLocalData() {
+  ['classpuls_v2','classpuls_classes','classpuls_current_class','classpuls_drawings',
+   'classpuls_dirty_at','classpuls_synced_at','classpuls_owner'].forEach(k => localStorage.removeItem(k));
+  clearTimeout(APP.saveTimer); APP.saveTimer = null;
+  APP._dirtyPending = false;
+  APP.state.boards = [];
+  APP.state.activeBoardId = null;
+  APP.state.undo = null;
+  APP.icalCache = {};
+  DRAW.boardDrawings = {};
+  const nameEl = document.getElementById('class-btn-name');
+  if (nameEl) nameEl.textContent = 'Klasse wählen';
+  CLASSES.renderDropdown();
+  APP._booting = true;   // die frische Standard-Tafel ist keine Nutzer-Änderung
+  createBoard('Tafel 1', null, [], true);
+  APP._booting = false;
+  DRAW.loadBoard(APP.state.activeBoardId);
+}
+
+// Fragt bei zwei abweichenden Ständen, was passieren soll. Wird der Dialog ohne Wahl
+// geschlossen, gilt "zusammenführen" — dabei geht auf keiner Seite etwas verloren.
+function askSyncConflict(when, anonymous) {
+  return new Promise(resolve => {
+    const intro = anonymous
+      ? 'Auf diesem Gerät gibt es Tafeln, die noch nicht zu deinem Konto gehören — und in deinem Konto liegen bereits Tafeln'
+      : 'Auf diesem Gerät gibt es Änderungen, die noch nicht in der Cloud sind — und die Cloud wurde inzwischen von einem anderen Gerät geändert';
+    const { overlay } = openModal(`
+      <div class="modal" style="max-width:440px">
+        <h2 style="margin-bottom:8px">☁️ Zwei Stände gefunden</h2>
+        <p style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:16px">
+          ${intro}${when ? ' (Stand: ' + safeText(when) + ')' : ''}. Was soll passieren?
+        </p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn-primary" data-choice="merge">🔀 Beides behalten (zusammenführen)</button>
+          <button class="btn-secondary" data-choice="cloud">☁️ Cloud-Stand laden — Änderungen dieses Geräts verwerfen</button>
+          <button class="btn-secondary" data-choice="local">💻 Stand dieses Geräts behalten — Cloud überschreiben</button>
+        </div>
+      </div>`);
+    let done = false;
+    const finish = choice => {
+      if (done) return;
+      done = true;
+      clearInterval(watch);
+      overlay.remove();
+      resolve(choice);
+    };
+    overlay.querySelectorAll('[data-choice]').forEach(b =>
+      b.addEventListener('click', () => finish(b.dataset.choice)));
+    // Egal wie der Dialog verschwindet (ESC, Klick daneben): nie ohne Entscheidung hängen bleiben
+    const watch = setInterval(() => { if (!overlay.isConnected) finish('merge'); }, 300);
+  });
+}
+
+// Bilder vor dem Speichern verkleinern: Handy-Fotos (4–8 MB) würden den
+// Browser-Speicher (~5 MB für ALLE Tafeln) sofort sprengen.
+function readImageScaled(file, maxDim, cb) {
+  if (!file || file.size > 30 * 1024 * 1024) { cb(null); return; }
+  const reader = new FileReader();
+  reader.onerror = () => cb(null);
+  reader.onload = ev => {
+    const src = ev.target.result;
+    // Animationen und Vektorgrafiken nicht rastern — nur übernehmen, wenn sie klein genug sind
+    if (file.type === 'image/gif' || file.type === 'image/svg+xml') { cb(src.length <= 1500000 ? src : null); return; }
+    const img = new Image();
+    img.onerror = () => cb(null);
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+      if (scale === 1 && src.length <= 400000) { cb(src); return; }   // schon klein genug
+      const c = document.createElement('canvas');
+      c.width  = Math.max(1, Math.round(img.naturalWidth  * scale));
+      c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      const cx = c.getContext('2d');
+      let out = '';
+      if (file.type === 'image/png') {                       // Transparenz erhalten, solange es klein bleibt
+        cx.drawImage(img, 0, 0, c.width, c.height);
+        out = c.toDataURL('image/png');
+      }
+      if (!out || out.length > 700000) {
+        cx.fillStyle = '#fff'; cx.fillRect(0, 0, c.width, c.height);
+        cx.drawImage(img, 0, 0, c.width, c.height);
+        out = c.toDataURL('image/jpeg', 0.85);
+      }
+      cb(out);
+    };
+    img.src = src;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Signalton für abgelaufene Timer. Der AudioContext wird beim Start-Klick "geweckt",
+// weil Browser Ton ohne vorherige Nutzer-Geste blockieren.
+let _alarmCtx = null;
+function primeAlarm() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    _alarmCtx = _alarmCtx || new AC();
+    if (_alarmCtx.state === 'suspended') _alarmCtx.resume();
+  } catch(e) {}
+}
+function playAlarm() {
+  try {
+    primeAlarm();
+    const ctx = _alarmCtx;
+    if (!ctx) return;
+    const t0 = ctx.currentTime + 0.02;
+    [0, 0.32, 0.64, 1.2, 1.52, 1.84].forEach(dt => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.0001, t0 + dt);
+      gain.gain.exponentialRampToValueAtTime(0.35, t0 + dt + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.26);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(t0 + dt); osc.stop(t0 + dt + 0.28);
+    });
+  } catch(e) {}
+}
+
+// KI- und Sprachbefehle liefern Widget-Einstellungen teils in anderer Form, als die Widgets erwarten
+function normalizeWidgetConfig(type, cfg) {
+  cfg = (cfg && typeof cfg === 'object') ? cfg : {};
+  if ((type === 'text' || type === 'goal') && !cfg.text && cfg.content) cfg.text = cfg.content;
+  if (type === 'homework') {
+    if (!cfg.items && cfg.text) cfg.items = [cfg.text];
+    if (Array.isArray(cfg.items)) {
+      cfg.items = cfg.items.map(it => typeof it === 'string' ? it : (it && (it.text || it.label)) || '').filter(Boolean);
+    }
+  }
+  if (type === 'phases') {
+    // Die KI nennt die Liste "items" mit "label" — das Widget erwartet "phases" mit "name" und Farbe
+    const palette = ['#6366f1', '#22c55e', '#f59e0b', '#ec4899', '#06b6d4'];
+    const src = Array.isArray(cfg.phases) ? cfg.phases : (Array.isArray(cfg.items) ? cfg.items : null);
+    if (src) {
+      cfg.phases = src.filter(p => p && typeof p === 'object').map((p, i) => ({
+        name: String(p.name || p.label || p.text || 'Phase ' + (i + 1)),
+        minutes: Math.max(1, parseInt(p.minutes) || 5),
+        color: /^#[0-9a-f]{3,8}$/i.test(p.color || '') ? p.color : palette[i % palette.length],
+      }));
+      delete cfg.items;
+      cfg.activeIdx = -1;
+    }
+  }
+  if (type === 'checklist' && Array.isArray(cfg.items)) {
+    cfg.items = cfg.items.map(it => typeof it === 'string' ? { text: it, done: false } : { text: String((it && (it.text || it.label)) || ''), done: !!(it && it.done) }).filter(it => it.text);
+  }
+  if (type === 'agenda' && Array.isArray(cfg.items)) {
+    cfg.items = cfg.items.map(it => typeof it === 'string' ? { time: '', text: it } : { time: String((it && it.time) || ''), text: String((it && (it.text || it.label)) || '') }).filter(it => it.text);
+  }
+  if (type === 'timer' && (cfg.minutes != null || cfg.seconds != null)) {
+    // "Timer 5 Minuten" kommt als seconds:300 — ohne Umrechnung kämen 5 Standard-Minuten obendrauf
+    let total = (Number(cfg.minutes) || 0) * 60 + (Number(cfg.seconds) || 0);
+    total = Math.max(1, Math.min(total, 180 * 60));
+    cfg.minutes = Math.floor(total / 60);
+    cfg.seconds = total % 60;
+  }
+  return cfg;
 }
 
 function el(tag, cls, attrs={}) {
@@ -1475,6 +1842,24 @@ function openModal(html, onClose) {
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   const closeBtns = overlay.querySelectorAll('[data-close]');
   closeBtns.forEach(b => b.addEventListener('click', close));
+  // Tastatur: ESC schließt auch beim Tippen in einem Feld; Enter in einem
+  // einzeiligen Feld löst die Hauptaktion aus (Login-Dialog regelt Enter selbst)
+  overlay.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.stopPropagation(); close(); return; }
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT'
+        && !['file','checkbox','range','color'].includes(e.target.type)
+        && !e.target.closest('.auth-modal')) {
+      const primary = overlay.querySelector('.btn-primary:not([disabled]), .ai-board-gen-btn:not([disabled])');
+      if (primary) { e.preventDefault(); primary.click(); }
+    }
+  });
+  // Mit Maus/Tastatur direkt ins erste Feld — auf Touch-Geräten nicht (Bildschirmtastatur verdeckt den Dialog)
+  if (window.matchMedia && window.matchMedia('(pointer:fine)').matches) {
+    requestAnimationFrame(() => {
+      if (overlay.contains(document.activeElement)) return;
+      overlay.querySelector('input[type="text"], input[type="url"], input[type="number"], input[type="email"], textarea')?.focus();
+    });
+  }
   return { overlay, close };
 }
 
@@ -1486,8 +1871,10 @@ function createBoard(name, bg, widgets=[], skipLimit=false) {
   const board = {
     id: uid(),
     name: name || 'Neue Tafel',
-    background: bg || { type:'gradient', value:'linear-gradient(135deg,#667eea,#764ba2)' },
-    widgets: widgets.map(w => ({ ...w, id: uid(), createdAt: new Date().toISOString() })),
+    background: bg ? { ...bg } : { type:'gradient', value:'linear-gradient(135deg,#667eea,#764ba2)' },
+    // Tief kopieren: sonst teilen sich Tafeln aus derselben Vorlage ihre Einstellungen
+    // (abgehakte Checkliste auf Tafel A wäre auch auf Tafel B abgehakt)
+    widgets: widgets.map((w, i) => ({ zIndex: i + 1, ...JSON.parse(JSON.stringify(w)), id: uid(), createdAt: new Date().toISOString() })),
     createdAt: new Date().toISOString(),
   };
   APP.state.boards.push(board);
@@ -1716,9 +2103,14 @@ function renderBoardTabs() {
     });
 
     btn.append(nameSpan, editBtn, closeX);
-    btn.addEventListener('click', () => switchBoard(board.id));
+    btn.addEventListener('click', () => { if (board.id !== APP.state.activeBoardId) switchBoard(board.id); });
     container.appendChild(btn);
   });
+  // Aktiven Tab sichtbar halten, wenn die Tab-Leiste überläuft
+  const activeTab = container.querySelector('.tab-btn.active');
+  if (activeTab && container.scrollWidth > container.clientWidth) {
+    container.scrollLeft = Math.max(0, activeTab.offsetLeft - container.offsetLeft - 12);
+  }
 }
 
 function openRenameModal(board) {
@@ -1775,18 +2167,18 @@ function openRenameModal(board) {
 
 function renderBoardBg() {
   const board = APP.activeBoard();
-  const bgEl = document.getElementById('board-bg');
-  if (!board) return;
-  const bg = board.background;
-  if (bg.type === 'gradient') bgEl.style.background = bg.value;
-  else if (bg.type === 'color') bgEl.style.background = bg.value;
-  else if (bg.type === 'image') {
-    // URL nicht in cssText interpolieren (CSS-Injection) — Properties einzeln setzen
-    bgEl.style.cssText = '';
-    bgEl.style.backgroundImage = 'url("' + String(bg.value).replace(/["\\]/g, '') + '")';
-    bgEl.style.backgroundSize = 'cover';
-    bgEl.style.backgroundPosition = 'center';
-    bgEl.style.backgroundRepeat = 'no-repeat';
+  const boardEl = document.getElementById('board');
+  if (!board || !boardEl) return;
+  const bg = board.background || {};
+  // Hintergrund direkt auf dem Scroll-Container: bleibt beim Scrollen der Tafel stehen.
+  // Nur die background-Eigenschaft setzen — top/bottom des Boards steuert die Toolbar-Position.
+  if (bg.type === 'image' && bg.value) {
+    // URL nicht ungeprüft interpolieren (CSS-Injection)
+    boardEl.style.background = 'url("' + String(bg.value).replace(/["\\\n\r]/g, '') + '") center / cover no-repeat #1e293b';
+  } else if (bg.value) {
+    boardEl.style.background = bg.value;
+  } else {
+    boardEl.style.background = '';
   }
 }
 
@@ -1801,17 +2193,33 @@ function renderWidgets() {
   layer.innerHTML = '';
   const board = APP.activeBoard();
   if (!board) return;
-  board.widgets.forEach(w => layer.appendChild(buildWidgetEl(w)));
-  // Size layer to encompass all widgets (for mobile scrolling)
-  let maxR = 900, maxB = 600;
+  if (!Array.isArray(board.widgets)) board.widgets = [];
+  board.widgets = board.widgets.filter(w => w && w.type);
+  board.widgets.forEach(w => {
+    // Ein einzelnes defektes Widget darf nicht die ganze Tafel leer lassen
+    try { layer.appendChild(buildWidgetEl(w)); }
+    catch(e) { console.error('Widget konnte nicht aufgebaut werden:', w.type, e); }
+  });
+  updateLayerSize();
+  // restart timetable refresh
+  board.widgets.filter(w=>w.type==='timetable').forEach(w => startTimetableRefresh(w));
+}
+
+// Fläche so groß wie der Inhalt halten (Scrollbereich) und die Zeichenebene mitziehen
+function updateLayerSize() {
+  const layer = document.getElementById('widgets-layer');
+  const board = APP.activeBoard();
+  if (!layer || !board) return;
+  // Auf Handys bewusst eine größere virtuelle Tafel, sonst passt kaum ein Widget
+  const small = window.innerWidth <= 768;
+  let maxR = small ? 900 : 0, maxB = small ? 600 : 0;
   board.widgets.forEach(w => {
     maxR = Math.max(maxR, (w.x || 0) + (w.w || 200) + 20);
     maxB = Math.max(maxB, (w.y || 0) + (w.h || 100) + 20);
   });
   layer.style.minWidth = maxR + 'px';
   layer.style.minHeight = maxB + 'px';
-  // restart timetable refresh
-  board.widgets.filter(w=>w.type==='timetable').forEach(w => startTimetableRefresh(w));
+  if (DRAW.canvas) DRAW._syncScroll();
 }
 
 function buildWidgetEl(w) {
@@ -1884,12 +2292,16 @@ function buildWidgetEl(w) {
     APP.selectedId = w.id;
     document.querySelectorAll('.widget').forEach(el => el.classList.remove('selected'));
     shell.classList.add('selected');
-    // bring to front
+    // bring to front — nur wenn das Widget nicht schon oben liegt (sonst löst jeder
+    // Klick ein Speichern + Cloud-Sync aus und der z-index wächst endlos)
     const board = APP.activeBoard();
     if (board) {
-      w.zIndex = nextZ(board);
-      shell.style.zIndex = w.zIndex;
-      APP.save();
+      const maxOther = board.widgets.reduce((m, o) => o === w ? m : Math.max(m, o.zIndex || 0), 0);
+      if ((w.zIndex || 0) <= maxOther) {
+        w.zIndex = maxOther + 1;
+        shell.style.zIndex = w.zIndex;
+        APP.save();
+      }
     }
   });
 
@@ -1926,7 +2338,7 @@ function initDrag(shell, handle, w) {
     handle.removeEventListener('pointermove', onMove);
     handle.removeEventListener('pointerup', onUp);
     handle.removeEventListener('pointercancel', onUp);
-    APP.save();
+    if (w.x !== startLeft || w.y !== startTop) { APP.save(); updateLayerSize(); }
   }
 }
 
@@ -1953,7 +2365,9 @@ function initResize(shell, handle, w) {
     handle.removeEventListener('pointermove', onMove);
     handle.removeEventListener('pointerup', onUp);
     handle.removeEventListener('pointercancel', onUp);
+    if (w.w === startW && w.h === startH) return;
     APP.save();
+    updateLayerSize();
     // re-render content so QR etc. resizes
     const body = shell.querySelector('.widget-body');
     if (body) renderWidgetContent(w, body);
@@ -1965,9 +2379,53 @@ function initResize(shell, handle, w) {
 // ══════════════════════════════════════════════════════════════
 function renderWidgetContent(w, body) {
   body.innerHTML = '';
+  if (!w.config || typeof w.config !== 'object') w.config = {};
   const fn = WIDGET_RENDERERS[w.type];
-  if (fn) fn(w, body);
+  const showError = msg => {
+    body.innerHTML = '';
+    const box = el('div');
+    box.style.cssText = 'padding:14px;font-size:12.5px;color:rgba(255,255,255,0.6);text-align:center;line-height:1.5';
+    box.textContent = msg;
+    body.appendChild(box);
+  };
+  if (!fn) { showError('❓ Unbekanntes Element'); return; }
+  try { fn(w, body); }
+  catch(e) {
+    // Defekte Daten in einem Widget dürfen nicht die ganze Tafel lahmlegen
+    console.error('Widget-Fehler (' + w.type + '):', e);
+    showError('⚠️ Dieses Element konnte nicht geladen werden. Über ✕ entfernen und neu anlegen.');
+  }
 }
+
+// ── Timer-Hilfen ──
+function timerFullSeconds(w) {
+  const c = w.config || {};
+  const secs = Math.max(0, Number(c.seconds) || 0);
+  // Fehlt "minutes" (ältere KI-/Sprach-Timer mit reinen Sekunden), nicht stillschweigend 5 Minuten addieren
+  const mins = c.minutes == null ? (secs > 0 ? 0 : 5) : Math.max(0, Number(c.minutes) || 0);
+  return (mins * 60 + secs) || 300;
+}
+function resetTimerState(w) {
+  delete w._timerRunning; delete w._timerEndAt; delete w._timerRemaining;
+}
+// Überwacht ALLE laufenden Timer — auch auf Tafeln, die gerade nicht angezeigt werden
+setInterval(() => {
+  const now = Date.now();
+  (APP.state.boards || []).forEach(board => {
+    (board.widgets || []).forEach(w => {
+      if (!w || w.type !== 'timer' || !w._timerRunning || !w._timerEndAt || now < w._timerEndAt) return;
+      w._timerRunning = false;
+      w._timerRemaining = 0;
+      // Lief der Timer ab, während die Seite geschlossen war: nicht nachträglich Alarm schlagen
+      if (now - w._timerEndAt > 15000) return;
+      if (w.config?.sound !== false) playAlarm();
+      const elsewhere = board.id !== APP.state.activeBoardId;
+      toast('⏰ Zeit abgelaufen!' + (elsewhere ? ' (Tafel „' + board.name + '“)' : ''), 6000);
+      const shell = document.querySelector('[data-wid="' + w.id + '"]');
+      if (shell) { shell.classList.remove('alarm'); void shell.offsetWidth; shell.classList.add('alarm'); }
+    });
+  });
+}, 500);
 
 const WIDGET_RENDERERS = {
 
@@ -2005,18 +2463,19 @@ const WIDGET_RENDERERS = {
     const startBtn = el('button','w-action-btn');
     const resetBtn = el('button','w-action-btn');
     resetBtn.textContent = '↺';
+    resetBtn.title = 'Zurücksetzen';
     row.append(startBtn, resetBtn);
     body.append(display, row);
 
     // Laufzeit-Zustand liegt auf dem Widget-Objekt, damit ein Re-Render
-    // (Ansicht wechseln, Widget hinzufügen, iCal-Refresh) den Timer nicht zurücksetzt
-    const full = (w.config.minutes||5)*60 + (w.config.seconds||0);
+    // (Ansicht wechseln, Widget hinzufügen, Tafelwechsel) den Timer nicht zurücksetzt.
+    // Das Ablaufen selbst überwacht TIMER_WATCH — auch wenn gerade eine andere Tafel offen ist.
+    const full = timerFullSeconds(w);
     let running = !!w._timerRunning;
     let endAt = w._timerEndAt || null;
     let remaining;
     if (running && endAt) {
       remaining = Math.max(0, Math.round((endAt - Date.now())/1000));
-      if (remaining <= 0) { running = false; w._timerRunning = false; }
     } else if (typeof w._timerRemaining === 'number') {
       remaining = w._timerRemaining;
     } else {
@@ -2029,27 +2488,28 @@ const WIDGET_RENDERERS = {
     }
     function updateDisplay() {
       display.textContent = fmt(Math.max(0,remaining));
-      display.classList.toggle('urgent', remaining <= 30 && running);
-      startBtn.textContent = running ? '⏸ Pause' : (remaining < full ? '▶ Weiter' : '▶ Start');
+      display.classList.toggle('urgent', remaining <= 30 && (running || remaining === 0));
+      startBtn.textContent = running ? '⏸ Pause' : (remaining <= 0 ? '⏰ Abgelaufen' : (remaining < full ? '▶ Weiter' : '▶ Start'));
     }
     function tick() {
-      if (!running) return;
+      if (!w._timerRunning) {
+        // von TIMER_WATCH beendet (oder extern gestoppt)
+        running = false;
+        remaining = typeof w._timerRemaining === 'number' ? w._timerRemaining : 0;
+        stopInterval(w.id);
+        updateDisplay();
+        return;
+      }
       remaining = Math.max(0, Math.round((endAt - Date.now())/1000));
       updateDisplay();
-      if (remaining <= 0) {
-        running = false;
-        w._timerRunning = false;
-        w._timerRemaining = 0;
-        stopInterval(w.id);
-        toast('⏰ Zeit abgelaufen!', 5000);
-      }
     }
     startBtn.addEventListener('click', () => {
       if (remaining <= 0) return;
       running = !running;
       if (running) {
+        primeAlarm(); // Ton braucht eine Nutzer-Geste — hier ist sie
         endAt = Date.now() + remaining*1000;
-        w._timerRunning = true; w._timerEndAt = endAt;
+        w._timerRunning = true; w._timerEndAt = endAt; delete w._timerRemaining;
         startInterval(w.id, tick, 250);
       } else {
         w._timerRunning = false; w._timerRemaining = remaining;
@@ -2059,7 +2519,7 @@ const WIDGET_RENDERERS = {
     });
     resetBtn.addEventListener('click', () => {
       running = false; stopInterval(w.id);
-      delete w._timerRunning; delete w._timerEndAt; delete w._timerRemaining;
+      resetTimerState(w);
       remaining = full;
       updateDisplay();
     });
@@ -2157,9 +2617,13 @@ const WIDGET_RENDERERS = {
           div.contentEditable = 'false';
           div.style.cursor = '';
           div.style.outline = '';
-          w.config.text = div.textContent;
+          // innerText statt textContent: Zeilenumbrüche (Umschalt+Enter) bleiben erhalten
+          w.config.text = div.innerText.replace(/\n+$/, '');
           APP.save();
           div.removeEventListener('blur', finish);
+          // neu zeichnen, damit die automatische Schriftgröße zur neuen Textlänge passt
+          const shell = div.closest('.widget');
+          if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
         };
         div.addEventListener('blur', finish);
         div.addEventListener('keydown', ev => {
@@ -2222,10 +2686,11 @@ const WIDGET_RENDERERS = {
     container.append(qrDiv, label);
     body.appendChild(container);
     const url = w.config.url || 'https://klassenboard.netlify.app';
-    const size = Math.min(w.w - 40, w.h - 60, 160);
+    // Mit dem Widget mitwachsen: ein QR-Code muss auch aus der letzten Reihe scannbar sein
+    const size = Math.round(Math.max(80, Math.min(w.w - 40, w.h - (APP.state.editMode ? 100 : 70), 900)));
     try {
       new QRCode(qrDiv, { text: url, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
-    } catch(e) { qrDiv.textContent = 'QR-Fehler'; }
+    } catch(e) { qrDiv.textContent = 'QR-Code nicht verfügbar (offline?)'; qrDiv.style.color = '#333'; qrDiv.style.fontSize = '12px'; }
   },
 
   // ── Random Name ──
@@ -2253,10 +2718,18 @@ const WIDGET_RENDERERS = {
     }
     btn.addEventListener('click', () => {
       if (!names.length) return;
-      highlighted = Math.floor(Math.random() * names.length);
+      // Fair ziehen: jeder Name kommt einmal dran, bevor sich jemand wiederholt
+      let drawn = Array.isArray(w.config.drawn) ? w.config.drawn.filter(i => i < names.length) : [];
+      if (drawn.length >= names.length) drawn = [];
+      const pool = names.map((_, i) => i).filter(i => !drawn.includes(i));
+      highlighted = pool[Math.floor(Math.random() * pool.length)];
+      drawn.push(highlighted);
+      w.config.drawn = drawn;
       w.config.highlighted = highlighted;
       APP.save();
       render();
+      list.querySelector('.highlighted')?.scrollIntoView({ block: 'nearest' });
+      btn.textContent = '🎲 Zufällig (' + (names.length - drawn.length) + ' übrig)';
     });
     body.append(btn, list);
     render();
@@ -2377,14 +2850,14 @@ const WIDGET_RENDERERS = {
         input.onchange = () => {
           const file = input.files[0];
           if (!file) return;
-          const reader = new FileReader();
-          reader.onload = e => {
-            w.config.src = e.target.result;
+          // Vor dem Speichern verkleinern — ein Handy-Foto würde sonst den Browser-Speicher sprengen
+          readImageScaled(file, 1600, dataUrl => {
+            if (!dataUrl) { toast('❌ Bild konnte nicht geladen werden (zu groß oder kein Bildformat)'); return; }
+            w.config.src = dataUrl;
             w.config.alt = file.name;
             APP.save();
-            renderWidgets();
-          };
-          reader.readAsDataURL(file);
+            renderWidgetContent(w, body);
+          });
         };
         input.click();
       });
@@ -2495,6 +2968,13 @@ const WIDGET_RENDERERS = {
 
     function startMic() {
       if (running) return;
+      // Ohne HTTPS oder in alten Browsern gibt es kein Mikrofon-API — sonst bliebe der Button hängen
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        emojiEl.textContent = '❌';
+        labelEl.textContent = 'Mikrofon nicht verfügbar';
+        labelEl.style.color = '#f87171';
+        return;
+      }
       running = true;
       micBtn.textContent = '⏹ Stoppen';
       micBtn.style.background = 'rgba(239,68,68,0.25)';
@@ -2861,13 +3341,16 @@ const WIDGET_RENDERERS = {
         const del = document.createElement('button');
         del.textContent = '✕';
         del.style.cssText = 'position:absolute;top:2px;right:2px;background:rgba(239,68,68,0.7);border:none;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;line-height:16px';
+        // Auf Touch-Geräten gibt es kein Hover — dort im Edit-Modus dauerhaft zeigen
+        const touchOnly = window.matchMedia && window.matchMedia('(hover:none)').matches;
+        if (touchOnly && APP.state.editMode) del.style.display = 'flex';
         tile.addEventListener('mouseenter', () => { del.style.display='flex'; tile.style.background='rgba(255,255,255,0.12)'; });
-        tile.addEventListener('mouseleave', () => { del.style.display='none'; tile.style.background='rgba(255,255,255,0.06)'; });
+        tile.addEventListener('mouseleave', () => { if (!touchOnly) del.style.display='none'; tile.style.background='rgba(255,255,255,0.06)'; });
 
         tile.addEventListener('click', e => {
           if (e.target === del || del.contains(e.target)) return;
           const url = link.url.startsWith('http') ? link.url : 'https://' + link.url;
-          window.open(url, '_blank');
+          window.open(url, '_blank', 'noopener');
         });
         del.addEventListener('click', e => {
           e.stopPropagation();
@@ -3246,11 +3729,22 @@ const WIDGET_RENDERERS = {
       fileInp.addEventListener('change', () => {
         const f = fileInp.files[0];
         if (!f) return;
+        // Bilder werden automatisch verkleinert und dürfen deshalb größer sein
+        const isScalableImage = f.type.startsWith('image/') && f.type !== 'image/gif' && f.type !== 'image/svg+xml';
+        if (isScalableImage) {
+          readImageScaled(f, 1600, dataUrl => {
+            if (!dataUrl) { toast('❌ Bild konnte nicht geladen werden'); return; }
+            w.config.fileData = { name: f.name, type: dataUrl.startsWith('data:image/png') ? 'image/png' : 'image/jpeg', data: dataUrl };
+            APP.save();
+            renderWidgetContent(w, body);
+          });
+          return;
+        }
         // localStorage fasst insgesamt nur ~5 MB — größere Dateien würden das
         // Speichern ALLER Boards dauerhaft blockieren
         const MAX_FILE = 2 * 1024 * 1024;
         if (f.size > MAX_FILE) {
-          toast('⚠️ Datei zu groß (max. 2 MB). Tipp: Bilder vorher verkleinern.');
+          toast('⚠️ Datei zu groß (max. 2 MB für PDF, Audio und Video).', 4000);
           fileInp.value = '';
           return;
         }
@@ -3390,9 +3884,12 @@ const WIDGET_RENDERERS = {
     display.style.fontSize = Math.max(32, Math.min(w.w * 0.52, w.h * 0.58)) + 'px';
     display.textContent = w.config.value ?? '?';
     const info = el('div'); info.style.cssText='font-size:11px;color:rgba(255,255,255,0.35)';
-    info.textContent = `${w.config.min||1} – ${w.config.max||30}`;
+    const lo = Number(w.config.min ?? 1), hi = Math.max(lo, Number(w.config.max ?? 30));
+    info.textContent = `${lo} – ${hi}`;
+    display.style.cursor = 'pointer';
+    display.title = 'Klicken für eine neue Zahl';
     display.addEventListener('click', () => {
-      const v = Math.floor(Math.random()*(((w.config.max||30)-(w.config.min||1))+1)) + (w.config.min||1);
+      const v = Math.floor(Math.random() * (hi - lo + 1)) + lo;
       display.textContent = v;
       w.config.value = v;
       APP.save();
@@ -3403,10 +3900,31 @@ const WIDGET_RENDERERS = {
   // ── Groups ──
   groups(w, body) {
     const names = (w.config.names||'').split('\n').map(s=>s.trim()).filter(Boolean);
-    const size = Math.max(1, w.config.size || 3);
-    const shuffled = [...names].sort(()=>Math.random()-0.5);
-    const grps = [];
-    for (let i=0; i<shuffled.length; i+=size) grps.push(shuffled.slice(i,i+size));
+    const size = Math.max(1, parseInt(w.config.size) || 3);
+    if (!names.length) {
+      const hint = el('div'); hint.style.cssText = 'font-size:12px;color:rgba(255,255,255,0.35);padding:14px;text-align:center';
+      hint.textContent = 'Namen eintragen (⚙ Einstellungen)';
+      body.appendChild(hint);
+      return;
+    }
+    // Die Einteilung wird gespeichert. Früher wurde bei JEDEM Neuzeichnen der Tafel neu
+    // gemischt (Widget hinzufügen, Ansicht wechseln …) — mitten in der Gruppenarbeit.
+    const sig = size + '|' + names.join('\u0001');
+    let grps = w.config.groupsResult;
+    if (!Array.isArray(grps) || w.config.groupsSig !== sig) {
+      const shuffled = [...names];
+      for (let i = shuffled.length - 1; i > 0; i--) {          // Fisher-Yates: faire Zufallsreihenfolge
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      // Ausgewogen verteilen: 13 Namen bei Größe 3 → 4+3+3+3 statt 3+3+3+3+1
+      const count = Math.max(1, Math.round(shuffled.length / size));
+      grps = Array.from({ length: Math.min(count, Math.max(1, shuffled.length)) }, () => []);
+      shuffled.forEach((n, i) => grps[i % grps.length].push(n));
+      w.config.groupsResult = grps;
+      w.config.groupsSig = sig;
+      APP.save();
+    }
 
     // Adaptive font: fill available space so names are readable from the back of the class
     const numGroups = Math.max(1, grps.length);
@@ -3424,7 +3942,7 @@ const WIDGET_RENDERERS = {
 
     const inner = el('div','groups-inner');
     const btn = el('button','w-action-btn'); btn.textContent = '🔀 Neu mischen'; btn.style.cssText='margin:0 auto 6px;display:block;flex-shrink:0';
-    btn.addEventListener('click', () => renderWidgetContent(w, body));
+    btn.addEventListener('click', () => { delete w.config.groupsResult; renderWidgetContent(w, body); });
 
     grps.forEach((g,i) => {
       const card = el('div','group-card');
@@ -3614,32 +4132,74 @@ function fmtTime(dt) {
   return dt.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
 }
 
+const ICAL_REFETCH_MS = 10 * 60 * 1000;
+const _icalLastAttempt = {};   // boardId → Zeitpunkt des letzten Abrufversuchs (gegen Abruf-Schleifen)
+
+// Nur die Stundenplan-Widgets neu zeichnen. Früher wurde alle 5 Minuten die GANZE Tafel
+// neu aufgebaut — das stoppte z.B. das Mikrofon der Lautstärke-Ampel mitten im Unterricht.
+function rerenderTimetables() {
+  const board = APP.activeBoard();
+  if (!board) return;
+  board.widgets.filter(w => w.type === 'timetable').forEach(w => {
+    const body = document.querySelector('[data-wid="' + w.id + '"] .widget-body');
+    if (body) renderWidgetContent(w, body);
+  });
+}
+
 function startTimetableRefresh(w) {
   const board = APP.activeBoard();
   if (!board) return;
-  const cache = APP.icalCache[board.id];
-  if (!cache?.url) return;
-  // refresh every 5 min
-  startInterval('ical_' + w.id, () => {
-    fetchIcal(cache.url, board.id);
-  }, 5*60*1000);
+  if (!APP.icalCache[board.id]?.url) return;
+  const refetchIfStale = () => {
+    const cache = APP.icalCache[board.id];   // immer frisch lesen — URL kann sich in den Einstellungen ändern
+    if (!cache?.url) return;
+    const last = Math.max(Date.parse(cache.lastFetched || '') || 0, _icalLastAttempt[board.id] || 0);
+    if (Date.now() - last > ICAL_REFETCH_MS) fetchIcal(cache.url, board.id, { silent: true });
+  };
+  // Jede Minute die Anzeige nachführen ("Jetzt" / "Als nächstes"), abgerufen wird nur alle 10 Minuten
+  startInterval('ical_' + w.id, () => { rerenderTimetables(); refetchIfStale(); }, 60 * 1000);
+  refetchIfStale();
 }
 
-async function fetchIcal(url, boardId) {
-  // Use a CORS proxy — for production, replace with your own /api/ical endpoint
-  const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+async function fetchIcal(url, boardId, opts = {}) {
+  _icalLastAttempt[boardId] = Date.now();
+  const ctl = new AbortController();
+  const timeout = setTimeout(() => ctl.abort(), 12000);
   try {
-    const resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const text = await resp.text();
-    const entries = parseIcal(text);
+    let text;
+    // Eigener Abruf-Endpunkt: der Kalender-Link (enthält einen persönlichen Schlüssel)
+    // geht nicht mehr über einen fremden öffentlichen Proxy.
+    const resp = await fetch('/.netlify/functions/ical', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+      signal: ctl.signal,
+    });
+    if ([404, 405, 501].includes(resp.status)) {
+      // Endpunkt nicht vorhanden (lokale Entwicklung ohne Netlify) → öffentlicher Proxy als Ersatz
+      const alt = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), { signal: ctl.signal });
+      if (!alt.ok) throw new Error('HTTP ' + alt.status);
+      text = await alt.text();
+    } else if (!resp.ok) {
+      const info = await resp.json().catch(() => ({}));
+      throw new Error(info.error || 'HTTP ' + resp.status);
+    } else {
+      text = await resp.text();
+    }
+    if (!/BEGIN:VCALENDAR/i.test(text)) throw new Error('Unter diesem Link liegt kein Kalender');
+    // Nur das relevante Zeitfenster behalten — ein ganzes Schuljahr würde Speicher und Cloud-Sync aufblähen
+    const from = Date.now() - 24 * 3600 * 1000, to = Date.now() + 21 * 24 * 3600 * 1000;
+    const entries = parseIcal(text).filter(e => e.end.getTime() >= from && e.start.getTime() <= to);
     APP.icalCache[boardId] = { url, entries, lastFetched: new Date().toISOString() };
-    APP.save();
-    // re-render timetable widgets on active board
-    if (boardId === APP.state.activeBoardId) renderWidgets();
-    toast('📅 Stundenplan aktualisiert (' + entries.length + ' Einträge)');
+    // Der automatische Hintergrund-Abruf ist keine Nutzer-Änderung → nur lokal sichern
+    if (opts.silent) APP._persistLocal(); else APP.save();
+    if (boardId === APP.state.activeBoardId) rerenderTimetables();
+    if (!opts.silent) toast('📅 Stundenplan aktualisiert (' + entries.length + ' Termine in den nächsten 3 Wochen)');
   } catch(e) {
-    toast('⚠️ iCal-Fehler: ' + e.message);
+    if (!opts.silent) toast('⚠️ Stundenplan konnte nicht geladen werden: ' + (e.name === 'AbortError' ? 'Zeitüberschreitung' : e.message), 5000);
+    else console.warn('Stundenplan-Abruf fehlgeschlagen:', e);
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -3879,15 +4439,17 @@ function openTextEdit(w) {
         <textarea id="te-text" rows="5" style="resize:vertical">${safeText(w.config.text||'')}</textarea>
       </div>
       <div class="form-group">
-        <label>Schriftgröße (px)</label>
-        <input type="number" id="te-size" value="${w.config.fontSize||16}" min="10" max="80">
+        <label>Schriftgröße in px (leer = passt sich automatisch an)</label>
+        <input type="number" id="te-size" value="${w.config.fontSize||''}" placeholder="automatisch" min="10" max="200">
       </div>
       <button class="btn-primary" id="te-save">Speichern</button>
     </div>
   `);
   overlay.querySelector('#te-save').addEventListener('click', () => {
     w.config.text = overlay.querySelector('#te-text').value;
-    w.config.fontSize = parseInt(overlay.querySelector('#te-size').value)||16;
+    // Leeres Feld = automatische Größe. Früher wurde hier ungefragt 16px festgeschrieben.
+    const size = parseInt(overlay.querySelector('#te-size').value);
+    if (size >= 10) w.config.fontSize = Math.min(size, 200); else delete w.config.fontSize;
     APP.save();
     const shell = document.querySelector('[data-wid="'+w.id+'"]');
     if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
@@ -3902,18 +4464,28 @@ function openTimerSettings(w) {
       <h2>⏱ Timer einstellen</h2>
       <div class="form-group">
         <label>Minuten</label>
-        <input type="number" id="ts-min" value="${w.config.minutes||5}" min="0" max="180">
+        <input type="number" id="ts-min" value="${Math.floor(timerFullSeconds(w) / 60)}" min="0" max="180">
       </div>
       <div class="form-group">
         <label>Sekunden</label>
-        <input type="number" id="ts-sec" value="${w.config.seconds||0}" min="0" max="59">
+        <input type="number" id="ts-sec" value="${timerFullSeconds(w) % 60}" min="0" max="59">
       </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer">
+        <input type="checkbox" id="ts-sound" ${w.config.sound !== false ? 'checked' : ''} style="width:auto"> Signalton, wenn die Zeit abgelaufen ist
+      </label>
       <button class="btn-primary" id="ts-save">Speichern & Zurücksetzen</button>
     </div>
   `);
   overlay.querySelector('#ts-save').addEventListener('click', () => {
-    w.config.minutes = parseInt(overlay.querySelector('#ts-min').value)||0;
-    w.config.seconds = parseInt(overlay.querySelector('#ts-sec').value)||0;
+    let total = (parseInt(overlay.querySelector('#ts-min').value) || 0) * 60
+              + (parseInt(overlay.querySelector('#ts-sec').value) || 0);
+    if (total <= 0) { toast('Bitte eine Zeit größer als 0 einstellen'); return; }
+    total = Math.min(total, 180 * 60);
+    w.config.minutes = Math.floor(total / 60);
+    w.config.seconds = total % 60;
+    w.config.sound = overlay.querySelector('#ts-sound').checked;
+    resetTimerState(w);   // "Speichern & Zurücksetzen": alter Lauf-/Pausenstand darf nicht stehen bleiben
+    stopInterval(w.id);
     APP.save();
     const shell = document.querySelector('[data-wid="'+w.id+'"]');
     if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
@@ -3962,6 +4534,7 @@ function openNamesEdit(w) {
   overlay.querySelector('#nm-save').addEventListener('click', () => {
     w.config.names = overlay.querySelector('#nm-names').value;
     w.config.highlighted = -1;
+    w.config.drawn = [];
     APP.save();
     const shell = document.querySelector('[data-wid="'+w.id+'"]');
     if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
@@ -4030,7 +4603,7 @@ function openTimetableSettings(w) {
       </div>
       <p class="ical-info">
         In WebUntis: Mein Untis → Kalender → Mein Kalender → iCal-Link kopieren.<br>
-        Der Link wird <strong>nur lokal</strong> in deinem Browser gespeichert.
+        Der Link wird nur zum Abruf deines Stundenplans verwendet und zusammen mit deinen Tafeln gespeichert.
         ${cache.lastFetched ? '<br>Zuletzt abgerufen: ' + new Date(cache.lastFetched).toLocaleString('de-DE') : ''}
       </p>
       <div class="btn-row">
@@ -4041,13 +4614,17 @@ function openTimetableSettings(w) {
   `);
   overlay.querySelector('#ical-save').addEventListener('click', () => {
     const url = overlay.querySelector('#ical-url').value.trim();
+    if (url && !/^https?:\/\//i.test(url)) { toast('Bitte einen vollständigen Link eingeben (https://…)'); return; }
     if (board) {
-      APP.icalCache[board.id] = { ...APP.icalCache[board.id], url };
+      // Neue URL → alte Termine verwerfen, damit nicht der Plan des vorherigen Links stehen bleibt
+      const prev = APP.icalCache[board.id] || {};
+      APP.icalCache[board.id] = prev.url === url ? { ...prev, url } : { url, entries: [] };
       w.config.icalUrl = url;
     }
     APP.save();
     close();
-    if (url) fetchIcal(url, board.id);
+    rerenderTimetables();
+    if (url && board) { fetchIcal(url, board.id); startTimetableRefresh(w); }
   });
   overlay.querySelector('#ical-test').addEventListener('click', () => {
     const url = overlay.querySelector('#ical-url').value.trim();
@@ -4068,7 +4645,7 @@ function openImageSettings(w) {
         <input type="url" id="img-url" value="${safeText(w.config.src||'')}" placeholder="https://…">
       </div>
       <div class="form-group">
-        <label>Oder Datei hochladen (max. 2 MB)</label>
+        <label>Oder Datei hochladen (wird automatisch verkleinert)</label>
         <input type="file" id="img-file" accept="image/*" style="color:#fff">
       </div>
       <div class="form-group">
@@ -4082,17 +4659,15 @@ function openImageSettings(w) {
     w.config.alt = overlay.querySelector('#img-alt').value.trim();
     const file = overlay.querySelector('#img-file').files[0];
     if (file) {
-      if (file.size > 2*1024*1024) { toast('❌ Datei zu groß (max. 2 MB)'); return; }
       if (!file.type.startsWith('image/')) { toast('❌ Nur Bilddateien erlaubt'); return; }
-      const reader = new FileReader();
-      reader.onload = e => {
-        w.config.src = e.target.result;
+      readImageScaled(file, 1600, dataUrl => {
+        if (!dataUrl) { toast('❌ Bild konnte nicht geladen werden (zu groß oder beschädigt)'); return; }
+        w.config.src = dataUrl;
         APP.save();
         const shell = document.querySelector('[data-wid="'+w.id+'"]');
         if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
         close();
-      };
-      reader.readAsDataURL(file);
+      });
     } else {
       w.config.src = overlay.querySelector('#img-url').value.trim();
       APP.save();
@@ -4118,8 +4693,10 @@ function openYoutubeSettings(w) {
   overlay.querySelector('#yt-save').addEventListener('click', () => {
     let val = overlay.querySelector('#yt-url').value.trim();
     // Extract video ID
-    const match = val.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
-    w.config.videoId = match ? match[1] : val.slice(-11);
+    const match = val.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([A-Za-z0-9_-]{11})/);
+    const id = match ? match[1] : (/^[A-Za-z0-9_-]{11}$/.test(val) ? val : '');
+    if (val && !id) { toast('❌ Das ist kein gültiger YouTube-Link'); return; }
+    w.config.videoId = id;
     APP.save();
     const shell = document.querySelector('[data-wid="'+w.id+'"]');
     if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
@@ -4134,18 +4711,24 @@ function openRandNumSettings(w) {
       <h2>🔢 Zufallszahl</h2>
       <div class="form-group">
         <label>Minimum</label>
-        <input type="number" id="rn-min" value="${w.config.min||1}">
+        <input type="number" id="rn-min" value="${w.config.min ?? 1}">
       </div>
       <div class="form-group">
         <label>Maximum</label>
-        <input type="number" id="rn-max" value="${w.config.max||30}">
+        <input type="number" id="rn-max" value="${w.config.max ?? 30}">
       </div>
       <button class="btn-primary" id="rn-save">Speichern</button>
     </div>
   `);
   overlay.querySelector('#rn-save').addEventListener('click', () => {
-    w.config.min = parseInt(overlay.querySelector('#rn-min').value)||1;
-    w.config.max = parseInt(overlay.querySelector('#rn-max').value)||30;
+    // 0 ist ein gültiger Wert (früher wurde 0 stillschweigend zu 1); vertauschte Grenzen tauschen
+    let min = parseInt(overlay.querySelector('#rn-min').value);
+    let max = parseInt(overlay.querySelector('#rn-max').value);
+    if (isNaN(min)) min = 1;
+    if (isNaN(max)) max = 30;
+    if (min > max) [min, max] = [max, min];
+    w.config.min = min;
+    w.config.max = max;
     w.config.value = null;
     APP.save();
     const shell = document.querySelector('[data-wid="'+w.id+'"]');
@@ -4172,7 +4755,8 @@ function openGroupsSettings(w) {
   `);
   overlay.querySelector('#gr-save').addEventListener('click', () => {
     w.config.names = overlay.querySelector('#gr-names').value;
-    w.config.size = parseInt(overlay.querySelector('#gr-size').value)||3;
+    w.config.size = Math.max(1, parseInt(overlay.querySelector('#gr-size').value)||3);
+    delete w.config.groupsResult;   // "Speichern & Neu mischen"
     APP.save();
     const shell = document.querySelector('[data-wid="'+w.id+'"]');
     if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
@@ -4265,7 +4849,7 @@ function openYoutubeOverlay(videoId) {
   box.style.cssText = 'position:relative;width:min(94vw,1200px);aspect-ratio:16/9;border-radius:12px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.8);background:#000;';
 
   // Direkt-iframe mit origin-Parameter — das ist der entscheidende Fix
-  const origin = encodeURIComponent(window.location.origin || 'https://classpuls.de');
+  const origin = encodeURIComponent(window.location.origin || 'https://klassenboard.netlify.app');
   const iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;';
   iframe.src = 'https://www.youtube-nocookie.com/embed/' + videoId
@@ -4284,12 +4868,14 @@ function openYoutubeOverlay(videoId) {
   hint.textContent = 'ESC oder Klick außerhalb zum Schließen';
 
   const close = () => {
+    document.removeEventListener('keydown', onKey);
     iframe.src = '';
     overlay.remove();
   };
+  const onKey = e => { if (e.key === 'Escape') close(); };
   closeBtn.addEventListener('click', e => { e.stopPropagation(); close(); });
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); }, { once: true });
+  document.addEventListener('keydown', onKey);
 
   box.append(iframe, closeBtn);
   overlay.append(box, hint);
@@ -4366,8 +4952,8 @@ function openTemplateModal() {
       APP.snapshotUndo();
       const board = APP.activeBoard();
       if (board) {
-        board.background = tpl.bg;
-        board.widgets = tpl.widgets.map(w => ({...w, id:uid(), createdAt:new Date().toISOString()}));
+        board.background = { ...tpl.bg };
+        board.widgets = tpl.widgets.map((w, i) => ({ zIndex: i + 1, ...JSON.parse(JSON.stringify(w)), id:uid(), createdAt:new Date().toISOString() }));
       }
       APP.save();
       renderAll();
@@ -4467,10 +5053,13 @@ function openExportModal() {
 // KEYBOARD SHORTCUTS
 // ══════════════════════════════════════════════════════════════
 document.addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
-  if (e.key === 'e' || e.key === 'E') toggleEditMode();
-  if (e.key === 'w' || e.key === 'W') openWidgetMenu();
+  const tag = e.target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) return;
+  // Buchstaben-Kürzel nur ohne Strg/Alt/Cmd — sonst schaltete z.B. Strg+F (Suchen) den Vollbildmodus um
+  const plain = !e.ctrlKey && !e.metaKey && !e.altKey;
+  if (plain && (e.key === 'f' || e.key === 'F')) toggleFullscreen();
+  if (plain && (e.key === 'e' || e.key === 'E')) toggleEditMode();
+  if (plain && (e.key === 'w' || e.key === 'W')) openWidgetMenu();
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
     e.preventDefault();
     if (!DRAW.active) APP.undo(); // im Zeichenmodus macht DRAW sein eigenes Undo
@@ -4497,25 +5086,37 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// Maßgeblich ist die Klasse am <body>: Geräte ohne Fullscreen-API (ältere iPads) bekommen
+// einen "Präsentationsmodus" ohne Leiste — und kommen über den ✕-Button wieder heraus.
 function toggleFullscreen() {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen?.();
+  const root = document.documentElement;
+  const nativeFs = () => document.fullscreenElement || document.webkitFullscreenElement;
+  if (!document.body.classList.contains('fullscreen')) {
     document.body.classList.add('fullscreen');
-    document.getElementById('btn-fullscreen').textContent = '⤡';
+    try {
+      const req = root.requestFullscreen || root.webkitRequestFullscreen;
+      const p = req && req.call(root);
+      if (p && p.catch) p.catch(() => {});
+    } catch(e) {}
   } else {
-    document.exitFullscreen?.();
     document.body.classList.remove('fullscreen');
-    document.getElementById('btn-fullscreen').textContent = '⤢';
+    if (nativeFs()) {
+      try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch(e) {}
+    }
   }
+  const btn = document.getElementById('btn-fullscreen');
+  if (btn) btn.textContent = document.body.classList.contains('fullscreen') ? '⤡' : '⤢';
+  document.getElementById('widget-menu')?.remove();
 }
+document.getElementById('fs-exit')?.addEventListener('click', toggleFullscreen);
 
-// Listen for ESC key exiting fullscreen (browser-native)
-document.addEventListener('fullscreenchange', () => {
-  const fs = !!document.fullscreenElement;
+// Vom Browser beendetes Vollbild (ESC) nachziehen
+['fullscreenchange', 'webkitfullscreenchange'].forEach(evt => document.addEventListener(evt, () => {
+  const fs = !!(document.fullscreenElement || document.webkitFullscreenElement);
   document.body.classList.toggle('fullscreen', fs);
   const btn = document.getElementById('btn-fullscreen');
   if (btn) btn.textContent = fs ? '⤡' : '⤢';
-});
+}));
 
 function toggleEditMode() {
   APP.state.editMode = !APP.state.editMode;
@@ -4553,15 +5154,75 @@ function openLoginModal() {
         <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
       </div>
       <button class="auth-submit" id="auth-submit-btn" onclick="submitAuth()">Anmelden</button>
+      <div style="text-align:center;margin-top:10px">
+        <a href="#" id="auth-forgot" style="font-size:12px;color:rgba(255,255,255,0.5)">Passwort vergessen?</a>
+      </div>
       <div class="auth-msg" id="auth-msg"></div>
       <div class="auth-info">Deine Boards werden automatisch in der<br>Cloud gespeichert und überall verfügbar.</div>
     </div>
   `);
+  _authMode = 'login';
   const emailInput = overlay.querySelector('#auth-email');
   const pwInput    = overlay.querySelector('#auth-password');
   emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') pwInput.focus(); });
   pwInput.addEventListener('keydown',    e => { if (e.key === 'Enter') submitAuth(); });
+  overlay.querySelector('#auth-forgot').addEventListener('click', async e => {
+    e.preventDefault();
+    const msg = overlay.querySelector('#auth-msg');
+    const email = emailInput.value.trim();
+    if (!email || !email.includes('@')) {
+      msg.textContent = 'Bitte oben zuerst deine E-Mail-Adresse eintragen.';
+      msg.className = 'auth-msg error';
+      emailInput.focus();
+      return;
+    }
+    try {
+      await AUTH.resetPassword(email);
+      // Bewusst neutral formuliert: verrät nicht, ob zu der Adresse ein Konto existiert
+      msg.textContent = '✅ Falls ein Konto mit dieser Adresse existiert, ist eine E-Mail zum Zurücksetzen unterwegs.';
+      msg.className = 'auth-msg success';
+    } catch(err) {
+      msg.textContent = 'Das hat gerade nicht geklappt. Bitte in ein paar Minuten erneut versuchen.';
+      msg.className = 'auth-msg error';
+    }
+  });
   setTimeout(() => emailInput.focus(), 50);
+}
+
+// Wird geöffnet, wenn jemand über den Link aus der "Passwort vergessen"-Mail kommt
+function openNewPasswordModal() {
+  const { overlay, close } = openModal(`
+    <div class="modal auth-modal">
+      <h2 style="margin-bottom:16px">Neues Passwort festlegen</h2>
+      <div class="auth-field">
+        <label>Neues Passwort (mind. 8 Zeichen)</label>
+        <input type="password" id="np-password" autocomplete="new-password">
+      </div>
+      <button class="auth-submit" id="np-save">Passwort speichern</button>
+      <div class="auth-msg" id="np-msg"></div>
+    </div>
+  `);
+  const input = overlay.querySelector('#np-password');
+  const msg = overlay.querySelector('#np-msg');
+  const save = async () => {
+    if (input.value.length < 8) {
+      msg.textContent = 'Das Passwort braucht mindestens 8 Zeichen.';
+      msg.className = 'auth-msg error';
+      return;
+    }
+    try {
+      const { error } = await AUTH.client.auth.updateUser({ password: input.value });
+      if (error) throw error;
+      close();
+      toast('✅ Passwort geändert — du bist angemeldet');
+    } catch(err) {
+      msg.textContent = 'Das Passwort konnte nicht geändert werden. Bitte den Link aus der E-Mail erneut öffnen.';
+      msg.className = 'auth-msg error';
+    }
+  };
+  overlay.querySelector('#np-save').addEventListener('click', save);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') save(); });
+  setTimeout(() => input.focus(), 50);
 }
 
 function switchAuthTab(mode) {
@@ -4595,11 +5256,17 @@ async function submitAuth() {
       document.querySelector('.modal-overlay')?.remove();
       toast('✅ Willkommen zurück!');
     } else {
-      await AUTH.register(email, password);
-      msg.textContent = '✅ Bestätigungsmail gesendet! Bitte E-Mail prüfen.';
-      msg.className = 'auth-msg success';
-      btn.disabled = false;
-      btn.textContent = 'Konto erstellen';
+      const result = await AUTH.register(email, password);
+      if (result && result.session) {
+        // E-Mail-Bestätigung ist im Projekt deaktiviert → direkt angemeldet
+        document.querySelector('.modal-overlay')?.remove();
+        toast('✅ Konto erstellt — willkommen!');
+      } else {
+        msg.textContent = '✅ Fast geschafft: Bitte den Link in der Bestätigungs-E-Mail anklicken.';
+        msg.className = 'auth-msg success';
+        btn.disabled = false;
+        btn.textContent = 'Konto erstellen';
+      }
     }
   } catch(e) {
     const known = {
@@ -4607,7 +5274,12 @@ async function submitAuth() {
       'User already registered':   'Diese E-Mail ist bereits registriert.',
       'Email not confirmed':        'Bitte zuerst die Bestätigungsmail bestätigen.',
     };
-    msg.textContent = known[e.message] || e.message;
+    let text = known[e.message];
+    if (!text && /rate limit|too many/i.test(e.message || '')) text = 'Zu viele Versuche — bitte ein paar Minuten warten.';
+    if (!text && /password/i.test(e.message || '')) text = 'Das Passwort ist zu schwach — bitte ein längeres wählen.';
+    if (!text && !navigator.onLine) text = 'Keine Internetverbindung.';
+    msg.textContent = text || 'Das hat nicht geklappt. Bitte Eingaben prüfen und erneut versuchen.';
+    console.warn('Auth-Fehler:', e);
     msg.className = 'auth-msg error';
     btn.disabled = false;
     btn.textContent = _authMode === 'login' ? 'Anmelden' : 'Konto erstellen';
@@ -4709,18 +5381,20 @@ const VOICE = {
     if (act === 'add-widget' || act === 'add-and-configure') {
       const type = action.widgetType;
       if (!REGISTRY[type]) { toast('❌ Widget "' + type + '" nicht gefunden'); return; }
-      const widget = addWidget(type, action.config || {});
-      if (action.config && widget) {
-        Object.assign(widget.config, action.config);
-        APP.save(); renderWidgets();
+      // "Timer 5 Minuten" kommt als seconds:300 — ohne Umrechnung wurden daraus 10 Minuten
+      if (addWidget(type, normalizeWidgetConfig(type, action.config))) {
+        toast('✅ ' + REGISTRY[type].emoji + ' ' + REGISTRY[type].label + ' hinzugefügt');
       }
-      toast('✅ ' + REGISTRY[type].emoji + ' ' + REGISTRY[type].label + ' hinzugefügt');
 
     } else if (act === 'configure-widget') {
       const type = action.widgetType;
       let w = board.widgets.slice().reverse().find(w => w.type === type);
-      if (!w) { toast('⚠️ Kein ' + (REGISTRY[type]?.label || type) + '-Widget gefunden — wird hinzugefügt'); addWidget(type, action.config || {}); return; }
-      Object.assign(w.config, action.config || {});
+      if (!REGISTRY[type]) { toast('❌ Widget "' + type + '" nicht gefunden'); return; }
+      const cfg = normalizeWidgetConfig(type, action.config);
+      if (!w) { toast('⚠️ Kein ' + REGISTRY[type].label + '-Widget gefunden — wird hinzugefügt'); addWidget(type, cfg); return; }
+      Object.assign(w.config, cfg);
+      if (type === 'timer') resetTimerState(w);
+      if (type === 'groups') delete w.config.groupsResult;
       APP.save(); renderWidgets();
       toast('✅ ' + (REGISTRY[type]?.label || type) + ' aktualisiert');
 
@@ -4798,6 +5472,9 @@ function openAiBoardGenerator() {
     const lessonType = overlay.querySelector('#abg-type').value;
 
     if (!topic) { toast('⚠️ Bitte ein Thema eingeben'); overlay.querySelector('#abg-topic').focus(); return; }
+    // Limit VOR der KI-Anfrage prüfen. Früher lief die Anfrage trotzdem, und die Elemente
+    // landeten dann mangels neuer Tafel in der gerade geöffneten (inkl. ersetztem Hintergrund).
+    if (!checkBoardLimit()) return;
 
     const btn = overlay.querySelector('#abg-btn');
     const progress = overlay.querySelector('#abg-progress');
@@ -4827,13 +5504,9 @@ function openAiBoardGenerator() {
       progress.textContent = '✅ Board wird erstellt…';
 
       // Create new board
-      const boardName = parsed.boardName || `${topic} – Klasse ${grade}`;
-      createBoard(boardName);
-      const board = APP.activeBoard();
-
-      // Use gradient background (no AI image)
-      board.background = { type: 'gradient', value: 'linear-gradient(135deg,#667eea,#764ba2)' };
-      progress.textContent = '🎨 KI generiert Hintergrundbild… (kann 15–30 Sek. dauern)';
+      const boardName = String(parsed.boardName || `${topic} – Klasse ${grade}`).slice(0, 60);
+      const board = createBoard(boardName);
+      if (!board) throw new Error('Es konnte keine neue Tafel angelegt werden.');
 
       // ── Smart layout: clock top-right, title top-center, rest in flow ──
       const widgets = (parsed.widgets || []).filter(d => REGISTRY[d.type]);
@@ -4847,17 +5520,6 @@ function openAiBoardGenerator() {
       const rest       = widgets.filter(d => d.type !== 'clock' && d.type !== 'goal');
 
       let zIdx = 1;
-      // KI-Antworten normalisieren: das Modell liefert teils andere Config-Keys als die Renderer erwarten
-      function normalizeConfig(type, cfg) {
-        cfg = cfg || {};
-        if (type === 'text' && !cfg.text && cfg.content) cfg.text = cfg.content;
-        if (type === 'homework') {
-          if (!cfg.items && cfg.text) cfg.items = [cfg.text];
-          if (Array.isArray(cfg.items)) cfg.items = cfg.items.map(it => typeof it === 'string' ? it : (it && (it.text || it.label)) || '').filter(Boolean);
-        }
-        if (type === 'goal' && !cfg.text && cfg.content) cfg.text = cfg.content;
-        return cfg;
-      }
       function placeWidget(def, x, y, wOverride, hOverride) {
         const reg = REGISTRY[def.type];
         const ww = wOverride || reg.w, hh = hOverride || reg.h;
@@ -4865,7 +5527,8 @@ function openAiBoardGenerator() {
           id: uid(), type: def.type,
           x: Math.round(x), y: Math.round(y),
           w: ww, h: hh,
-          config: normalizeConfig(def.type, def.config),
+          // Standardwerte + normalisierte KI-Angaben (die KI liefert teils andere Schlüssel)
+          config: { ...getDefaultConfig(def.type), ...normalizeWidgetConfig(def.type, def.config) },
           zIndex: zIdx++, locked: false,
           createdAt: new Date().toISOString(),
         });
@@ -4893,7 +5556,7 @@ function openAiBoardGenerator() {
         rowH = Math.max(rowH, hh);
       });
 
-      APP._persist();
+      APP.save();
       renderAll();
       toast(`🪄 Board "${boardName}" mit ${widgets.length} Widgets erstellt!`);
       close();
@@ -4960,28 +5623,36 @@ document.getElementById('board').addEventListener('dblclick', e => {
     min-height:44px;outline:none;backdrop-filter:blur(8px);box-shadow:0 8px 32px rgba(0,0,0,0.4);`;
   document.body.appendChild(ta);
   ta.focus();
+  // Das Entfernen des Feldes löst selbst ein blur aus — ohne die Sperre entstanden
+  // zwei übereinanderliegende Text-Elemente, und ESC legte trotzdem eines an.
+  let finished = false;
   const commit = () => {
+    if (finished) return;
+    finished = true;
     const txt = ta.value.trim();
+    // Position VOR dem Entfernen bestimmen (Toolbar-Höhe + Board-Scroll einrechnen)
+    const wlRect = document.getElementById('widgets-layer').getBoundingClientRect();
     ta.remove();
     if (!txt) return;
     APP.snapshotUndo();
-    const board = APP.state.boards.find(b => b.id === APP.state.activeBoardId);
+    const board = APP.activeBoard();
     if (!board) return;
     const def = REGISTRY.text;
-    // Klick-Position in Widget-Layer-Koordinaten umrechnen (Toolbar-Höhe + Board-Scroll)
-    const wlRect = document.getElementById('widgets-layer').getBoundingClientRect();
     board.widgets.push({
-      id: 'w_' + Date.now(),
+      id: uid(),
       type: 'text',
-      x: Math.max(0, e.clientX - wlRect.left - 160),
-      y: Math.max(0, e.clientY - wlRect.top - 20),
+      x: Math.max(0, Math.round(e.clientX - wlRect.left - 20)),
+      y: Math.max(0, Math.round(e.clientY - wlRect.top - 20)),
       w: def.w, h: def.h,
-      config: { text: txt, fontSize: 18, bold: false, align: 'left' }
+      zIndex: nextZ(board), locked: false,
+      config: { text: txt },
+      createdAt: new Date().toISOString(),
     });
     APP.save(); renderWidgets();
   };
   ta.addEventListener('keydown', ev => {
-    if (ev.key === 'Escape') { ta.remove(); return; }
+    ev.stopPropagation();
+    if (ev.key === 'Escape') { finished = true; ta.remove(); return; }
     if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); commit(); }
   });
   ta.addEventListener('blur', () => setTimeout(commit, 150));
@@ -5007,6 +5678,14 @@ function migrateLocalStorage() {
 }
 
 function init() {
+  // Alles, was beim Start automatisch gespeichert wird (Standard-Tafel, Demo, Datenmigration),
+  // zählt nicht als "lokale Änderung" — sonst käme beim ersten Login ein Konflikt-Dialog
+  // wegen bloßer Demo-Daten.
+  APP._booting = true;
+  try { initApp(); } finally { APP._booting = false; }
+}
+
+function initApp() {
   migrateLocalStorage();
   const loaded = APP.load();
   const isFirstVisit = !loaded && !localStorage.getItem('classpuls_visited');
@@ -5214,10 +5893,18 @@ const CLASSES = {
     const token = (this._loadToken = (this._loadToken || 0) + 1);
     // 1. Versuche Supabase wenn angemeldet
     if (AUTH.user && AUTH.client) {
-      const { data, error } = await AUTH.client.from('class_boards')
-        .select('*').eq('user_id', AUTH.user.id).eq('class_name', className).maybeSingle();
+      let data = null, error = null;
+      try {
+        ({ data, error } = await AUTH.client.from('class_boards')
+          .select('*').eq('user_id', AUTH.user.id).eq('class_name', className).maybeSingle());
+      } catch(e) { error = e; }   // offline → lokaler Stand
       if (token !== this._loadToken) return;
-      if (!error && data) {
+      // Die Cloud-Kopie nur nehmen, wenn sie nicht älter ist als die auf diesem Gerät —
+      // sonst würde ein fehlgeschlagener Upload (z.B. offline) die neueren Tafeln überschreiben
+      const local = this._data()[className];
+      const cloudAt = data ? (Date.parse(data.saved_at) || 0) : 0;
+      const localAt = local ? (Date.parse(local.savedAt) || 0) : 0;
+      if (!error && data && (!local || cloudAt >= localAt)) {
         APP.snapshotUndo();
         APP.state.boards = data.boards || [];
         APP.state.activeBoardId = data.active_board_id || data.boards?.[0]?.id;
@@ -5307,6 +5994,7 @@ const CLASSES = {
       }
     } else {
       this.renderDropdown();
+      APP.save();   // Klassenliste ist Teil des Cloud-Stands
     }
   },
 
@@ -5345,7 +6033,7 @@ const CLASSES = {
 
   _emoji(name) {
     const n = name.toLowerCase();
-    if (n.includes('deutsch') || n.includes('de')) return '📖';
+    if (n.includes('deutsch')) return '📖';
     if (n.includes('mathe') || n.includes('math')) return '🔢';
     if (n.includes('sport')) return '⚽';
     if (n.includes('musik')) return '🎵';
@@ -5361,14 +6049,28 @@ const CLASSES = {
     const dropdown = document.getElementById('class-dropdown');
     if (!btn || !dropdown) return;
 
+    // Das Menü hängt direkt an <body>: in der horizontal scrollbaren Toolbar wurde es
+    // komplett abgeschnitten — Klassen wechseln/anlegen war dadurch unmöglich.
+    document.body.appendChild(dropdown);
+    const place = () => {
+      const r = btn.getBoundingClientRect();
+      const below = r.top < window.innerHeight / 2;     // Toolbar oben → nach unten aufklappen
+      dropdown.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 236)) + 'px';
+      dropdown.style.top = below ? (r.bottom + 8) + 'px' : 'auto';
+      dropdown.style.bottom = below ? 'auto' : (window.innerHeight - r.top + 8) + 'px';
+      dropdown.style.maxHeight = Math.max(160, (below ? window.innerHeight - r.bottom : r.top) - 24) + 'px';
+    };
     btn.addEventListener('click', e => {
       e.stopPropagation();
       const open = dropdown.classList.toggle('open');
-      if (open) this.renderDropdown();
+      if (open) { this.renderDropdown(); place(); }
     });
     document.addEventListener('click', e => {
-      if (!dropdown.contains(e.target) && e.target !== btn) dropdown.classList.remove('open');
+      if (!dropdown.contains(e.target) && !btn.contains(e.target)) dropdown.classList.remove('open');
     });
+    // Nur neu ausrichten, nicht schließen: auf Android löst schon das Einblenden der
+    // Bildschirmtastatur ein resize aus — das Menü würde beim Tippen des Klassennamens zugehen
+    window.addEventListener('resize', () => { if (dropdown.classList.contains('open')) place(); });
 
     // Add trigger
     document.getElementById('class-add-trigger').addEventListener('click', () => {
@@ -5421,14 +6123,24 @@ const DRAW = {
     if (!this.canvas) return;
     this.ctx = this.canvas.getContext('2d');
     this._resize();
-    window.addEventListener('resize', () => this._resize());
+    window.addEventListener('resize', () => { this._resize(); this._syncScroll(); });
+
+    // Die Zeichnung gehört zur Tafel: scrollt die Tafel, wandert die Zeichenebene mit
+    const boardEl = document.getElementById('board');
+    boardEl?.addEventListener('scroll', () => this._syncScroll(), { passive: true });
+    // Im Zeichenmodus liegt die Zeichenebene über der Tafel — Mausrad trotzdem zum Scrollen durchreichen
+    this.canvas.addEventListener('wheel', e => {
+      if (!boardEl || this.drawing) return;
+      boardEl.scrollBy(e.deltaX, e.deltaY);
+    }, { passive: true });
 
     // ── Pointer events (mouse + touch + stylus) ──
-    this.canvas.addEventListener('pointerdown', e => this._start(e));
-    this.canvas.addEventListener('pointermove', e => this._move(e));
-    this.canvas.addEventListener('pointerup',   e => this._end(e));
-    this.canvas.addEventListener('pointerout',  e => this._end(e));
-    this.canvas.setPointerCapture; // allow capture
+    this.canvas.addEventListener('pointerdown',   e => this._start(e));
+    this.canvas.addEventListener('pointermove',   e => this._move(e));
+    this.canvas.addEventListener('pointerup',     e => this._end(e));
+    this.canvas.addEventListener('pointerout',    e => this._end(e));
+    // Abgebrochene Berührung (Handballen, Systemgeste): sonst zieht der nächste Stift-Hover eine Geisterlinie
+    this.canvas.addEventListener('pointercancel', e => this._end(e));
 
     // ── Toolbar buttons ──
     const btn = id => document.getElementById(id);
@@ -5474,11 +6186,14 @@ const DRAW = {
 
     // Clear
     btn('dt-clear')?.addEventListener('click', () => {
-      if (confirm('Zeichnung löschen?')) {
-        this.history = [];
+      if (!this._hasInk()) return;
+      if (confirm('Zeichnung auf dieser Tafel löschen?')) {
+        this._pushHistory();   // per ↩ wiederherstellbar
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        // Also clear saved data for this board
+        this._markInk('empty');
+        // Auch den gespeicherten Stand entfernen — sonst käme die Zeichnung nach einem Reload zurück
         delete this.boardDrawings[APP.state.activeBoardId];
+        this._persistDrawings();
       }
     });
 
@@ -5499,7 +6214,9 @@ const DRAW = {
       overlay.querySelector('#draw-exit-no').addEventListener('click', function() {
         self.history = [];
         self.ctx.clearRect(0, 0, self.canvas.width, self.canvas.height);
+        self._markInk('empty');
         delete self.boardDrawings[APP.state.activeBoardId];
+        self._persistDrawings();
         overlay.remove();
         self.toggle();
       });
@@ -5574,14 +6291,21 @@ const DRAW = {
     requestAnimationFrame(() => { inp.focus(); });
 
     const self = this;
+    // Das Entfernen des Feldes löst selbst ein blur aus — ohne diese Sperre wurde der Text
+    // doppelt gezeichnet, und ESC hat ihn trotzdem eingefügt.
+    let finished = false;
     const commit = () => {
+      if (finished) return;
+      finished = true;
       const txt = inp.value.trim();
+      const off = self._scrollOffset();
+      const px = parseInt(inp.style.left) + off.x;
+      const py = parseInt(inp.style.top) + fs + off.y;
       inp.remove();
       if (!txt) return;
-      const px = parseInt(inp.style.left);
-      const py = parseInt(inp.style.top) + fs;
-      self.history.push(self.ctx.getImageData(0, 0, self.canvas.width, self.canvas.height));
-      if (self.history.length > 30) self.history.shift();
+      if (off.x || off.y) self._resize(window.innerWidth + off.x, window.innerHeight + off.y);
+      self._pushHistory();
+      self._markInk('ink');
       self.ctx.globalCompositeOperation = 'source-over';
       self.ctx.fillStyle = self.color;
       self.ctx.font = `bold ${fs}px sans-serif`;
@@ -5593,7 +6317,7 @@ const DRAW = {
 
     inp.addEventListener('keydown', ev => {
       ev.stopPropagation();
-      if (ev.key === 'Escape') { inp.remove(); return; }
+      if (ev.key === 'Escape') { finished = true; inp.remove(); return; }
       if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
     });
     inp.addEventListener('blur', () => setTimeout(commit, 120));
@@ -5601,25 +6325,52 @@ const DRAW = {
 
   _initTextTool() { /* text handled in _showTextInput, called from _start */ },
 
-  _resize() {
+  _resize(needW, needH) {
     if (!this.canvas) return;
     // Canvas wächst nur — beim Verkleinern des Fensters würde die Zeichnung
-    // sonst irreversibel abgeschnitten (Orientierungswechsel auf Tablets!)
-    const W = Math.max(window.innerWidth, this.canvas.width);
-    const H = Math.max(window.innerHeight, this.canvas.height);
+    // sonst irreversibel abgeschnitten (Orientierungswechsel auf Tablets!).
+    // Wird in einem gescrollten Bereich der Tafel gezeichnet, wächst er bei Bedarf dorthin
+    // (needW/needH) — aber nie pauschal auf die ganze Tafel und gedeckelt (Speicher!).
+    const W = Math.min(5000, Math.max(window.innerWidth,  needW || 0, this.canvas.width));
+    const H = Math.min(4000, Math.max(window.innerHeight, needH || 0, this.canvas.height));
     if (this.canvas.width === W && this.canvas.height === H) return; // no change — don't clear
-    const dataURL = this.canvas.width > 0 ? this.canvas.toDataURL() : null;
+    // Inhalt synchron über eine Kopie retten (vorher: asynchron per Bild — Striche in der Zwischenzeit gingen verloren)
+    let copy = null;
+    if (this.canvas.width > 0 && this.canvas.height > 0) {
+      copy = document.createElement('canvas');
+      copy.width = this.canvas.width; copy.height = this.canvas.height;
+      copy.getContext('2d').drawImage(this.canvas, 0, 0);
+    }
     this.canvas.width  = W;
     this.canvas.height = H;
-    if (dataURL) {
-      const img = new Image();
-      img.onload = () => this.ctx.drawImage(img, 0, 0);
-      img.src = dataURL;
-    }
+    if (copy) this.ctx.drawImage(copy, 0, 0);
+    this.history = [];   // alte Undo-Schnappschüsse passen nicht mehr zur neuen Größe
   },
 
+  // Verschiebung der Zeichenebene = Scrollposition der Tafel
+  _scrollOffset() {
+    const b = document.getElementById('board');
+    return { x: b ? b.scrollLeft : 0, y: b ? b.scrollTop : 0 };
+  },
+  _syncScroll() {
+    if (!this.canvas) return;
+    const o = this._scrollOffset();
+    this.canvas.style.transform = (o.x || o.y) ? 'translate(' + (-o.x) + 'px,' + (-o.y) + 'px)' : '';
+  },
+  // Bildschirm- → Zeichenebenen-Koordinaten
   _getPos(e) {
-    return { x: e.clientX, y: e.clientY };
+    const o = this._scrollOffset();
+    return { x: e.clientX + o.x, y: e.clientY + o.y };
+  },
+
+  // Undo-Schnappschuss mit Speicher-Deckel: 30 Vollbilder wären bei 1920×1080 rund 250 MB
+  _pushHistory() {
+    try {
+      this.history.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height));
+    } catch(e) { this.history = []; return; }
+    const bytes = this.canvas.width * this.canvas.height * 4;
+    const max = Math.max(1, Math.min(30, Math.floor(96e6 / Math.max(bytes, 1))));
+    while (this.history.length > max) this.history.shift();
   },
 
   _start(e) {
@@ -5634,19 +6385,24 @@ const DRAW = {
     // Capture pointer so drawing works even outside window
     try { this.canvas.setPointerCapture(e.pointerId); } catch(_) {}
 
-    // Undo snapshot
-    this.history.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height));
-    if (this.history.length > 30) this.history.shift();
+    // Wird in einem gescrollten Bereich gezeichnet, muss die Zeichenebene bis dorthin reichen
+    const off = this._scrollOffset();
+    if (off.x || off.y) this._resize(window.innerWidth + off.x, window.innerHeight + off.y);
+    this._syncScroll();
 
+    this._pushHistory();   // Undo snapshot
+    this._markInk(this.tool === 'eraser' ? 'unknown' : 'ink');
+
+    const p = this._getPos(e);
     this.drawing = true;
-    this._pts = [{ x: e.clientX, y: e.clientY }];
+    this._pts = [p];
     this._rafPending = false;
 
     // Draw initial dot
     this._applyStyle();
     const lw = this._lineWidth();
     this.ctx.beginPath();
-    this.ctx.arc(e.clientX, e.clientY, lw / 2, 0, Math.PI * 2);
+    this.ctx.arc(p.x, p.y, lw / 2, 0, Math.PI * 2);
     this.ctx.fill();
     this.ctx.shadowBlur = 0;
   },
@@ -5657,9 +6413,12 @@ const DRAW = {
     e.preventDefault();
 
     // Collect all coalesced points for stylus/high-freq input
-    const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    // (liefert der Browser keine Zwischenpunkte, das Ereignis selbst verwenden — sonst entstünde nur ein Punkt)
+    const coalesced = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
+    const events = coalesced && coalesced.length ? coalesced : [e];
+    const off = this._scrollOffset();
     for (const ev of events) {
-      this._pts.push({ x: ev.clientX, y: ev.clientY });
+      this._pts.push({ x: ev.clientX + off.x, y: ev.clientY + off.y });
     }
 
     if (!this._rafPending) {
@@ -5753,15 +6512,35 @@ const DRAW = {
   _undo() {
     if (this.history.length === 0) return;
     const snap = this.history.pop();
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.putImageData(snap, 0, 0);
+    this._markInk('unknown');
+    clearTimeout(this._saveTimer);
+    this._saveTimer = setTimeout(() => this.saveBoard(APP.state.activeBoardId), 800);
+  },
+
+  // Merkt, ob die Zeichenebene Inhalt hat und ob er seit dem letzten Sichern verändert wurde.
+  // Erspart das Durchsuchen/Kodieren der ganzen Fläche bei jedem Tafelwechsel.
+  _ink: 'empty',        // 'empty' | 'ink' | 'unknown' (z.B. nach Radieren)
+  _inkDirty: false,
+  _markInk(state) { this._ink = state; this._inkDirty = true; },
+  _hasInk() {
+    if (this._ink === 'unknown') this._ink = this._isCanvasEmpty() ? 'empty' : 'ink';
+    return this._ink === 'ink';
   },
 
   // Save drawing of current board before switching
   saveBoard(boardId) {
     if (!this.canvas || !boardId) return;
-    if (this._isCanvasEmpty()) delete this.boardDrawings[boardId];
-    else this.boardDrawings[boardId] = this.canvas.toDataURL();
-    this._persistDrawings();
+    if (!this._hasInk()) {
+      if (this.boardDrawings[boardId]) { delete this.boardDrawings[boardId]; this._persistDrawings(); }
+    } else if (this._inkDirty || !this.boardDrawings[boardId]) {
+      // Nur neu kodieren, wenn sich wirklich etwas geändert hat. (Sonst würde ein schneller
+      // Tafelwechsel vor dem Fertigladen eine leere Fläche über die Zeichnung speichern.)
+      this.boardDrawings[boardId] = this.canvas.toDataURL();
+      this._persistDrawings();
+    }
+    this._inkDirty = false;
     this._updateKeepVisible();
   },
 
@@ -5773,11 +6552,19 @@ const DRAW = {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.history = [];
     const dataURL = this.boardDrawings[boardId];
+    this._ink = dataURL ? 'ink' : 'empty';
+    this._inkDirty = false;
     if (dataURL) {
       const img = new Image();
-      img.onload = () => { if (token === this._loadToken) this.ctx.drawImage(img, 0, 0); };
+      img.onload = () => {
+        if (token !== this._loadToken) return;
+        // Gespeicherte Zeichnung kann größer sein als die aktuelle Fläche (anderes Gerät/gescrollt)
+        this._resize(img.naturalWidth, img.naturalHeight);
+        this.ctx.drawImage(img, 0, 0);
+      };
       img.src = dataURL;
     }
+    this._syncScroll();
     this._updateKeepVisible();
   },
 
@@ -5798,9 +6585,18 @@ const DRAW = {
   // Zeichnungen überleben Reload — separater Key, damit Board-Daten bei vollem Speicher Vorrang behalten
   _persistDrawings() {
     try {
+      // Zeichnungen gelöschter Tafeln nicht ewig mitschleppen
+      const alive = new Set();
+      (APP.state.boards || []).forEach(b => alive.add(b.id));
+      Object.values(CLASSES._data()).forEach(cl => ((cl && cl.boards) || []).forEach(b => alive.add(b.id)));
+      if (alive.size) Object.keys(this.boardDrawings).forEach(id => { if (!alive.has(id)) delete this.boardDrawings[id]; });
       localStorage.setItem('classpuls_drawings', JSON.stringify(this.boardDrawings));
     } catch(e) {
       try { localStorage.removeItem('classpuls_drawings'); } catch(_) {}
+      if (!this._quotaWarned) {
+        this._quotaWarned = true;
+        toast('ℹ️ Zeichnungen sind zu groß zum dauerhaften Speichern — sie bleiben, bis der Tab geschlossen wird', 6000);
+      }
     }
   },
 
@@ -5848,13 +6644,18 @@ const DRAW = {
     rh.addEventListener('lostpointercapture', () => dragging = false);
   }
 
-  let isOpen = false;
+  const fabIcon = fab.innerHTML;
+  const syncFab = () => {
+    const open = panel.classList.contains('open');
+    if (open) fab.textContent = '✕'; else fab.innerHTML = fabIcon;
+  };
   fab.addEventListener('click', () => {
-    isOpen = !isOpen;
-    panel.classList.toggle('open', isOpen);
-    fab.textContent = isOpen ? '✕' : '🤖';
-    if (isOpen) textarea.focus();
+    const open = panel.classList.toggle('open');
+    syncFab();
+    if (open) textarea.focus();
   });
+  // Das Panel wird auch von außen geschlossen (ESC) — Button-Symbol dann nachziehen
+  new MutationObserver(syncFab).observe(panel, { attributes: true, attributeFilter: ['class'] });
 
   function isImageRequest(q) {
     const t = q.trim().toLowerCase();
@@ -5940,31 +6741,26 @@ const DRAW = {
 
     try {
       let answer;
-
-      if (isPro() && AUTH.client) {
-        const { data, error } = await AUTH.client.functions.invoke('ai-generate', {
-          body: { type: 'ask', question: q }
-        });
-        if (error) throw new Error(error.message);
-        answer = data?.text;
-      } else {
-        const controller = new AbortController();
-        const timeout = setTimeout(function() { controller.abort(); }, 30000);
-        const res = await fetch('/.netlify/functions/ai-chat', {
+      const controller = new AbortController();
+      const timeout = setTimeout(function() { controller.abort(); }, 30000);
+      let res;
+      try {
+        res = await fetch('/.netlify/functions/ai-chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question: q, history: chatHistory.slice(-6) }),
           signal: controller.signal
         });
+      } finally {
         clearTimeout(timeout);
-        if (!res.ok) {
-          const err = await res.json().catch(function() { return {}; });
-          throw new Error(err.error || 'Serverfehler (' + res.status + ')');
-        }
-        const data = await res.json();
-        answer = data.text;
-        if (!isPro()) localStorage.setItem(TEXT_AI_KEY, String(count + 1));
       }
+      if (!res.ok) {
+        const err = await res.json().catch(function() { return {}; });
+        throw new Error(err.error || 'Serverfehler (' + res.status + ')');
+      }
+      const data = await res.json();
+      answer = data.text;
+      if (!isPro()) localStorage.setItem(TEXT_AI_KEY, String(count + 1));
 
       chatHistory.push({ role: 'user', content: q });
       chatHistory.push({ role: 'assistant', content: answer });
@@ -6038,16 +6834,7 @@ const TOOLBAR_ITEMS = [
     btn.textContent = reg.emoji;
     btn.style.display = 'none';
     btn.addEventListener('click', () => {
-      const board = APP.activeBoard();
-      if (!board) return;
-      APP.snapshotUndo();
-      board.widgets.push({
-        id: 'w_' + Date.now(), type,
-        x: 40 + Math.random()*200, y: 80 + Math.random()*150,
-        w: reg.w, h: reg.h, config: {}, createdAt: new Date().toISOString()
-      });
-      APP.save(); renderWidgets();
-      toast('✅ ' + reg.label + ' hinzugefügt');
+      if (addWidget(type)) toast('✅ ' + reg.label + ' hinzugefügt');
     });
     sep.parentNode.insertBefore(btn, sep);
   });
@@ -6060,7 +6847,16 @@ function flushPendingSaves() {
   if (AUTH._syncTimer) { clearTimeout(AUTH._syncTimer); AUTH._syncTimer = null; AUTH._doSync(); }
 }
 window.addEventListener('pagehide', flushPendingSaves);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushPendingSaves(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') flushPendingSaves();
+  else AUTH.checkRemote();   // zurück im Tab: hat ein anderes Gerät inzwischen etwas gespeichert?
+});
+// Wieder online: liegengebliebene Änderungen nachreichen
+window.addEventListener('online', () => {
+  if (!AUTH.user) return;
+  if (!AUTH._cloudReady) AUTH.loadFromCloud();
+  else if (localStorage.getItem('classpuls_dirty_at')) AUTH.syncToCloud();
+});
 
 function getToolbarPrefs() {
   try { return JSON.parse(localStorage.getItem('kb_toolbar_prefs') || 'null'); } catch { return null; }
@@ -6249,8 +7045,10 @@ function openToolbarCustomizer() {
 // TOOLBAR GUARDIAN — auto-removes any element blocking the toolbar
 // ══════════════════════════════════════════════════════════════
 setInterval(() => {
-  const safe = new Set(['toolbar','board','board-bg','widgets-layer','toast','ki-fab','ki-panel','draw-canvas','draw-toolbar','draw-text-input']);
+  if (document.hidden) return;
+  const safe = new Set(['toolbar','board','board-bg','widgets-layer','toast','ki-fab','ki-panel','draw-canvas','draw-toolbar','draw-text-input','class-dropdown','fs-exit']);
   document.querySelectorAll('body > *').forEach(el => {
+    if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return;
     if (safe.has(el.id)) return;
     if (el.classList.contains('modal-overlay')) return;
     if (el.closest('.modal-overlay')) return;
@@ -6266,7 +7064,7 @@ setInterval(() => {
       el.remove();
     }
   });
-}, 500);
+}, 1500);
 
 // ══════════════════════════════════════════════════════════════
 // STARTUP
