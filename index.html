@@ -839,6 +839,8 @@ body.fullscreen #board { top:0; }
         <input id="class-add-input" type="text" placeholder='z.B. "2e" oder "7b Deutsch"' maxlength="30">
         <button id="class-add-confirm">Anlegen</button>
       </div>
+      <div class="class-dd-divider"></div>
+      <div class="class-dd-add" id="class-reset-trigger" style="font-size:11.5px;padding-top:6px">↺ Alles zurücksetzen…</div>
     </div>
   </div>
   <div class="toolbar-sep" style="margin:0 2px"></div>
@@ -1536,6 +1538,7 @@ const APP = {
   // Schreibt den Stand in den Browser-Speicher. Ist der voll, haben die Tafeln
   // Vorrang vor den (ebenfalls dort liegenden) Zeichnungen.
   _persistLocal() {
+    if (this._resetting) return true;
     const json = JSON.stringify({
       boards: this.state.boards,
       activeBoardId: this.state.activeBoardId,
@@ -1613,17 +1616,6 @@ const APP = {
       toast('✅ Importiert: ' + data.boards.length + ' Tafel(n)');
     } catch(e) { toast('❌ Import fehlgeschlagen: ' + e.message); }
   },
-  deleteAllData() {
-    // Cloud-Kopie ebenfalls entfernen, sonst kommt alles beim nächsten Login zurück
-    if (AUTH.user && AUTH.client) {
-      clearTimeout(AUTH._syncTimer); AUTH._syncTimer = null;
-      AUTH.client.from('boards').delete().eq('user_id', AUTH.user.id).then(() => {});
-      AUTH.client.from('class_boards').delete().eq('user_id', AUTH.user.id).then(() => {});
-    }
-    resetLocalData();
-    if (AUTH.user) localStorage.setItem('classpuls_owner', AUTH.user.id);
-  },
-
   // ── Undo ──
   snapshotUndo() {
     this.state.undo = JSON.stringify(this.state.boards);
@@ -1685,6 +1677,70 @@ function resetLocalData() {
   createBoard('Tafel 1', null, [], true);
   APP._booting = false;
   DRAW.loadBoard(APP.state.activeBoardId);
+}
+
+// ── Alles zurücksetzen: ClassPuls wieder in den Zustand des allerersten Besuchs bringen ──
+function openResetDialog() {
+  const loggedIn = !!AUTH.user;
+  const { overlay } = openModal(`
+    <div class="modal" style="max-width:440px">
+      <button class="modal-close" data-close>✕</button>
+      <h2 style="margin-bottom:8px">↺ Alles zurücksetzen</h2>
+      <p style="font-size:13.5px;color:rgba(255,255,255,0.75);line-height:1.6;margin-bottom:10px">
+        ClassPuls startet danach wieder wie beim allerersten Öffnen — mit der Demo-Klasse.
+      </p>
+      <ul style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.7;margin:0 0 12px 18px">
+        <li>alle Tafeln, Klassen und Zeichnungen werden gelöscht</li>
+        <li>die Leiste steht wieder oben, mit den Standard-Knöpfen</li>
+        ${loggedIn ? '<li><strong style="color:#fca5a5">auch die in der Cloud gespeicherten Tafeln deines Kontos werden gelöscht</strong></li>' : ''}
+      </ul>
+      <p style="font-size:12.5px;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:16px">
+        Das lässt sich nicht rückgängig machen. Wenn du etwas behalten möchtest: vorher über 💾 „Alle Tafeln exportieren".
+      </p>
+      <div style="display:flex;gap:10px">
+        <button class="btn-secondary" style="flex:1" data-close>Abbrechen</button>
+        <button class="btn-secondary" id="reset-go" style="flex:1;color:#fff;background:rgba(239,68,68,0.75);border-color:rgba(239,68,68,0.9);font-weight:600">Ja, alles zurücksetzen</button>
+      </div>
+    </div>`);
+  overlay.querySelector('#reset-go').addEventListener('click', async ev => {
+    const btn = ev.currentTarget;
+    btn.disabled = true;
+    btn.textContent = 'Wird zurückgesetzt…';
+    const ok = await resetEverything();
+    if (!ok) { btn.disabled = false; btn.textContent = 'Ja, alles zurücksetzen'; }
+  });
+}
+
+async function resetEverything() {
+  // Angemeldet: zuerst die Cloud leeren — sonst käme nach dem Neuladen alles von dort zurück
+  if (AUTH.user && AUTH.client) {
+    let cloudOk = false;
+    try {
+      const del = AUTH.client.from('boards').delete().eq('user_id', AUTH.user.id);
+      const res = await Promise.race([del, new Promise(r => setTimeout(() => r({ error: new Error('timeout') }), 8000))]);
+      cloudOk = !res.error;
+      // Klassen-Tabelle ist optional — ein Fehler dort darf das Zurücksetzen nicht blockieren
+      await Promise.race([
+        AUTH.client.from('class_boards').delete().eq('user_id', AUTH.user.id),
+        new Promise(r => setTimeout(r, 4000)),
+      ]).catch(() => {});
+    } catch(e) { cloudOk = false; }
+    if (!cloudOk) {
+      toast('⚠️ Die Cloud ist gerade nicht erreichbar — bitte gleich nochmal versuchen', 5000);
+      return false;
+    }
+  }
+  // Ab hier darf nichts mehr den alten Stand zurückschreiben
+  APP._resetting = true;
+  clearTimeout(APP.saveTimer); APP.saveTimer = null; APP._dirtyPending = false;
+  clearTimeout(AUTH._syncTimer); AUTH._syncTimer = null;
+  clearTimeout(DRAW._saveTimer);
+  ['classpuls_v2','classpuls_classes','classpuls_current_class','classpuls_drawings',
+   'classpuls_dirty_at','classpuls_synced_at','classpuls_owner','classpuls_visited',
+   'kb_toolbar_pos','kb_toolbar_side','kb_toolbar_prefs'].forEach(k => localStorage.removeItem(k));
+  // Neu laden → die App startet wie beim ersten Besuch (ohne ?reset in der Adresse)
+  window.location.replace(window.location.pathname);
+  return true;
 }
 
 // Fragt bei zwei abweichenden Ständen, was passieren soll. Wird der Dialog ohne Wahl
@@ -5032,7 +5088,7 @@ function openExportModal() {
         </div>
         <button class="btn-secondary" id="exp-import">⬆ Importieren</button>
         <hr style="border-color:rgba(255,255,255,0.1);margin:4px 0">
-        <button class="btn-secondary" id="exp-delete" style="color:#f87171;border-color:rgba(239,68,68,0.3)">🗑 Alle Daten löschen</button>
+        <button class="btn-secondary" id="exp-delete" style="color:#f87171;border-color:rgba(239,68,68,0.3)">↺ Alles zurücksetzen (wie beim ersten Start)</button>
       </div>
     </div>
   `);
@@ -5044,9 +5100,7 @@ function openExportModal() {
     reader.onload = e => { APP.importAll(e.target.result); close(); };
     reader.readAsText(file);
   });
-  overlay.querySelector('#exp-delete').addEventListener('click', () => {
-    if (confirm('Alle Tafeln und Daten wirklich löschen?')) { APP.deleteAllData(); close(); toast('🗑 Alle Daten gelöscht'); }
-  });
+  overlay.querySelector('#exp-delete').addEventListener('click', () => { close(); openResetDialog(); });
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -5711,7 +5765,7 @@ function initApp() {
 }
 
 function setupDemo() {
-  CLASSES.create('Demo-Klasse 3a', true);
+  CLASSES.create('Demo-Klasse 3a', true, true);
 
   APP.state.boards = [];
   APP.state.activeBoardId = null;
@@ -5771,7 +5825,7 @@ function setupDemo() {
   APP.state.activeBoardId = APP.state.boards[0].id;
   APP.save();
   renderAll();
-  toast('👋 Willkommen! Das ist eine Demo-Klasse zum Ausprobieren.');
+  toast('👋 Willkommen! Das ist eine Demo-Klasse zum Ausprobieren.', 4500);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -5855,6 +5909,7 @@ const CLASSES = {
     try { return JSON.parse(localStorage.getItem(this.STORAGE_KEY)) || {}; } catch(e) { return {}; }
   },
   _save(data) {
+    if (APP._resetting) return;
     try { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data)); }
     catch(e) { toast('⚠️ Speicher voll — Klassendaten konnten nicht gesichert werden'); }
   },
@@ -5933,7 +5988,7 @@ const CLASSES = {
   },
 
   // ── Klasse wechseln ──
-  async switchTo(className) {
+  async switchTo(className, silent) {
     const current = this.current();
     if (current) {
       this.saveCurrentBoards(current); // auto-save current
@@ -5944,11 +5999,11 @@ const CLASSES = {
     this.renderDropdown();
     document.getElementById('class-btn-name').textContent = className;
     document.getElementById('class-dropdown').classList.remove('open');
-    toast('📚 Klasse ' + className + ' geladen');
+    if (!silent) toast('📚 Klasse ' + className + ' geladen');
   },
 
   // ── Neue Klasse anlegen ──
-  create(name, skipLimit=false) {
+  create(name, skipLimit=false, silent=false) {
     if (!name.trim()) return;
     if (!skipLimit && !checkClassLimit()) return;
     const data = this._data();
@@ -5963,7 +6018,7 @@ const CLASSES = {
       };
     }
     this._save(data);
-    this.switchTo(name);
+    this.switchTo(name, silent);
   },
 
   // ── Klasse löschen ──
@@ -6073,6 +6128,10 @@ const CLASSES = {
     window.addEventListener('resize', () => { if (dropdown.classList.contains('open')) place(); });
 
     // Add trigger
+    document.getElementById('class-reset-trigger').addEventListener('click', () => {
+      dropdown.classList.remove('open');
+      openResetDialog();
+    });
     document.getElementById('class-add-trigger').addEventListener('click', () => {
       const form = document.getElementById('class-add-form');
       form.classList.toggle('visible');
@@ -6584,6 +6643,7 @@ const DRAW = {
 
   // Zeichnungen überleben Reload — separater Key, damit Board-Daten bei vollem Speicher Vorrang behalten
   _persistDrawings() {
+    if (APP._resetting) return;
     try {
       // Zeichnungen gelöschter Tafeln nicht ewig mitschleppen
       const alive = new Set();
@@ -6843,6 +6903,7 @@ const TOOLBAR_ITEMS = [
 // Ausstehende (debounced) Speicherungen sofort schreiben, wenn der Tab verschwindet —
 // sonst gehen die letzten ~2 Sekunden Arbeit beim Schließen verloren
 function flushPendingSaves() {
+  if (APP._resetting) return;
   if (APP.saveTimer) { clearTimeout(APP.saveTimer); APP._persist(); }
   if (AUTH._syncTimer) { clearTimeout(AUTH._syncTimer); AUTH._syncTimer = null; AUTH._doSync(); }
 }
@@ -7022,7 +7083,7 @@ function openToolbarCustomizer() {
   });
 
   const resetBtn = document.createElement('button');
-  resetBtn.textContent = 'Zurücksetzen';
+  resetBtn.textContent = 'Nur die Leiste zurücksetzen';
   resetBtn.style.cssText = 'margin-top:12px;width:100%;border:none;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);border-radius:8px;padding:7px;cursor:pointer;font-size:12px;';
   resetBtn.addEventListener('click', () => {
     localStorage.removeItem('kb_toolbar_prefs');
@@ -7031,6 +7092,12 @@ function openToolbarCustomizer() {
     openToolbarCustomizer();
   });
   panel.appendChild(resetBtn);
+
+  const resetAllBtn = document.createElement('button');
+  resetAllBtn.textContent = '↺ Alles zurücksetzen…';
+  resetAllBtn.style.cssText = 'margin-top:8px;width:100%;border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.12);color:#fca5a5;border-radius:8px;padding:7px;cursor:pointer;font-size:12px;';
+  resetAllBtn.addEventListener('click', () => { panel.remove(); openResetDialog(); });
+  panel.appendChild(resetAllBtn);
 
   document.body.appendChild(panel);
   document.addEventListener('pointerdown', function outside(ev) {
@@ -7078,6 +7145,7 @@ if (_pollParam) {
   applyToolbarPrefs();
   applyToolbarPosition(localStorage.getItem('kb_toolbar_pos') || 'top');
   init();
+  if (new URLSearchParams(window.location.search).has('reset')) openResetDialog();
 }
 </script>
 </body>
