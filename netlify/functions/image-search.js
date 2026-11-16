@@ -71,7 +71,7 @@ async function smartTranslate(query) {
   } catch (e) { return query; }
 }
 
-async function searchPixabay(query, type, index) {
+async function searchPixabay(query, type, index, large) {
   if (!PIXABAY_KEY) return null;
   try {
     const url = 'https://pixabay.com/api/?key=' + PIXABAY_KEY
@@ -83,7 +83,8 @@ async function searchPixabay(query, type, index) {
     const data = await res.json();
     if (!data.hits || data.hits.length === 0) return null;
     const hit = data.hits[index % data.hits.length];
-    return { url: hit.webformatURL, credit: 'Pixabay', more: data.hits.length > 1 };
+    // Für Tafel-Hintergründe die größere Fassung (1280 px), sonst die kleine (640 px)
+    return { url: (large && hit.largeImageURL) || hit.webformatURL, credit: 'Pixabay', more: data.hits.length > 1 };
   } catch (e) { return null; }
 }
 
@@ -114,14 +115,14 @@ async function searchWikimedia(query, index) {
 // Bild auf dem Server laden und als data:-Adresse zurückgeben. Vorteile: Der Browser im
 // Klassenzimmer ruft keinen fremden Bilderdienst auf, und das Bild bleibt auf der Tafel
 // erhalten (die Adressen von Pixabay verfallen nach einem Tag).
-async function toDataUrl(url) {
+async function toDataUrl(url, maxBytes) {
   try {
     const res = await fetch(url, { headers: { 'User-Agent': 'ClassPuls/1.0' } });
     if (!res.ok) return null;
     const type = (res.headers.get('content-type') || '').split(';')[0].trim();
     if (!/^image\/(jpeg|png|webp|gif)$/.test(type)) return null;
     const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length > 900 * 1024) return null;   // zu groß für Tafel-Speicher und Antwortgröße
+    if (buf.length > (maxBytes || 900 * 1024)) return null;   // zu groß für Tafel-Speicher und Antwortgröße
     return 'data:' + type + ';base64,' + buf.toString('base64');
   } catch (e) { return null; }
 }
@@ -147,14 +148,15 @@ exports.handler = async (event) => {
     if (/^\W*BLOCK\W*$/i.test(englishQuery)) return reply(200, { url: null, blocked: true });
 
     // Pixabay zuerst (bessere Qualität, Jugendschutz-Filter), sonst Wikimedia
-    const found = (await searchPixabay(englishQuery, type, index))
-      || (type === 'illustration' ? await searchPixabay(englishQuery, 'photo', index) : null)
+    const large = body.size === 'large';
+    const found = (await searchPixabay(englishQuery, type, index, large))
+      || (type === 'illustration' ? await searchPixabay(englishQuery, 'photo', index, large) : null)
       || (await searchWikimedia(englishQuery, index));
     if (!found) return reply(200, { url: null });
 
     const out = { url: found.url, credit: found.credit, more: !!found.more };
     if (body.inline) {
-      const dataUrl = await toDataUrl(found.url);
+      const dataUrl = await toDataUrl(found.url, large ? 1300 * 1024 : 0);
       if (dataUrl) out.dataUrl = dataUrl;
     }
     return reply(200, out);

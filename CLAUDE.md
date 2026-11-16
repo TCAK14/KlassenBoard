@@ -56,6 +56,17 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
   Formen zeichnen ihre Vorschau über dem Undo-Schnappschuss (`_previewShape`). Lineal `#draw-ruler` (`_toggleRuler`):
   Striche, die dicht an einer Kante beginnen, werden auf die Kante projiziert (`_rulerSnap`/`_project`). Undo + Redo
 
+## Elemente seit „alles von Classroomscreen und besser" (Nov 2026)
+- Neu: `worksymbols`, `scoreboard`, `visualtimer` (läuft über denselben Timer-Wächter wie `timer`), `countdown`,
+  `calendar` (markiert Countdown-Tage der Tafel), `sticker` (Karte ohne Hintergrund via `data-type`), `webcam`
+  (Stream nie automatisch: `CAM_ON` gilt nur pro Sitzung; `stopCam` beim Neuaufbau/Entfernen), `video` (Datei in IndexedDB wie PDF)
+- Würfel: gezeichnete SVG-Würfel, 1–6 Stück (`config.count`, `config.values`)
+- Klassenliste: `getRoster()/setRoster()` in localStorage `classpuls_roster` pro Klasse, NICHT in der Cloud.
+  Neue `names`/`groups` starten damit (`newWidgetConfig`); Dialoge haben „Klassenliste einfügen/merken"
+- Tafel teilen: `shareBoardLink()` packt die Tafel (ohne Bilder/Dateien, `_slimConfig`) deflate-komprimiert in
+  `#tafel=…`; `checkSharedBoard()` beim Start fragt vor dem Hinzufügen nach und säubert die Adresse
+- Hintergrund: Fotosuche im Hintergrund-Dialog über `image-search` mit `size:'large'` (Pixabay 1280 px, data:-URL)
+
 ## PDF-Element (`pdf`)
 - Dateien liegen in IndexedDB (`PDFSTORE`, DB `classpuls_files`, bis 60 MB) — NICHT in localStorage/Cloud. Auf einem
   anderen Gerät zeigt das Element „liegt nicht auf diesem Gerät" und lässt die Datei neu wählen
@@ -131,6 +142,5 @@ Zusätzlich die Seite laden und die Konsole auf Fehler prüfen.
 - [ ] Text-Tool: weitere Verbesserungen (Schriftauswahl, Größe)
 - [ ] Redesign Etappe 2 (Rest): direkte Bedienung für weitere Elemente (Zufallszahl-Bereich, Namen/Checkliste direkt
       im Element bearbeiten, QR-Link eintippen); KI-Tafel-Generator nutzt noch ein einfaches Fließ-Layout
-- [ ] Redesign Etappe 3: fehlende Elemente (Arbeitssymbole, Punktetafel, visueller Timer, Countdown, Kalender, Webcam)
 - [ ] Rest aus Etappe 1: Zeichen-Leiste und Dialog-Überschriften nutzen noch Emojis; Dialoge sind noch dunkel;
       Landing Page hat noch das alte Indigo-Branding und die Systemschrift

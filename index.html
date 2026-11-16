@@ -1040,6 +1040,102 @@ body[data-cards="dark"] .tm-ring .prg { stroke:var(--accent-soft); }
   .tpl-desc2 { display:none; }
 }
 
+.dc { width:100%; height:100%; box-sizing:border-box; padding:8px 10px; display:flex; flex-direction:column; gap:8px; }
+.dc-area { flex:1 1 0; min-height:0; display:grid; gap:12px; justify-content:center; align-content:center; border:0; background:transparent; padding:0; cursor:pointer; }
+.dc-die svg { display:block; filter:drop-shadow(0 3px 6px rgba(0,0,0,0.18)); }
+.dc-face { fill:#fff; stroke:#B4BDB7; stroke-width:2.5; }
+.dc-pip { fill:#1B2422; }
+.dc-area.rolling .dc-die { animation:dcShake .14s linear infinite; }
+@keyframes dcShake { 0%,100% { transform:rotate(0); } 25% { transform:rotate(-8deg); } 75% { transform:rotate(8deg); } }
+.dc-ctrl { flex:none; display:flex; align-items:center; gap:6px; height:44px; }
+.dc-ctrl .tm-btn { flex:none; width:clamp(32px, 14cqw, 44px); min-height:40px; padding:0; }
+.dc-label { flex:none; min-width:24px; text-align:center; font-size:16px; font-weight:700; }
+.dc-sum { flex:1 1 0; min-width:0; white-space:nowrap; overflow:hidden; text-align:right; font-size:clamp(15px, 6cqw, 26px); font-weight:700; color:var(--accent-ink); font-variant-numeric:tabular-nums; }
+body[data-cards="dark"] .dc-sum { color:var(--accent-soft); }
+
+/* ── Arbeitssymbole ── */
+.ws-grid { width:100%; height:100%; box-sizing:border-box; padding:8px; display:grid; gap:8px; grid-auto-rows:1fr; }
+.ws-tile {
+  min-width:0; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5em; padding:4px;
+  border-radius:16px; border:2px solid var(--w-line); background:transparent; color:var(--w-ink);
+  font:inherit; font-weight:700; line-height:1.15; text-align:center; cursor:pointer; transition:background .15s, opacity .15s, border-color .15s;
+}
+.ws-tile svg { flex:none; max-height:62%; }
+.ws-tile:hover { border-color:var(--w-line-strong); }
+.ws-grid.has-active .ws-tile:not(.on) { opacity:.32; }
+.ws-tile.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+/* ── Punktetafel ── */
+.sb { width:100%; height:100%; box-sizing:border-box; padding:8px; display:flex; gap:8px; }
+.sb-col { flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:space-between; gap:4px; padding:8px 6px; border-radius:16px; background:var(--w-fill); border:2px solid transparent; }
+.sb-col.lead { border-color:var(--sb); background:var(--w-fill-2); }
+.sb-name { width:100%; min-width:0; box-sizing:border-box; padding:4px 6px; border:0; border-radius:8px; background:transparent; color:var(--sb); font:inherit; font-weight:700; text-align:center; outline:none; }
+body[data-cards="dark"] .sb-name { color:var(--w-ink); }
+.sb-name:focus { background:var(--w-fill-3); }
+.sb-num { font-weight:700; line-height:1; font-variant-numeric:tabular-nums; color:var(--w-ink); }
+.sb-row { display:flex; gap:6px; width:100%; }
+.sb-btn { flex:1 1 0; min-width:0; height:44px; border:0; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; background:var(--w-fill-3); color:var(--w-ink); }
+.sb-btn:last-child { flex:1.6 1 0; background:var(--sb); color:#fff; }
+.sb-btn:active { transform:scale(0.95); }
+
+/* ── Zeitkreis ── */
+.vt { width:100%; height:100%; box-sizing:border-box; padding:8px 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; }
+.vt-disc { flex:none; }
+.vt-disc svg { display:block; width:100%; height:100%; }
+.vt-face { fill:#fff; stroke:var(--w-line-strong); stroke-width:1; }
+body[data-cards="dark"] .vt-face { fill:rgba(255,255,255,0.08); }
+.vt-pie { fill:none; stroke:#D92D20; stroke-width:50; transition:stroke-dasharray .3s linear; }
+.vt.urgent .vt-pie { stroke:#B42318; }
+.vt-ticks line { stroke:var(--w-ink); stroke-width:1.2; stroke-linecap:round; opacity:.55; }
+.vt-hub { fill:var(--w-ink); }
+.vt-digits { font-weight:700; line-height:1; font-variant-numeric:tabular-nums; }
+.vt.urgent .vt-digits { color:var(--w-danger); }
+.vt-row { width:100%; max-width:340px; }
+.vt-row .tm-go { flex:2.2 1 0; min-height:42px; font-size:16px; }
+.vt-row .tm-go .ic { display:none; }
+
+/* ── Countdown ── */
+.cd { width:100%; height:100%; box-sizing:border-box; padding:10px 14px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:2px; }
+.cd > * { flex:none; }
+.cd-small { color:var(--w-muted); font-weight:700; line-height:1.2; }
+.cd-small:empty { display:none; }
+.cd-num { font-weight:700; line-height:1; font-variant-numeric:tabular-nums; color:var(--accent-ink); }
+body[data-cards="dark"] .cd-num { color:var(--accent-soft); }
+.cd.today .cd-num { color:#D9480F; }
+.cd-title { font-weight:700; line-height:1.2; overflow-wrap:anywhere; }
+.cd-date { color:var(--w-faint); margin-top:4px; }
+
+/* ── Kalender ── */
+.cal-head { flex:none; align-self:stretch; display:flex; align-items:center; gap:4px; padding:5px 8px; background:var(--w-bar); }
+.cal-title { flex:1 1 0; min-width:0; font-size:15px; font-weight:700; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cal-today { flex:none; height:30px; padding:0 10px; border-radius:8px; border:1.5px solid var(--w-line-strong); background:transparent; color:var(--w-ink); font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
+.cal-grid { flex:1 1 0; align-self:stretch; min-height:0; box-sizing:border-box; padding:4px 6px 6px; display:grid; grid-template-columns:repeat(8, 1fr); grid-auto-rows:1fr; }
+.cal-h { display:flex; align-items:center; justify-content:center; font-size:.62em; font-weight:700; color:var(--w-muted); text-transform:uppercase; letter-spacing:.04em; }
+.cal-c { position:relative; display:flex; align-items:center; justify-content:center; font-weight:600; font-variant-numeric:tabular-nums; }
+.cal-c span { display:flex; align-items:center; justify-content:center; width:1.9em; height:1.9em; border-radius:50%; }
+.cal-c.kw, .cal-h.kw { color:var(--w-faint); font-size:.62em; font-weight:700; border-right:1px solid var(--w-line); }
+.cal-c.out { color:var(--w-faint); opacity:.55; }
+.cal-c.we { color:var(--w-muted); }
+.cal-c.now span { background:var(--accent); color:#fff; }
+.cal-c.mark span { box-shadow:inset 0 0 0 2px #D9480F; }
+
+/* ── Sticker: kein Kartenhintergrund ── */
+.widget[data-type="sticker"] { background:transparent; border-color:transparent; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; }
+.widget[data-type="sticker"]:hover, .widget[data-type="sticker"].selected { background:rgba(255,255,255,0.1); }
+.st { line-height:1; user-select:none; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.35)); }
+
+/* ── Kamera und Video ── */
+.cam-stage { position:relative; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.cam-stage video, .vid { width:100%; height:100%; object-fit:contain; background:#000; display:block; }
+.cam-stage video.mirror { transform:scaleX(-1); }
+.cam-stage .pdf-loading { color:#fff; background:#000; }
+.cam-bar { position:absolute; left:50%; bottom:8px; transform:translateX(-50%); display:flex; gap:6px; padding:5px; border-radius:14px; background:rgba(0,0,0,0.55); opacity:0; transition:opacity .15s; max-width:calc(100% - 12px); }
+.cam-stage:hover .cam-bar, .cam-bar:focus-within { opacity:1; }
+@media (hover:none) { .cam-bar { opacity:1; } }
+.cam-btn { display:flex; align-items:center; gap:6px; height:38px; padding:0 10px; border:0; border-radius:10px; background:rgba(255,255,255,0.14); color:#fff; font:inherit; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.cam-btn:hover, .cam-btn.on { background:rgba(255,255,255,0.3); }
+.vid { flex:1 1 0; align-self:stretch; min-height:0; }
+
 /* ── Einzelnes Element im Vollbild ── */
 .widget.wfull { position:fixed !important; left:0 !important; top:0 !important; width:100vw !important; height:100vh !important; z-index:5000 !important; border-radius:0; border:0; }
 .widget.wfull .widget-header, .widget.wfull .resize-handle, .widget.wfull .w-full-btn { display:none; }
@@ -1470,6 +1566,16 @@ const ICONS = {
   files: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
   pdf: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
   chevronLeft: 'M15 6l-6 6 6 6',
+  worksymbols: 'M9 11V5a1.5 1.5 0 0 1 3 0v5M12 10V4a1.5 1.5 0 0 1 3 0v6M15 10V6.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-1a5 5 0 0 1-4.3-2.4L4.2 13a1.5 1.5 0 0 1 2.6-1.5L9 14.5',
+  scoreboard: 'M4 5h16v14H4zM12 5v14M7.5 10v4M15.5 10h2v2h-2v2h2',
+  visualtimer: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 12V3a9 9 0 0 1 9 9z',
+  countdown: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M9 15l2 2 4-4',
+  calendar: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01',
+  sticker: 'M12 3l2.6 5.6 6 .7-4.5 4.1 1.3 6L12 16.5 6.6 19.4l1.3-6L3.4 9.3l6-.7z',
+  webcam: 'M4 7h11v10H4zM15 10l5-3v10l-5-3M9.5 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
+  video: 'M4 4h16v16H4zM8 4v16M16 4v16M4 8h4M4 12h4M4 16h4M16 8h4M16 12h4M16 16h4',
+  share: 'M8 12a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM21 6a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM21 18a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM7.7 10.8l8.6-3.6M7.7 13.2l8.6 3.6',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
   zoomIn: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4M11 8v6M8 11h6',
   zoomOut: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4M8 11h6',
   marker: 'M9 14l6-9 4 3-6 9zM9 14l-2 5 6-2M4 21h7',
@@ -1906,7 +2012,7 @@ const REGISTRY = {
   timetable:    { label:'Stundenplan',   emoji:'📅', w:320, h:300 },
   image:        { label:'Bild',          emoji:'🖼', w:300, h:220 },
   youtube:      { label:'YouTube',       emoji:'▶️', w:360, h:220 },
-  dice:         { label:'Würfel',        emoji:'🎲', w:200, h:200 },
+  dice:         { label:'Würfel',        emoji:'🎲', w:280, h:240 },
   randomnum:    { label:'Zufallszahl',   emoji:'🔢', w:260, h:200 },
   groups:       { label:'Gruppen',       emoji:'👥', w:340, h:280 },
   agenda:       { label:'Agenda',        emoji:'📋', w:300, h:260 },
@@ -1916,6 +2022,14 @@ const REGISTRY = {
   browser:      { label:'Browser',      emoji:'🌐', w:600, h:450 },
   files:        { label:'Dateien',       emoji:'📂', w:500, h:400 },
   pdf:          { label:'PDF',           emoji:'📕', w:520, h:660 },
+  worksymbols:  { label:'Arbeitssymbole', emoji:'🤫', w:460, h:320 },
+  scoreboard:   { label:'Punktetafel',   emoji:'🏆', w:460, h:300 },
+  visualtimer:  { label:'Zeitkreis',     emoji:'⏳', w:340, h:420 },
+  countdown:    { label:'Countdown',     emoji:'📆', w:360, h:260 },
+  calendar:     { label:'Kalender',      emoji:'🗓', w:420, h:380 },
+  sticker:      { label:'Sticker',       emoji:'⭐', w:170, h:170 },
+  webcam:       { label:'Kamera',        emoji:'📷', w:520, h:360 },
+  video:        { label:'Video',         emoji:'🎬', w:560, h:380 },
   noise:        { label:'Lautstärke',    emoji:'🎤', w:260, h:220 },
   poll:         { label:'Live-Umfrage',  emoji:'📊', w:340, h:280 },
   ai:           { label:'KI-Assistent', emoji:'🤖', w:360, h:300 },
@@ -1924,11 +2038,11 @@ const REGISTRY = {
 };
 
 const WIDGET_CATS = [
-  { label:'Zeit',        types:['clock','timer','stopwatch'] },
-  { label:'Unterricht',  types:['text','goal','homework','traffic','names'] },
+  { label:'Zeit',        types:['clock','timer','visualtimer','stopwatch','countdown','calendar'] },
+  { label:'Unterricht',  types:['text','goal','homework','traffic','worksymbols','names','scoreboard','sticker'] },
   { label:'Tools',       types:['qr','dice','randomnum','groups','noise','poll'] },
   { label:'Planung',     types:['agenda','checklist','phases','status'] },
-  { label:'Medien',      types:['pdf','youtube','files','browser','favorites'] },
+  { label:'Medien',      types:['pdf','image','video','youtube','webcam','files','browser','favorites'] },
   { label:'Stundenplan', types:['timetable'] },
 ];
 
@@ -2081,6 +2195,46 @@ const BUILT_IN_TEMPLATES = [
     { type:'noise',   x:24,  y:24,  w:330, h:484, config:{} },
     { type:'timer',   x:378, y:24,  w:674, h:250, config:{ minutes:20 } },
     { type:'traffic', x:378, y:298, w:674, h:210, config:{ state:'yellow' } },
+  ]},
+  { id:'tpl-arbeitsphase', name:'Arbeitsphase', desc:'Arbeitssymbole, Zeitkreis, Auftrag', bg:TPL_BG.green, widgets:[
+    { type:'worksymbols', x:24,  y:24,  w:620, h:300, config:{ active:['quiet'] } },
+    { type:'visualtimer', x:668, y:24,  w:384, h:484, config:{ minutes:15 } },
+    { type:'text',        x:24,  y:348, w:620, h:160, config:{ text:'Arbeitsauftrag:\n' } },
+  ]},
+  { id:'tpl-quiz', name:'Quiz-Duell', desc:'Punktetafel, Timer, Frage', bg:TPL_BG.night, widgets:[
+    { type:'scoreboard', x:24,  y:24,  w:620, h:300, config:{ teams:[{name:'Team Blau',score:0},{name:'Team Rot',score:0}] } },
+    { type:'timer',      x:668, y:24,  w:384, h:300, config:{ minutes:1 } },
+    { type:'text',       x:24,  y:348, w:1028, h:160, config:{ text:'Frage 1:' } },
+  ]},
+  { id:'tpl-wettbewerb', name:'Team-Wettbewerb', desc:'Vier Teams, Stoppuhr, Gruppen', bg:TPL_BG.slate, widgets:[
+    { type:'scoreboard', x:24,  y:24,  w:1028, h:290, config:{ teams:[{name:'Team 1',score:0},{name:'Team 2',score:0},{name:'Team 3',score:0},{name:'Team 4',score:0}] } },
+    { type:'stopwatch',  x:24,  y:338, w:400, h:170, config:{} },
+    { type:'groups',     x:448, y:338, w:604, h:170, config:{ names:'', size:4 } },
+  ]},
+  { id:'tpl-ferien', name:'Ferien-Countdown', desc:'Countdown, Kalender, Hinweis', bg:TPL_BG.night, widgets:[
+    { type:'countdown', x:24,  y:24,  w:500, h:300, config:{ title:'Ferien', date:'' } },
+    { type:'calendar',  x:548, y:24,  w:504, h:484, config:{} },
+    { type:'text',      x:24,  y:348, w:500, h:160, config:{ text:'Bis dahin schaffen wir noch:' } },
+  ]},
+  { id:'tpl-wochenstart', name:'Wochenstart', desc:'Kalender, Uhr, Wochenplan', bg:TPL_BG.green, widgets:[
+    { type:'calendar',  x:24,  y:24,  w:440, h:484, config:{} },
+    { type:'clock',     x:488, y:24,  w:564, h:170, config:{} },
+    { type:'checklist', x:488, y:218, w:564, h:290, config:{ items:[] } },
+  ]},
+  { id:'tpl-film', name:'Film & Aufgabe', desc:'Video, Beobachtungsauftrag, Timer', bg:TPL_BG.slate, widgets:[
+    { type:'youtube', x:24,  y:24,  w:660, h:484, config:{} },
+    { type:'text',    x:708, y:24,  w:344, h:260, config:{ text:'Achte beim Film auf:' } },
+    { type:'timer',   x:708, y:308, w:344, h:200, config:{ minutes:10 } },
+  ]},
+  { id:'tpl-dokukamera', name:'Dokumentenkamera', desc:'Kamera groß, Notizen', bg:TPL_BG.slate, widgets:[
+    { type:'webcam', x:24,  y:24,  w:740, h:484, config:{} },
+    { type:'text',   x:788, y:24,  w:264, h:484, config:{ text:'Notizen:' } },
+  ]},
+  { id:'tpl-grundschule', name:'Grundschul-Start', desc:'Zeitkreis, Symbole, Sticker', bg:TPL_BG.green, widgets:[
+    { type:'visualtimer', x:24,  y:24,  w:384, h:484, config:{ minutes:10 } },
+    { type:'worksymbols', x:432, y:24,  w:620, h:300, config:{ shown:['quiet','whisper','hand','listen','circle','tidy'] } },
+    { type:'goal',        x:432, y:348, w:440, h:160, config:{ text:'' } },
+    { type:'sticker',     x:896, y:348, w:156, h:160, config:{ emoji:'⭐' } },
   ]},
 ];
 
@@ -2259,6 +2413,7 @@ function safeText(str) {
 function resetLocalData() {
   ['classpuls_v2','classpuls_classes','classpuls_current_class','classpuls_drawings',
    'classpuls_dirty_at','classpuls_synced_at','classpuls_owner'].forEach(k => localStorage.removeItem(k));
+  localStorage.removeItem('classpuls_roster');   // Klassenlisten liegen nur lokal — beim Abmelden mit löschen
   clearTimeout(APP.saveTimer); APP.saveTimer = null;
   APP._dirtyPending = false;
   APP.state.boards = [];
@@ -2335,6 +2490,7 @@ async function resetEverything() {
    'classpuls_dirty_at','classpuls_synced_at','classpuls_owner','classpuls_visited',
    'kb_toolbar_pos','kb_toolbar_side','kb_toolbar_prefs','kb_dock_items','kb_autohide','kb_cards'].forEach(k => localStorage.removeItem(k));
   try { indexedDB.deleteDatabase('classpuls_files'); } catch(e) {}
+  localStorage.removeItem('classpuls_roster');
   // Neu laden → die App startet wie beim ersten Besuch (ohne ?reset in der Adresse)
   window.location.replace(window.location.pathname);
   return true;
@@ -2624,6 +2780,16 @@ function findFreeSpot(board, w, h) {
   return { x: sx + Math.max(12, Math.min(40 + n * 28, viewW - w - 12)), y: sy + 40 + n * 28 };
 }
 
+// Standard-Einstellungen; Namensrad und Gruppen starten mit der gemerkten Klassenliste statt mit Beispielnamen
+function newWidgetConfig(type, extraConfig) {
+  const cfg = { ...getDefaultConfig(type), ...(extraConfig || {}) };
+  if ((type === 'names' || type === 'groups') && !(extraConfig && 'names' in extraConfig)) {
+    const roster = getRoster();
+    if (roster) cfg.names = roster;
+  }
+  return cfg;
+}
+
 function addWidget(type, extraConfig={}, size) {
   const board = APP.activeBoard();
   if (!board) return;
@@ -2640,7 +2806,7 @@ function addWidget(type, extraConfig={}, size) {
     h: newH,
     zIndex: nextZ(board),
     locked: false,
-    config: { ...getDefaultConfig(type), ...extraConfig },
+    config: newWidgetConfig(type, extraConfig),
     createdAt: new Date().toISOString(),
   };
   board.widgets.push(widget);
@@ -2664,6 +2830,7 @@ function removeWidget(id) {
   board.widgets = board.widgets.filter(w => w.id !== id);
   stopInterval(id);
   stopAudioStream(id);
+  stopCam(id); CAM_ON.delete(id);
   stopPollChannel(id);
   APP.selectedId = null;
   APP.save();
@@ -2877,6 +3044,7 @@ function renderBoardBg() {
 // ══════════════════════════════════════════════════════════════
 function renderWidgets() {
   exitWidgetFull(true);
+  Object.keys(CAM_STREAMS).forEach(stopCam);
   stopAllIntervals();
   stopAllAudioStreams();
   stopAllPollChannels(); // Poll-Renderer abonniert neu — alte Realtime-Channels nicht leaken
@@ -2916,7 +3084,7 @@ function updateLayerSize() {
 // ── Einzelnes Element im Vollbild (PDF, Video, Timer … für die ganze Klasse) ──
 let _wfull = null;
 // Eingebettete Seiten/Videos füllen den Rahmen von selbst — nicht neu aufbauen (Video liefe sonst von vorn)
-const WFULL_NO_RERENDER = new Set(['youtube', 'browser']);
+const WFULL_NO_RERENDER = new Set(['youtube', 'browser', 'webcam', 'video']);
 // Im Vollbild rechnen die Elemente mit der Bildschirmgröße statt mit ihrer gespeicherten Größe.
 // Ein Proxy statt echter Änderung: die gespeicherte Größe bleibt unangetastet.
 function widgetFullProxy(w) {
@@ -2968,11 +3136,13 @@ function exitWidgetFull(skipRender) {
 
 // Elemente mit Einstellungs-Dialog (muss zu openWidgetSettings passen)
 const WIDGET_HAS_SETTINGS = new Set(['timer','text','qr','names','homework','goal','timetable','image','youtube',
-  'noise','poll','randomnum','groups','agenda','checklist','phases']);
+  'noise','poll','randomnum','groups','agenda','checklist','phases',
+  'visualtimer','worksymbols','countdown','sticker','scoreboard']);
 
 function buildWidgetEl(w) {
   const shell = el('div','widget' + (w.id === APP.selectedId ? ' selected' : ''));
   shell.dataset.wid = w.id;
+  shell.dataset.type = w.type;
   shell.style.cssText = `left:${w.x}px;top:${w.y}px;width:${w.w}px;height:${w.h}px;z-index:${w.zIndex||1}`;
 
   // Header (only in edit mode)
@@ -3282,7 +3452,7 @@ setInterval(() => {
   const now = Date.now();
   (APP.state.boards || []).forEach(board => {
     (board.widgets || []).forEach(w => {
-      if (!w || w.type !== 'timer' || !w._timerRunning || !w._timerEndAt || now < w._timerEndAt) return;
+      if (!w || (w.type !== 'timer' && w.type !== 'visualtimer') || !w._timerRunning || !w._timerEndAt || now < w._timerEndAt) return;
       w._timerRunning = false;
       w._timerRemaining = 0;
       // Lief der Timer ab, während die Seite geschlossen war: nicht nachträglich Alarm schlagen
@@ -3527,6 +3697,290 @@ function openPdfFullscreen(w, onClose) {
     else go(e.clientX > window.innerWidth / 2 ? 1 : -1);   // Tippen: rechte Hälfte = weiter
   });
   getPdfDoc(w.config.fileId).then(d => { doc = d; if (!d) close(); else show(); }, close);
+}
+
+// ══════════════════════════════════════════════════════════════
+// KLASSENLISTE — einmal eintragen, in Namensrad und Gruppen wiederverwenden.
+// Liegt bewusst NUR auf diesem Gerät (localStorage), nicht in der Cloud.
+// ══════════════════════════════════════════════════════════════
+function getRoster() {
+  try { return String((JSON.parse(localStorage.getItem('classpuls_roster') || '{}') || {})[CLASSES.current() || '_'] || ''); }
+  catch(e) { return ''; }
+}
+function setRoster(text) {
+  let all = {};
+  try { all = JSON.parse(localStorage.getItem('classpuls_roster') || '{}') || {}; } catch(e) {}
+  const names = String(text || '').split('\n').map(s => s.trim()).filter(Boolean).slice(0, 60).join('\n');
+  all[CLASSES.current() || '_'] = names;
+  try { localStorage.setItem('classpuls_roster', JSON.stringify(all)); } catch(e) {}
+  return names;
+}
+// Zwei Knöpfe unter einem Namens-Feld: Liste der Klasse einfügen / als Klassenliste merken
+function attachRosterButtons(overlay, textareaSel) {
+  const ta = overlay.querySelector(textareaSel);
+  if (!ta) return;
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:-6px 0 14px';
+  const use = document.createElement('button'); use.className = 'btn-secondary'; use.type = 'button';
+  const save = document.createElement('button'); save.className = 'btn-secondary'; save.type = 'button';
+  const cls = CLASSES.current();
+  use.textContent = 'Klassenliste einfügen';
+  save.textContent = 'Als Klassenliste merken';
+  use.addEventListener('click', () => {
+    const r = getRoster();
+    if (!r) { toast('Für ' + (cls || 'diese Klasse') + ' ist noch keine Klassenliste gemerkt'); return; }
+    ta.value = r;
+  });
+  save.addEventListener('click', () => {
+    const r = setRoster(ta.value);
+    toast(r ? '✅ Klassenliste gemerkt (' + r.split('\n').length + ' Namen, nur auf diesem Gerät)' : 'Klassenliste geleert');
+  });
+  row.append(use, save);
+  ta.closest('.form-group').after(row);
+}
+
+// ── Arbeitssymbole ──
+const WORK_SYMBOLS = [
+  { k:'quiet',   label:'Leise arbeiten', d: ICONS.volOff },
+  { k:'whisper', label:'Flüstern',       d: ICONS.volLow },
+  { k:'solo',    label:'Einzelarbeit',   d: ICONS.names },
+  { k:'partner', label:'Partnerarbeit',  d: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2.5 20a5.5 5.5 0 0 1 11 0M12.5 15.5a5.5 5.5 0 0 1 9 4.5' },
+  { k:'group',   label:'Gruppenarbeit',  d: ICONS.groups },
+  { k:'hand',    label:'Melden',         d: ICONS.worksymbols },
+  { k:'listen',  label:'Zuhören',        d: 'M7 9a5 5 0 0 1 10 0c0 3-3 4-3 7a3 3 0 0 1-6 .5M10 10a2 2 0 0 1 4 0c0 1.5-2 2-2 4' },
+  { k:'read',    label:'Lesen',          d: 'M12 6c-2-1.5-5-2-8-1.5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-13C17 4 14 4.5 12 6zM12 6v13' },
+  { k:'write',   label:'Schreiben',      d: ICONS.edit },
+  { k:'circle',  label:'Sitzkreis',      d: 'M12 3.6h.01M17.9 6.1h.01M20.4 12h.01M17.9 17.9h.01M12 20.4h.01M6.1 17.9h.01M3.6 12h.01M6.1 6.1h.01' },
+  { k:'tidy',    label:'Aufräumen',      d: ICONS.ai },
+  { k:'drink',   label:'Trinkpause',     d: 'M6 4h12l-1.5 16h-9zM7 9h10' },
+];
+const WORK_SYMBOLS_DEFAULT = ['quiet','whisper','solo','partner','group','hand'];
+function openWorkSymbolsSettings(w) {
+  const shown = Array.isArray(w.config.shown) && w.config.shown.length ? w.config.shown : WORK_SYMBOLS_DEFAULT;
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>Arbeitssymbole</h2>
+      <div class="form-group"><label>Welche Symbole sollen angezeigt werden?</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px">
+          ${WORK_SYMBOLS.map(s => `<label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#fff;cursor:pointer;margin:0;text-transform:none;letter-spacing:0;font-weight:500">
+            <input type="checkbox" data-k="${s.k}" ${shown.includes(s.k) ? 'checked' : ''} style="width:18px;height:18px"> ${s.label}</label>`).join('')}
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#fff;margin-bottom:14px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500">
+        <input type="checkbox" id="ws-multi" ${w.config.multi ? 'checked' : ''} style="width:18px;height:18px"> Mehrere Symbole gleichzeitig aktiv
+      </label>
+      <button class="btn-primary" id="ws-save">Speichern</button>
+    </div>
+  `);
+  overlay.querySelector('#ws-save').addEventListener('click', () => {
+    const keys = [...overlay.querySelectorAll('input[data-k]:checked')].map(i => i.dataset.k);
+    if (!keys.length) { toast('Bitte mindestens ein Symbol auswählen'); return; }
+    w.config.shown = keys;
+    w.config.multi = overlay.querySelector('#ws-multi').checked;
+    w.config.active = (w.config.active || []).filter(k => keys.includes(k)).slice(0, w.config.multi ? 99 : 1);
+    APP.save();
+    const shell = document.querySelector('[data-wid="' + w.id + '"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+  });
+}
+
+// ── Countdown ──
+function openCountdownSettings(w) {
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>Countdown</h2>
+      <div class="form-group"><label>Worauf wird gezählt?</label>
+        <input type="text" id="cd-title" maxlength="60" placeholder="z. B. Sommerferien, Klassenfahrt, Mathe-Arbeit" value="${safeText(w.config.title || '')}"></div>
+      <div class="form-group"><label>Datum</label>
+        <input type="date" id="cd-date" value="${safeText(w.config.date || '')}" style="width:100%;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#fff;font:inherit;font-size:14px;color-scheme:dark"></div>
+      <button class="btn-primary" id="cd-save">Speichern</button>
+    </div>
+  `);
+  overlay.querySelector('#cd-save').addEventListener('click', () => {
+    const d = overlay.querySelector('#cd-date').value;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { toast('Bitte ein Datum auswählen'); return; }
+    w.config.date = d;
+    w.config.title = overlay.querySelector('#cd-title').value.trim();
+    APP.save();
+    renderWidgets();   // auch der Kalender markiert den Tag
+    close();
+  });
+}
+
+// ── Sticker ──
+const STICKERS = ['⭐','🌟','🏆','🥇','👍','👏','🎉','🎈','💯','✅','❤️','😀','😎','🤩','🚀','🌈','🔥','💡','📚','✏️','🎵','⚽','🍀','☀️','🦉','🐢','🦊','🐝','🧩','🎯','⏰','🤫','🙋','🤝','💪','🧠'];
+function openStickerPicker(w) {
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>Sticker auswählen</h2>
+      <div id="st-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:6px"></div>
+    </div>
+  `);
+  const grid = overlay.querySelector('#st-grid');
+  STICKERS.forEach(s => {
+    const b = document.createElement('button');
+    b.textContent = s;
+    b.style.cssText = 'height:54px;font-size:30px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);cursor:pointer';
+    b.addEventListener('click', () => {
+      w.config.emoji = s;
+      APP.save();
+      const shell = document.querySelector('[data-wid="' + w.id + '"]');
+      if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+      close();
+    });
+    grid.appendChild(b);
+  });
+}
+
+// ── Punktetafel ──
+function openScoreboardSettings(w) {
+  const teams = Array.isArray(w.config.teams) ? w.config.teams : [];
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>Punktetafel</h2>
+      <div class="form-group"><label>Teams (je eines pro Zeile, höchstens 8)</label>
+        <textarea id="sb-teams" rows="6" style="resize:vertical">${safeText(teams.map(t => t.name).join('\n'))}</textarea></div>
+      <div class="btn-row">
+        <button class="btn-secondary" id="sb-reset" type="button">Alle Punkte auf 0</button>
+        <button class="btn-primary" id="sb-save">Speichern</button>
+      </div>
+    </div>
+  `);
+  const rerender = () => { const shell = document.querySelector('[data-wid="' + w.id + '"]'); if (shell) renderWidgetContent(w, shell.querySelector('.widget-body')); };
+  overlay.querySelector('#sb-reset').addEventListener('click', () => {
+    (w.config.teams || []).forEach(t => { t.score = 0; });
+    APP.save(); rerender(); close();
+  });
+  overlay.querySelector('#sb-save').addEventListener('click', () => {
+    const names = overlay.querySelector('#sb-teams').value.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 8);
+    if (names.length < 1) { toast('Bitte mindestens ein Team eintragen'); return; }
+    // Punkte behalten, wenn ein Team seinen Namen behält
+    w.config.teams = names.map((n, i) => {
+      const old = teams.find(t => t.name === n) || teams[i];
+      return { name: n, score: old && (teams.find(t => t.name === n) || names.length === teams.length) ? (Number(old.score) || 0) : 0 };
+    });
+    APP.save(); rerender(); close();
+  });
+}
+
+// ── Kamera ──
+const CAM_STREAMS = {};
+const CAM_ON = new Set();     // Elemente, deren Kamera in dieser Sitzung eingeschaltet wurde (nie gespeichert)
+function stopCam(id) {
+  const s = CAM_STREAMS[id];
+  if (s) { try { s.getTracks().forEach(t => t.stop()); } catch(e) {} delete CAM_STREAMS[id]; }
+}
+// ── Video-Dateien: Adressen der geladenen Dateien (damit sie wieder freigegeben werden) ──
+const _videoUrls = new Map();
+const _calOffset = new Map();
+function isoWeek(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / 86400000 + 1) / 7);
+}
+
+// ══════════════════════════════════════════════════════════════
+// TAFEL TEILEN — die Tafel steckt komplett im Link (kein Server, keine Anmeldung).
+// Bilder, PDFs und Videos sind zu groß dafür und werden weggelassen.
+// ══════════════════════════════════════════════════════════════
+const SHARE_PREFIX = '#tafel=';
+function _b64url(bytes) {
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function _unb64url(str) {
+  const s = atob(str.replace(/-/g, '+').replace(/_/g, '/'));
+  const out = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+  return out;
+}
+async function _pipe(bytes, stream) {
+  const w = stream.writable.getWriter();
+  w.write(bytes); w.close();
+  return new Uint8Array(await new Response(stream.readable).arrayBuffer());
+}
+// Einstellungen für den Link säubern: nichts Großes (eingebettete Dateien) und keine Laufzeit-Reste
+function _slimConfig(cfg) {
+  const out = {};
+  Object.keys(cfg || {}).forEach(k => {
+    if (k.startsWith('_') || k === 'fileId' || k === 'fileData' || k === 'messages' || k === 'entries') return;
+    const v = cfg[k];
+    if (typeof v === 'string' && (v.length > 4000 || v.startsWith('data:'))) return;
+    if (v && typeof v === 'object' && JSON.stringify(v).length > 6000) return;
+    out[k] = v;
+  });
+  return out;
+}
+async function shareBoardLink() {
+  const board = APP.activeBoard();
+  if (!board) return;
+  const bg = board.background && typeof board.background.value === 'string' && board.background.value.length < 600 ? board.background : null;
+  const data = { v: 1, n: board.name, b: bg, w: board.widgets.map(w => ({ t: w.type, x: w.x, y: w.y, w: w.w, h: w.h, c: _slimConfig(w.config) })) };
+  const raw = new TextEncoder().encode(JSON.stringify(data));
+  let payload;
+  try {
+    payload = window.CompressionStream ? '1' + _b64url(await _pipe(raw, new CompressionStream('deflate-raw'))) : '0' + _b64url(raw);
+  } catch (e) { payload = '0' + _b64url(raw); }
+  const url = location.origin + location.pathname + SHARE_PREFIX + payload;
+  if (url.length > 30000) { toast('Diese Tafel ist zu umfangreich für einen Link. Nutze stattdessen Export / Import.', 5000); return; }
+  const hasNames = board.widgets.some(w => ['names', 'groups'].includes(w.type) && w.config && w.config.names);
+  const { overlay } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>Tafel „${safeText(board.name)}“ teilen</h2>
+      <p style="font-size:14px;color:rgba(255,255,255,0.7);line-height:1.5;margin-bottom:12px">Wer diesen Link öffnet, bekommt eine Kopie der Tafel. Die Tafel steckt vollständig im Link – es wird nichts auf einem Server gespeichert.</p>
+      <div class="form-group"><input type="text" id="share-url" readonly value="${safeText(url)}"></div>
+      <button class="btn-primary" id="share-copy">Link kopieren</button>
+      <p style="font-size:12.5px;color:rgba(255,255,255,0.5);line-height:1.5;margin-top:12px">Bilder, PDFs und Videos sind nicht enthalten.${hasNames ? ' <strong style="color:#fbbf24">Achtung: Die Tafel enthält Namenslisten – teile den Link nur mit Personen, die diese Namen sehen dürfen.</strong>' : ''}</p>
+    </div>
+  `);
+  const inp = overlay.querySelector('#share-url');
+  overlay.querySelector('#share-copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(url); toast('✅ Link kopiert'); }
+    catch (e) { inp.focus(); inp.select(); toast('Bitte den Link markieren und kopieren'); }
+  });
+}
+// Beim Start: steckt eine geteilte Tafel in der Adresse?
+async function checkSharedBoard() {
+  if (!location.hash.startsWith(SHARE_PREFIX)) return;
+  const payload = location.hash.slice(SHARE_PREFIX.length);
+  // Adresse sofort säubern, damit ein Neuladen die Tafel nicht noch einmal anbietet
+  try { history.replaceState(null, '', location.pathname + location.search); } catch(e) {}
+  let data;
+  try {
+    let bytes = _unb64url(payload.slice(1));
+    if (payload[0] === '1') bytes = await _pipe(bytes, new DecompressionStream('deflate-raw'));
+    data = JSON.parse(new TextDecoder().decode(bytes));
+  } catch (e) { toast('Der geteilte Link ist unvollständig oder beschädigt.', 5000); return; }
+  if (!data || !Array.isArray(data.w)) { toast('Der geteilte Link enthält keine Tafel.', 5000); return; }
+  const num = (v, min, max, def) => { v = Number(v); return isFinite(v) ? Math.max(min, Math.min(max, Math.round(v))) : def; };
+  const widgets = data.w.slice(0, 60).filter(x => x && REGISTRY[x.t]).map(x => ({
+    type: x.t, x: num(x.x, 0, 6000, 20), y: num(x.y, 0, 6000, 20),
+    w: num(x.w, 100, 3000, REGISTRY[x.t].w), h: num(x.h, 60, 3000, REGISTRY[x.t].h),
+    config: { ...getDefaultConfig(x.t), ..._slimConfig(x.c && typeof x.c === 'object' ? x.c : {}) },
+  }));
+  const name = String(data.n || 'Geteilte Tafel').slice(0, 40);
+  const bg = data.b && typeof data.b.value === 'string' && data.b.value.length < 600 && !/url\s*\(|expression|javascript:/i.test(data.b.value)
+    ? { type: data.b.type === 'gradient' ? 'gradient' : 'color', value: data.b.value } : null;
+  const { overlay, close } = openModal(`
+    <div class="modal" style="max-width:440px">
+      <button class="modal-close" data-close>✕</button>
+      <h2>Geteilte Tafel hinzufügen?</h2>
+      <p style="font-size:15px;color:rgba(255,255,255,0.8);line-height:1.5;margin-bottom:16px">Jemand hat die Tafel <strong>„${safeText(name)}“</strong> mit ${widgets.length} Elementen mit dir geteilt. Sie wird als neue Tafel hinzugefügt, deine anderen Tafeln bleiben unverändert.</p>
+      <div class="btn-row"><button class="btn-secondary" data-close>Nein</button><button class="btn-primary" id="share-add">Hinzufügen</button></div>
+    </div>
+  `);
+  overlay.querySelector('#share-add').addEventListener('click', () => {
+    close();
+    if (createBoard(name, bg, widgets)) toast('✅ Tafel „' + name + '“ hinzugefügt');
+  });
 }
 
 // Leeres Element: ein deutlicher Knopf statt eines Hinweises auf das Zahnrad
@@ -3913,7 +4367,16 @@ const WIDGET_RENDERERS = {
     body.style.flexDirection = 'column';
     const names = (w.config.names || '').split('\n').map(s=>s.trim()).filter(Boolean);
     if (!names.length) {
-      body.appendChild(emptyCta('names', 'Namen eintragen', () => openNamesEdit(w)));
+      body.style.gap = '10px';
+      const cta = emptyCta('names', 'Namen eintragen', () => openNamesEdit(w));
+      body.appendChild(cta);
+      if (getRoster()) {
+        // gemerkte Klassenliste mit einem Tipp übernehmen
+        cta.style.margin = '0';
+        const b = emptyCta('groups', 'Klassenliste verwenden', () => { w.config.names = getRoster(); APP.save(); renderWidgetContent(w, body); });
+        b.style.margin = '0';
+        body.appendChild(b);
+      }
       return;
     }
     let highlighted = w.config.highlighted ?? -1;
@@ -5172,25 +5635,493 @@ const WIDGET_RENDERERS = {
     });
   },
 
+  // ── Arbeitssymbole ── antippen = aktiv; alles andere tritt zurück
+  worksymbols(w, body) {
+    const keys = Array.isArray(w.config.shown) && w.config.shown.length ? w.config.shown : WORK_SYMBOLS_DEFAULT;
+    const shown = keys.map(k => WORK_SYMBOLS.find(s => s.k === k)).filter(Boolean);
+    let active = Array.isArray(w.config.active) ? w.config.active.slice() : [];
+    const bodyH = w.h - (APP.state.editMode ? 34 : 0), n = shown.length;
+    // Spaltenzahl wählen, bei der die Kacheln am größten werden
+    let best = { cols: 1, size: 0 };
+    for (let cols = 1; cols <= n; cols++) {
+      const size = Math.min((w.w - 16) / cols, (bodyH - 16) / Math.ceil(n / cols));
+      if (size > best.size) best = { cols, size };
+    }
+    const grid = el('div', 'ws-grid');
+    grid.style.gridTemplateColumns = 'repeat(' + best.cols + ', 1fr)';
+    const ic = Math.round(Math.max(22, Math.min(best.size * 0.5, 320)));
+    const tiles = shown.map(s => {
+      const b = el('button', 'ws-tile');
+      b.innerHTML = '<svg width="' + ic + '" height="' + ic + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + s.d + '"/></svg><span>' + s.label + '</span>';
+      b.style.fontSize = Math.max(11, Math.min(best.size * 0.115, 44)) + 'px';
+      b.addEventListener('click', e => {
+        e.stopPropagation();
+        if (active.includes(s.k)) active = active.filter(k => k !== s.k);
+        else active = w.config.multi ? active.concat(s.k) : [s.k];
+        w.config.active = active;
+        APP.save();
+        paint();
+      });
+      grid.appendChild(b);
+      return b;
+    });
+    const paint = () => {
+      grid.classList.toggle('has-active', active.length > 0);
+      tiles.forEach((b, i) => {
+        const on = active.includes(shown[i].k);
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
+    };
+    paint();
+    body.appendChild(grid);
+  },
+
+  // ── Punktetafel ── Teams nebeneinander, Punkte direkt antippen
+  scoreboard(w, body) {
+    if (!Array.isArray(w.config.teams) || !w.config.teams.length) {
+      w.config.teams = [{ name: 'Team A', score: 0 }, { name: 'Team B', score: 0 }];
+    }
+    const teams = w.config.teams;
+    const COLORS = ['#0B7A74', '#D9480F', '#5F3DC4', '#1971C2', '#C2255C', '#2B8A3E', '#E67700', '#495057'];
+    const bodyH = w.h - (APP.state.editMode ? 34 : 0);
+    const colW = (w.w - 16) / teams.length;
+    const numFs = Math.max(24, Math.min(colW * 0.44, (bodyH - 104) * 0.86, 420));
+    const wrap = el('div', 'sb');
+    const cols = teams.map((t, i) => {
+      const col = el('div', 'sb-col');
+      col.style.setProperty('--sb', COLORS[i % COLORS.length]);
+      const name = el('input', 'sb-name');
+      name.value = t.name || ('Team ' + (i + 1));
+      name.maxLength = 24;
+      name.setAttribute('aria-label', 'Teamname');
+      name.style.fontSize = Math.max(13, Math.min(colW * 0.11, 30)) + 'px';
+      name.addEventListener('change', () => { t.name = name.value.trim() || ('Team ' + (i + 1)); name.value = t.name; APP.save(); });
+      name.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') name.blur(); });
+      const num = el('div', 'sb-num');
+      num.style.fontSize = numFs + 'px';
+      const row = el('div', 'sb-row');
+      const mk = (html, d, title) => {
+        const b = el('button', 'sb-btn');
+        b.innerHTML = html; b.title = title; b.setAttribute('aria-label', title);
+        b.addEventListener('click', e => { e.stopPropagation(); t.score = (Number(t.score) || 0) + d; APP.save(); paint(); });
+        return b;
+      };
+      row.append(mk(icon('minus', 20), -1, 'Einen Punkt abziehen'), mk(icon('plus', 24), 1, 'Einen Punkt geben'));
+      col.append(name, num, row);
+      wrap.appendChild(col);
+      return { col, num };
+    });
+    const paint = () => {
+      const scores = teams.map(t => Number(t.score) || 0);
+      const max = Math.max(...scores);
+      const single = scores.filter(s => s === max).length === 1 && teams.length > 1;
+      cols.forEach((c, i) => {
+        c.num.textContent = scores[i];
+        c.col.classList.toggle('lead', single && scores[i] === max);
+      });
+    };
+    paint();
+    body.appendChild(wrap);
+  },
+
+  // ── Zeitkreis ── die Restzeit als Fläche: je weniger Farbe, desto weniger Zeit (wie eine Lernuhr)
+  visualtimer(w, body) {
+    let full = timerFullSeconds(w);
+    let running = !!w._timerRunning;
+    let endAt = w._timerEndAt || null;
+    let remaining = running && endAt ? Math.max(0, Math.round((endAt - Date.now()) / 1000))
+      : (typeof w._timerRemaining === 'number' ? w._timerRemaining : full);
+    const bodyH = w.h - (APP.state.editMode ? 34 : 0);
+    const size = Math.round(Math.max(90, Math.min(w.w - 24, (bodyH - 16 - 12 - 46) / 1.13, 1100)));
+    const C = 2 * Math.PI * 25;
+    const wrap = el('div', 'vt');
+    const disc = el('div', 'vt-disc');
+    disc.style.width = disc.style.height = size + 'px';
+    let ticks = '';
+    for (let i = 0; i < 12; i++) {
+      const a = i * 30 * Math.PI / 180, r1 = i % 3 === 0 ? 41 : 44;
+      ticks += '<line x1="' + (50 + r1 * Math.sin(a)).toFixed(2) + '" y1="' + (50 - r1 * Math.cos(a)).toFixed(2) + '" x2="' + (50 + 48 * Math.sin(a)).toFixed(2) + '" y2="' + (50 - 48 * Math.cos(a)).toFixed(2) + '"/>';
+    }
+    disc.innerHTML = '<svg viewBox="0 0 100 100" role="img" aria-label="Verbleibende Zeit als Fläche">'
+      + '<circle class="vt-face" cx="50" cy="50" r="49"/>'
+      + '<g transform="translate(100 0) scale(-1 1)"><circle class="vt-pie" cx="50" cy="50" r="25" transform="rotate(-90 50 50)" stroke-dasharray="0 ' + C.toFixed(2) + '"/></g>'
+      + '<g class="vt-ticks">' + ticks + '</g><circle class="vt-hub" cx="50" cy="50" r="3"/></svg>';
+    const pie = disc.querySelector('.vt-pie');
+    const digits = el('div', 'vt-digits');
+    digits.style.fontSize = Math.max(16, Math.min(size * 0.13, 64)) + 'px';
+    const row = el('div', 'tm-row vt-row');
+    const mkBtn = (cls, html, title, fn) => {
+      const b = el('button', 'tm-btn' + (cls ? ' ' + cls : ''));
+      b.innerHTML = html; b.title = title; b.setAttribute('aria-label', title);
+      b.addEventListener('click', e => { e.stopPropagation(); fn(); });
+      return b;
+    };
+    const goBtn = mkBtn('tm-go', '', 'Start', toggle);
+    row.append(mkBtn('', icon('minus', 20), 'Eine Minute weniger', () => adjust(-60)),
+               mkBtn('', icon('plus', 20), 'Eine Minute mehr', () => adjust(60)),
+               mkBtn('', icon('reset', 19), 'Zurücksetzen', reset), goBtn);
+    wrap.append(disc, digits, row);
+    body.appendChild(wrap);
+
+    const fmt = s => String(Math.floor(Math.max(0, s) / 60)).padStart(2, '0') + ':' + String(Math.max(0, s) % 60).padStart(2, '0');
+    function isPaused() { return !running && typeof w._timerRemaining === 'number' && remaining > 0; }
+    function updateDisplay() {
+      const r = Math.max(0, remaining);
+      // Zifferblatt = 60 Minuten (wie eine Uhr); längere Zeiten füllen den ganzen Kreis
+      const scale = Math.max(3600, full, r);
+      pie.setAttribute('stroke-dasharray', (C * r / scale).toFixed(2) + ' ' + C.toFixed(2));
+      digits.textContent = fmt(r);
+      wrap.classList.toggle('urgent', r <= 30 && (running || r === 0));
+      const label = running ? 'Pause' : (r === 0 ? 'Nochmal' : (isPaused() ? 'Weiter' : 'Start'));
+      goBtn.innerHTML = icon(running ? 'pause' : (r === 0 ? 'reset' : 'play'), 20) + '<span>' + label + '</span>';
+      goBtn.title = label;
+    }
+    function tick() {
+      if (!w._timerRunning) {
+        running = false;
+        remaining = typeof w._timerRemaining === 'number' ? w._timerRemaining : 0;
+        stopInterval(w.id);
+        updateDisplay();
+        return;
+      }
+      remaining = Math.max(0, Math.round((endAt - Date.now()) / 1000));
+      updateDisplay();
+    }
+    function reset() {
+      running = false; stopInterval(w.id);
+      resetTimerState(w);
+      remaining = full;
+      updateDisplay();
+    }
+    function toggle() {
+      if (remaining <= 0) { reset(); return; }
+      running = !running;
+      if (running) {
+        primeAlarm();
+        endAt = Date.now() + remaining * 1000;
+        w._timerRunning = true; w._timerEndAt = endAt; delete w._timerRemaining;
+        startInterval(w.id, tick, 250);
+      } else {
+        w._timerRunning = false; w._timerRemaining = remaining;
+        stopInterval(w.id);
+      }
+      updateDisplay();
+    }
+    function adjust(delta) {
+      if (!running && !isPaused() && remaining > 0) {
+        const sec = Math.max(60, Math.min(180 * 60, full + delta));
+        w.config.minutes = Math.floor(sec / 60); w.config.seconds = sec % 60;
+        full = sec; resetTimerState(w); remaining = full;
+        APP.save();
+      } else {
+        remaining = Math.max(0, Math.min(180 * 60, remaining + delta));
+        if (running) { endAt = Date.now() + remaining * 1000; w._timerEndAt = endAt; }
+        else w._timerRemaining = remaining;
+      }
+      updateDisplay();
+    }
+    if (running) startInterval(w.id, tick, 250);
+    updateDisplay();
+  },
+
+  // ── Countdown ── Tage bis zu einem Ereignis
+  countdown(w, body) {
+    body.style.flexDirection = 'column';
+    const d = w.config.date;
+    if (!d || !/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      body.appendChild(emptyCta('countdown', 'Datum festlegen', () => openCountdownSettings(w)));
+      return;
+    }
+    const bodyH = w.h - (APP.state.editMode ? 34 : 0);
+    // Zeilen: Noch / Zahl / Tage bis / Titel / Datum ≈ 2 × Zahlengröße
+    const numFs = Math.max(30, Math.min(w.w * 0.36, (bodyH - 28) / (w.config.title ? 2.05 : 1.75), 520));
+    const wrap = el('div', 'cd');
+    const pre = el('div', 'cd-small'), num = el('div', 'cd-num'), unit = el('div', 'cd-small'), title = el('div', 'cd-title'), date = el('div', 'cd-date');
+    num.style.fontSize = numFs + 'px';
+    const small = Math.max(13, Math.min(numFs * 0.2, 40));
+    pre.style.fontSize = unit.style.fontSize = small + 'px';
+    title.style.fontSize = Math.max(15, Math.min(numFs * 0.26, 56)) + 'px';
+    date.style.fontSize = Math.max(11, small * 0.72) + 'px';
+    const [y, m, dd] = d.split('-').map(Number);
+    const target = new Date(y, m - 1, dd);
+    title.textContent = w.config.title || '';
+    date.textContent = target.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const update = () => {
+      const now = new Date();
+      const days = Math.round((target - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 86400000);
+      wrap.classList.toggle('today', days === 0);
+      if (days > 1) { pre.textContent = 'Noch'; num.textContent = days; unit.textContent = w.config.title ? 'Tage bis' : 'Tage'; }
+      else if (days === 1) { pre.textContent = 'Noch'; num.textContent = '1'; unit.textContent = w.config.title ? 'Tag bis' : 'Tag'; }
+      else if (days === 0) { pre.textContent = ''; num.textContent = 'Heute'; unit.textContent = ''; num.style.fontSize = (numFs * 0.6) + 'px'; }
+      else { pre.textContent = 'Vor'; num.textContent = -days; unit.textContent = -days === 1 ? 'Tag:' : 'Tagen:'; }
+    };
+    update();
+    startInterval(w.id, update, 60000);
+    wrap.append(pre, num, unit, title, date);
+    body.appendChild(wrap);
+  },
+
+  // ── Kalender ── Monat mit Kalenderwochen; Countdown-Tage dieser Tafel sind markiert
+  calendar(w, body) {
+    body.style.flexDirection = 'column';
+    body.style.padding = '0';
+    const bodyH = w.h - (APP.state.editMode ? 34 : 0);
+    const marks = new Map();
+    ((APP.activeBoard() || {}).widgets || []).forEach(x => {
+      if (x.type === 'countdown' && x.config && x.config.date) marks.set(x.config.date, x.config.title || 'Ereignis');
+    });
+    const head = el('div', 'cal-head'), grid = el('div', 'cal-grid');
+    const title = el('div', 'cal-title');
+    const mk = (iconName, label, fn) => {
+      const b = el('button', 'pdf-btn'); b.innerHTML = icon(iconName, 20); b.title = label; b.setAttribute('aria-label', label);
+      b.addEventListener('click', e => { e.stopPropagation(); fn(); });
+      return b;
+    };
+    const today = el('button', 'cal-today'); today.textContent = 'Heute';
+    today.addEventListener('click', e => { e.stopPropagation(); _calOffset.set(w.id, 0); paint(); });
+    head.append(mk('chevronLeft', 'Vorheriger Monat', () => { _calOffset.set(w.id, (_calOffset.get(w.id) || 0) - 1); paint(); }),
+                title, today,
+                mk('chevronRight', 'Nächster Monat', () => { _calOffset.set(w.id, (_calOffset.get(w.id) || 0) + 1); paint(); }));
+    const paint = () => {
+      const off = _calOffset.get(w.id) || 0;
+      const now = new Date();
+      const first = new Date(now.getFullYear(), now.getMonth() + off, 1);
+      const month = first.getMonth();
+      title.textContent = first.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+      today.style.visibility = off ? 'visible' : 'hidden';
+      const start = new Date(first);
+      start.setDate(1 - ((first.getDay() + 6) % 7));   // Montag der ersten Woche
+      const weeks = Math.ceil((((first.getDay() + 6) % 7) + new Date(first.getFullYear(), month + 1, 0).getDate()) / 7);
+      const cell = Math.min((w.w - 12) / 8, (bodyH - 46 - 8) / (weeks + 1));
+      grid.style.fontSize = Math.max(10, Math.min(cell * 0.42, 44)) + 'px';
+      grid.innerHTML = '';
+      ['KW', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].forEach((t, i) => {
+        const h = el('div', 'cal-h' + (i === 0 ? ' kw' : '')); h.textContent = t; grid.appendChild(h);
+      });
+      const day = new Date(start);
+      for (let r = 0; r < weeks; r++) {
+        const kw = el('div', 'cal-c kw'); kw.textContent = isoWeek(day); grid.appendChild(kw);
+        for (let i = 0; i < 7; i++) {
+          const c = el('div', 'cal-c');
+          const key = day.getFullYear() + '-' + String(day.getMonth() + 1).padStart(2, '0') + '-' + String(day.getDate()).padStart(2, '0');
+          const inner = el('span'); inner.textContent = day.getDate(); c.appendChild(inner);
+          if (day.getMonth() !== month) c.classList.add('out');
+          if (i >= 5) c.classList.add('we');
+          if (day.toDateString() === now.toDateString()) c.classList.add('now');
+          if (marks.has(key)) { c.classList.add('mark'); c.title = marks.get(key); }
+          grid.appendChild(c);
+          day.setDate(day.getDate() + 1);
+        }
+      }
+    };
+    paint();
+    body.append(head, grid);
+  },
+
+  // ── Sticker ── frei platzierbares Bild-Zeichen ohne Karte
+  sticker(w, body) {
+    const s = el('div', 'st');
+    s.textContent = w.config.emoji || '⭐';
+    s.style.fontSize = Math.max(24, Math.min(w.w, w.h - (APP.state.editMode ? 34 : 0)) * 0.66) + 'px';
+    body.appendChild(s);
+  },
+
+  // ── Kamera ── Live-Bild (z. B. als Dokumentenkamera); das Bild verlässt das Gerät nicht
+  webcam(w, body) {
+    stopCam(w.id);
+    body.style.padding = '0';
+    body.style.overflow = 'hidden';
+    const rerender = () => { if (body.isConnected) renderWidgetContent(w, body); };
+    if (!CAM_ON.has(w.id)) {
+      const box = el('div', 'pdf-empty');
+      const b = emptyCta('webcam', 'Kamera einschalten', () => { CAM_ON.add(w.id); rerender(); });
+      b.style.margin = '0';
+      const hint = el('div', 'pdf-empty-hint');
+      hint.textContent = 'Das Bild bleibt auf diesem Gerät und wird nicht gespeichert';
+      box.append(b, hint);
+      body.appendChild(box);
+      return;
+    }
+    const stage = el('div', 'cam-stage');
+    const video = document.createElement('video');
+    video.autoplay = true; video.muted = true; video.playsInline = true;
+    if (w.config.mirror) video.classList.add('mirror');
+    const msg = el('div', 'pdf-loading'); msg.textContent = 'Kamera wird gestartet …';
+    const bar = el('div', 'cam-bar');
+    const mk = (iconName, label, fn) => {
+      const b = el('button', 'cam-btn'); b.innerHTML = icon(iconName, 20) + '<span>' + label + '</span>';
+      b.addEventListener('click', e => { e.stopPropagation(); fn(b); });
+      return b;
+    };
+    bar.append(
+      mk('pause', 'Standbild', b => {
+        if (video.paused) { video.play(); b.querySelector('span').textContent = 'Standbild'; b.classList.remove('on'); }
+        else { video.pause(); b.querySelector('span').textContent = 'Weiter'; b.classList.add('on'); }
+      }),
+      mk('reset', 'Spiegeln', () => { w.config.mirror = !w.config.mirror; APP.save(); video.classList.toggle('mirror', !!w.config.mirror); }),
+      mk('webcam', 'Andere Kamera', async () => {
+        try {
+          const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+          if (cams.length < 2) { toast('Es ist nur eine Kamera angeschlossen'); return; }
+          const cur = cams.findIndex(d => d.deviceId === w.config.deviceId);
+          w.config.deviceId = cams[(cur + 1) % cams.length].deviceId;
+          APP.save(); rerender();
+        } catch (e) { toast('Kameras konnten nicht abgefragt werden'); }
+      }),
+      mk('x', 'Aus', () => { CAM_ON.delete(w.id); stopCam(w.id); rerender(); })
+    );
+    stage.append(video, msg, bar);
+    body.appendChild(stage);
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      msg.textContent = 'Dieser Browser unterstützt keine Kamera.';
+      return;
+    }
+    const want = { width: { ideal: 1920 }, height: { ideal: 1080 } };
+    if (w.config.deviceId) want.deviceId = { ideal: w.config.deviceId };
+    navigator.mediaDevices.getUserMedia({ video: want, audio: false }).then(stream => {
+      if (!body.isConnected || !stage.isConnected || !CAM_ON.has(w.id)) { stream.getTracks().forEach(t => t.stop()); return; }
+      CAM_STREAMS[w.id] = stream;
+      video.srcObject = stream;
+      msg.remove();
+    }, err => {
+      CAM_ON.delete(w.id);
+      msg.textContent = err && err.name === 'NotAllowedError'
+        ? 'Der Zugriff auf die Kamera wurde nicht erlaubt. Erlaube ihn über das Schloss-Symbol in der Adresszeile.'
+        : 'Es wurde keine Kamera gefunden oder sie wird gerade von einem anderen Programm benutzt.';
+    });
+  },
+
+  // ── Video ── eigene Videodatei, liegt wie PDFs nur lokal auf dem Gerät
+  video(w, body) {
+    body.style.flexDirection = 'column';
+    body.style.padding = '0';
+    body.style.overflow = 'hidden';
+    const rerender = () => { if (body.isConnected) renderWidgetContent(w, body); };
+    const pick = async file => {
+      if (!file) return;
+      if (!/^video\//.test(file.type) && !/\.(mp4|webm|mov|m4v|ogv)$/i.test(file.name || '')) { toast('Bitte eine Videodatei auswählen (z. B. MP4)'); return; }
+      if (file.size > 500 * 1024 * 1024) { toast('Dieses Video ist zu groß (maximal 500 MB).', 4000); return; }
+      try {
+        const fileId = 'vid_' + uid();
+        await PDFSTORE.put(fileId, await file.arrayBuffer());
+        if (w.config.fileId) PDFSTORE.del(w.config.fileId);
+        w.config = { fileId, name: file.name || 'Video', mime: file.type || 'video/mp4' };
+        APP.save();
+        rerender();
+      } catch (e) {
+        console.error('Video speichern:', e);
+        toast('Das Video konnte nicht gespeichert werden (Speicher des Browsers voll oder gesperrt).', 5000);
+      }
+    };
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'video/*'; inp.style.display = 'none';
+    inp.addEventListener('change', () => pick(inp.files[0]));
+    body.appendChild(inp);
+    body.ondragover = e => { e.preventDefault(); body.classList.add('pdf-drop'); };
+    body.ondragleave = () => body.classList.remove('pdf-drop');
+    body.ondrop = e => { e.preventDefault(); e.stopPropagation(); body.classList.remove('pdf-drop'); pick(e.dataTransfer.files[0]); };
+    const empty = (text, label) => {
+      const box = el('div', 'pdf-empty');
+      if (text) { const t = el('div', 'pdf-empty-text'); t.textContent = text; box.appendChild(t); }
+      const b = emptyCta('video', label, () => inp.click());
+      b.style.margin = '0';
+      const hint = el('div', 'pdf-empty-hint');
+      hint.textContent = 'oder Datei hierher ziehen · bleibt nur auf diesem Gerät';
+      box.append(b, hint);
+      body.appendChild(box);
+    };
+    if (!w.config.fileId) { empty('', 'Video öffnen'); return; }
+    const old = _videoUrls.get(w.id);
+    if (old) { URL.revokeObjectURL(old); _videoUrls.delete(w.id); }
+    const video = document.createElement('video');
+    video.className = 'vid';
+    video.controls = true; video.playsInline = true; video.preload = 'metadata';
+    body.appendChild(video);
+    PDFSTORE.get(w.config.fileId).then(buf => {
+      if (!body.isConnected) return;
+      if (!buf) { video.remove(); empty('„' + (w.config.name || 'Das Video') + '“ liegt nicht auf diesem Gerät.', 'Video erneut auswählen'); return; }
+      const url = URL.createObjectURL(new Blob([buf], { type: w.config.mime || 'video/mp4' }));
+      _videoUrls.set(w.id, url);
+      video.src = url;
+    }, () => { video.remove(); empty('Das Video konnte nicht geladen werden.', 'Video erneut auswählen'); });
+  },
+
   // ── Dice ──
   dice(w, body) {
-    const FACES = ['','⚀','⚁','⚂','⚃','⚄','⚅'];
-    body.style.flexDirection = 'column'; body.style.gap = '8px';
-    const d = el('div','w-dice');
-    d.style.fontSize = Math.max(40, Math.min(w.w * 0.65, w.h * 0.68)) + 'px';
-    d.textContent = FACES[w.config.value || 1];
-    d.title = 'Klicken zum Würfeln';
-    const hint = el('div'); hint.style.cssText='font-size:11px;color:var(--w-faint)';
-    hint.textContent = 'Klicken zum Würfeln';
-    d.addEventListener('click', () => {
-      let count = 0;
-      const roll = setInterval(() => {
-        const v = Math.ceil(Math.random()*6);
-        d.textContent = FACES[v];
-        if (++count >= 10) { clearInterval(roll); w.config.value = v; APP.save(); }
-      }, 60);
+    // Gezeichnete Würfel statt Schriftzeichen (sehen überall gleich aus und wachsen mit dem Element)
+    const PIPS = {
+      1: [[50, 50]], 2: [[29, 29], [71, 71]], 3: [[29, 29], [50, 50], [71, 71]],
+      4: [[29, 29], [71, 29], [29, 71], [71, 71]], 5: [[29, 29], [71, 29], [50, 50], [29, 71], [71, 71]],
+      6: [[29, 26], [71, 26], [29, 50], [71, 50], [29, 74], [71, 74]],
+    };
+    const n = Math.max(1, Math.min(6, parseInt(w.config.count, 10) || 1));
+    let vals = Array.isArray(w.config.values) ? w.config.values.slice(0, n) : [];
+    while (vals.length < n) vals.push(vals.length === 0 && w.config.value ? w.config.value : 1);
+    vals = vals.map(v => Math.max(1, Math.min(6, parseInt(v, 10) || 1)));
+    const bodyH = w.h - (APP.state.editMode ? 34 : 0);
+    const availW = w.w - 20, availH = bodyH - 16 - 52;
+    let best = { cols: 1, size: 0 };
+    for (let cols = 1; cols <= n; cols++) {
+      const rows = Math.ceil(n / cols);
+      const size = Math.min((availW - (cols - 1) * 12) / cols, (availH - (rows - 1) * 12) / rows);
+      if (size > best.size) best = { cols, size };
+    }
+    const size = Math.round(Math.max(28, Math.min(best.size, 420)));
+    const svg = v => '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" aria-hidden="true">'
+      + '<rect class="dc-face" x="5" y="5" width="90" height="90" rx="18"/>'
+      + PIPS[v].map(p => '<circle class="dc-pip" cx="' + p[0] + '" cy="' + p[1] + '" r="8.5"/>').join('') + '</svg>';
+    const wrap = el('div', 'dc');
+    const area = el('button', 'dc-area');
+    area.title = 'Antippen zum Würfeln';
+    area.setAttribute('aria-label', 'Würfeln');
+    area.style.gridTemplateColumns = 'repeat(' + best.cols + ', ' + size + 'px)';
+    const dice = vals.map(v => { const d = el('div', 'dc-die'); d.innerHTML = svg(v); area.appendChild(d); return d; });
+    const ctrl = el('div', 'dc-ctrl');
+    const mk = (iconName, title, fn) => {
+      const b = el('button', 'tm-btn'); b.innerHTML = icon(iconName, 18); b.title = title; b.setAttribute('aria-label', title);
+      b.addEventListener('click', e => { e.stopPropagation(); fn(); });
+      return b;
+    };
+    const setCount = k => {
+      k = Math.max(1, Math.min(6, k));
+      if (k === n) return;
+      w.config.count = k;
+      w.config.values = vals.slice(0, k);
+      APP.save();
+      renderWidgetContent(w, body);
+    };
+    const label = el('span', 'dc-label');
+    label.textContent = n;
+    label.title = n + ' Würfel';
+    const sum = el('span', 'dc-sum');
+    const paintSum = () => { sum.textContent = n > 1 ? 'Summe ' + vals.reduce((a, b) => a + b, 0) : ''; };
+    ctrl.append(mk('minus', 'Einen Würfel weniger', () => setCount(n - 1)), label, mk('plus', 'Einen Würfel mehr', () => setCount(n + 1)), sum);
+    let rolling = false;
+    area.addEventListener('click', e => {
+      e.stopPropagation();
+      if (rolling) return;
+      rolling = true;
+      area.classList.add('rolling');
+      let k = 0;
+      const t = setInterval(() => {
+        vals = vals.map(() => 1 + Math.floor(Math.random() * 6));
+        dice.forEach((d, i) => { d.innerHTML = svg(vals[i]); });
+        sum.textContent = '';
+        if (++k >= 9) {
+          clearInterval(t);
+          rolling = false;
+          area.classList.remove('rolling');
+          w.config.values = vals.slice();
+          w.config.value = vals[0];
+          APP.save();
+          paintSum();
+        }
+      }, 70);
     });
-    body.append(d, hint);
+    paintSum();
+    wrap.append(area, ctrl);
+    body.appendChild(wrap);
   },
 
   // ── Random Number ──
@@ -5218,7 +6149,15 @@ const WIDGET_RENDERERS = {
     const names = (w.config.names||'').split('\n').map(s=>s.trim()).filter(Boolean);
     const size = Math.max(1, parseInt(w.config.size) || 3);
     if (!names.length) {
-      body.appendChild(emptyCta('groups', 'Namen eintragen', () => openGroupsSettings(w)));
+      body.style.flexDirection = 'column'; body.style.gap = '10px';
+      const cta = emptyCta('groups', 'Namen eintragen', () => openGroupsSettings(w));
+      body.appendChild(cta);
+      if (getRoster()) {
+        cta.style.margin = '0';
+        const b = emptyCta('names', 'Klassenliste verwenden', () => { w.config.names = getRoster(); delete w.config.groupsResult; APP.save(); renderWidgetContent(w, body); });
+        b.style.margin = '0';
+        body.appendChild(b);
+      }
       return;
     }
     // Die Einteilung wird gespeichert. Früher wurde bei JEDEM Neuzeichnen der Tafel neu
@@ -5623,6 +6562,11 @@ function openWidgetSettings(wid) {
     agenda:  openAgendaEdit,
     checklist:openChecklistEdit,
     phases:  openPhasesEdit,
+    visualtimer: openTimerSettings,
+    worksymbols: openWorkSymbolsSettings,
+    countdown: openCountdownSettings,
+    sticker: openStickerPicker,
+    scoreboard: openScoreboardSettings,
   };
 
   const fn = settingsFns[w.type];
@@ -5849,6 +6793,7 @@ function openNamesEdit(w) {
       <button class="btn-primary" id="nm-save">Speichern</button>
     </div>
   `);
+  attachRosterButtons(overlay, '#nm-names');
   overlay.querySelector('#nm-save').addEventListener('click', () => {
     w.config.names = overlay.querySelector('#nm-names').value;
     w.config.highlighted = -1;
@@ -6071,6 +7016,7 @@ function openGroupsSettings(w) {
       <button class="btn-primary" id="gr-save">Speichern & Neu mischen</button>
     </div>
   `);
+  attachRosterButtons(overlay, '#gr-names');
   overlay.querySelector('#gr-save').addEventListener('click', () => {
     w.config.names = overlay.querySelector('#gr-names').value;
     w.config.size = Math.max(1, parseInt(overlay.querySelector('#gr-size').value)||3);
@@ -6382,6 +7328,14 @@ function openBgModal() {
       <h2>🎨 Hintergrund</h2>
       <div class="bg-grid" id="bg-grid"></div>
       <div class="form-group" style="margin-top:8px">
+        <label>Foto suchen (jugendfreie Bilddatenbank)</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="bg-photo-q" placeholder="z. B. Wald, Meer, Berge, Weltall" maxlength="60" style="flex:1">
+          <button class="btn-secondary" id="bg-photo-go">Suchen</button>
+        </div>
+        <div id="bg-photo-msg" style="font-size:12.5px;color:rgba(255,255,255,0.5);margin-top:6px;min-height:1.2em"></div>
+      </div>
+      <div class="form-group">
         <label>Eigene Farbe</label>
         <div style="display:flex;gap:8px;align-items:center">
           <input type="color" id="bg-color" value="#1F3531" style="width:48px;height:36px;padding:2px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.2);background:transparent">
@@ -6408,6 +7362,39 @@ function openBgModal() {
     });
     grid.appendChild(sw);
   });
+  // Foto aus der Bilddatenbank als Hintergrund (läuft über unseren Server, der Browser ruft keinen Bilderdienst auf)
+  let photoIndex = 0, photoQuery = '', photoBusy = false;
+  const photoMsg = overlay.querySelector('#bg-photo-msg');
+  const photoBtn = overlay.querySelector('#bg-photo-go');
+  const searchPhoto = async () => {
+    const q = overlay.querySelector('#bg-photo-q').value.trim();
+    if (!q || photoBusy || !board) return;
+    photoIndex = q === photoQuery ? photoIndex + 1 : 0;
+    photoQuery = q;
+    photoBusy = true; photoBtn.disabled = true;
+    photoMsg.textContent = 'Suche ein Foto …';
+    try {
+      const res = await fetch('/.netlify/functions/image-search', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q, type: 'photo', index: photoIndex, inline: true, size: 'large' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'http');
+      if (data.blocked) photoMsg.textContent = 'Dazu gibt es kein Bild. Versuch es mit einem anderen Begriff.';
+      else if (!data.dataUrl) photoMsg.textContent = 'Kein passendes Foto gefunden. Versuch es mit einem einfacheren Begriff.';
+      else {
+        board.background = { type: 'image', value: data.dataUrl };
+        APP.save(); renderBoardBg();
+        photoMsg.textContent = 'Foto gesetzt' + (data.credit ? ' (Bild: ' + data.credit + ')' : '') + '. Noch einmal „Suchen“ zeigt ein anderes.';
+        photoBtn.textContent = 'Anderes Foto';
+      }
+    } catch (e) {
+      photoMsg.textContent = navigator.onLine ? 'Die Bildsuche ist gerade nicht erreichbar.' : 'Keine Internetverbindung.';
+    } finally { photoBusy = false; photoBtn.disabled = false; }
+  };
+  photoBtn.addEventListener('click', searchPhoto);
+  overlay.querySelector('#bg-photo-q').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); searchPhoto(); } });
+  overlay.querySelector('#bg-photo-q').addEventListener('input', () => { photoBtn.textContent = 'Suchen'; });
   overlay.querySelector('#bg-apply-color').addEventListener('click', () => {
     const v = overlay.querySelector('#bg-color').value;
     if (board) { board.background={type:'color',value:v}; APP.save(); renderBoardBg(); }
@@ -8572,6 +9559,7 @@ const DOCK_DEFAULT = ['clock','timer','traffic','text','goal','checklist','names
 const DOCK_LABEL = {
   goal: 'Ziel', names: 'Namen', poll: 'Umfrage', phases: 'Phasen', status: 'Status',
   randomnum: 'Zufall', ai: 'KI-Text', ask: 'KI-Frage', homework: 'Hausaufg.', timetable: 'Plan',
+  worksymbols: 'Symbole', scoreboard: 'Punkte', visualtimer: 'Zeitkreis',
 };
 
 function getDockItems() {
@@ -8744,6 +9732,7 @@ function openMoreMenu() {
   item('palette', 'Hintergrund', openBgModal);
   item('timetable', 'Stundenplan verbinden', openTimetableFromMenu);
   item('mic', 'Sprachbefehl', () => VOICE.toggle());
+  item('share', 'Tafel teilen (Link)', shareBoardLink);
   item('download', 'Export / Import', openExportModal);
   sep();
   item('dock', 'Leiste anpassen', openDockCustomizer);
@@ -8902,6 +9891,7 @@ if (_pollParam) {
       .catch(() => {});
   }
   if (new URLSearchParams(window.location.search).has('reset')) openResetDialog();
+  checkSharedBoard();
 }
 </script>
 </body>
