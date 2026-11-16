@@ -1040,6 +1040,51 @@ body[data-cards="dark"] .tm-ring .prg { stroke:var(--accent-soft); }
   .tpl-desc2 { display:none; }
 }
 
+/* ── Einzelnes Element im Vollbild ── */
+.widget.wfull { position:fixed !important; left:0 !important; top:0 !important; width:100vw !important; height:100vh !important; z-index:5000 !important; border-radius:0; border:0; }
+.widget.wfull .widget-header, .widget.wfull .resize-handle, .widget.wfull .w-full-btn { display:none; }
+.widget.wfull .widget-body { top:0; }
+body.wfull-on #toolbar, body.wfull-on #dock, body.wfull-on #tb-pull-tab, body.wfull-on #fs-exit { display:none !important; }
+.w-full-exit {
+  position:absolute; top:12px; right:12px; z-index:60; width:48px; height:48px; border:0; border-radius:50%; cursor:pointer;
+  background:rgba(27,36,34,0.6); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,0.3);
+}
+.w-full-exit:hover { background:rgba(27,36,34,0.85); }
+.w-full-btn {
+  position:absolute; top:6px; right:6px; z-index:20; width:36px; height:36px; border:0; border-radius:10px; cursor:pointer;
+  background:rgba(27,36,34,0.55); color:#fff; display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity .15s;
+}
+.widget:hover .w-full-btn, .w-full-btn:focus-visible { opacity:1; }
+@media (hover:none) { .w-full-btn { opacity:.5; } }
+body.draw-mode .w-full-btn { display:none; }
+
+/* ── Zeichnen: Werkzeugleiste und Lineal ── */
+#draw-toolbar { max-width:calc(100vw - 16px); overflow-x:auto; scrollbar-width:none; gap:5px; }
+#draw-toolbar::-webkit-scrollbar { display:none; }
+.draw-tool-btn { width:42px; height:42px; border-radius:12px; font-size:0; }
+.draw-tool-btn.active { border-color:var(--accent-soft); background:rgba(127,227,218,0.25); color:var(--accent-soft); }
+#draw-ruler {
+  position:fixed; left:0; top:0; z-index:1790; width:620px; height:66px; transform-origin:50% 50%;
+  background:rgba(251,250,246,0.88); border:1.5px solid rgba(27,36,34,0.45); border-radius:6px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.35); cursor:grab; touch-action:none; user-select:none;
+}
+#draw-ruler:active { cursor:grabbing; }
+#draw-ruler .dr-scale {
+  position:absolute; left:10px; right:10px; top:0; height:16px; pointer-events:none;
+  background:
+    repeating-linear-gradient(90deg, rgba(27,36,34,0.85) 0 1.5px, transparent 1.5px 50px),
+    repeating-linear-gradient(90deg, rgba(27,36,34,0.5) 0 1px, transparent 1px 10px) 0 0/100% 9px no-repeat;
+}
+#draw-ruler .dr-nums span { position:absolute; top:18px; transform:translateX(-50%); font-size:12px; font-weight:700; color:#1B2422; pointer-events:none; }
+#draw-ruler .dr-ang { position:absolute; left:50%; bottom:6px; transform:translateX(-50%); font-size:14px; font-weight:700; color:#0A5F5A; pointer-events:none; }
+#draw-ruler .dr-rot {
+  position:absolute; bottom:8px; width:30px; height:30px; border-radius:50%; cursor:alias;
+  background:var(--accent); border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,0.3);
+}
+#draw-ruler .dr-rot[data-end="-1"] { left:8px; }
+#draw-ruler .dr-rot[data-end="1"] { right:8px; }
+
 /* ── PDF ── */
 .pdf-bar { flex:none; display:flex; align-items:center; gap:4px; padding:5px 8px; background:var(--w-bar); }
 .pdf-btn { flex:none; width:40px; height:36px; border:0; border-radius:9px; background:transparent; color:var(--w-ink); cursor:pointer; display:flex; align-items:center; justify-content:center; }
@@ -1333,36 +1378,37 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
 
 <!-- Zeichnen-Toolbar -->
 <div id="draw-toolbar">
-  <!-- Werkzeuge -->
-  <button class="draw-tool-btn active" id="dt-pen"       title="Stift (dünn)">✏️</button>
-  <button class="draw-tool-btn"        id="dt-pen-thick"  title="Stift (dick)">🖊</button>
-  <button class="draw-tool-btn"        id="dt-marker"     title="Marker (Textmarker)">🟡</button>
-  <button class="draw-tool-btn"        id="dt-brush"      title="Pinsel (weich)">🖌️</button>
-  <button class="draw-tool-btn"        id="dt-text"       title="Text schreiben (T)">T</button>
-  <button class="draw-tool-btn"        id="dt-eraser"     title="Radiergummi">◻</button>
+  <button class="draw-tool-btn active" data-tool="pen" title="Stift"></button>
+  <button class="draw-tool-btn" data-tool="marker" title="Textmarker"></button>
+  <button class="draw-tool-btn" data-tool="eraser" title="Radiergummi"></button>
   <div class="draw-sep"></div>
-  <!-- Farben -->
+  <button class="draw-tool-btn" data-tool="line" title="Gerade Linie"></button>
+  <button class="draw-tool-btn" data-tool="arrow" title="Pfeil"></button>
+  <button class="draw-tool-btn" data-tool="rect" title="Rechteck"></button>
+  <button class="draw-tool-btn" data-tool="ellipse" title="Kreis / Ellipse"></button>
+  <button class="draw-tool-btn" data-tool="text" title="Text schreiben"></button>
+  <button class="draw-tool-btn" id="dt-ruler" title="Lineal ein-/ausblenden"></button>
+  <div class="draw-sep"></div>
   <button class="draw-color-btn" style="background:#ffffff" data-color="#ffffff" title="Weiß"></button>
-  <button class="draw-color-btn" style="background:#facc15" data-color="#facc15" title="Gelb"></button>
+  <button class="draw-color-btn active" style="background:#facc15" data-color="#facc15" title="Gelb"></button>
   <button class="draw-color-btn" style="background:#fb923c" data-color="#fb923c" title="Orange"></button>
   <button class="draw-color-btn" style="background:#f87171" data-color="#f87171" title="Rot"></button>
   <button class="draw-color-btn" style="background:#34d399" data-color="#34d399" title="Grün"></button>
   <button class="draw-color-btn" style="background:#60a5fa" data-color="#60a5fa" title="Blau"></button>
   <button class="draw-color-btn" style="background:#e879f9" data-color="#e879f9" title="Pink"></button>
   <button class="draw-color-btn" style="background:#000000; border:1px solid rgba(255,255,255,0.4)" data-color="#000000" title="Schwarz"></button>
-  <!-- Eigene Farbe -->
-  <label title="Eigene Farbe" style="position:relative;cursor:pointer">
+  <label title="Eigene Farbe" style="position:relative;cursor:pointer;flex:none">
     <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:conic-gradient(red,yellow,green,cyan,blue,magenta,red);border:2px solid rgba(255,255,255,0.4)"></span>
     <input type="color" id="draw-custom-color" style="position:absolute;opacity:0;width:0;height:0" title="Eigene Farbe">
   </label>
   <div class="draw-sep"></div>
-  <!-- Stärke -->
   <input type="range" id="draw-size-slider" min="1" max="40" value="4" title="Strichstärke">
   <div class="draw-sep"></div>
-  <button class="draw-tool-btn" id="dt-undo"  title="Rückgängig (Strg+Z)">↩</button>
-  <button class="draw-tool-btn" id="dt-clear" title="Alles löschen">🗑</button>
+  <button class="draw-tool-btn" id="dt-undo" title="Rückgängig (Strg+Z)"></button>
+  <button class="draw-tool-btn" id="dt-redo" title="Wiederholen (Strg+Y)"></button>
+  <button class="draw-tool-btn" id="dt-clear" title="Alles löschen"></button>
   <div class="draw-sep"></div>
-  <button class="draw-tool-btn" id="dt-exit" title="Zeichnen beenden" style="background:rgba(239,68,68,0.2);color:#f87171">✕</button>
+  <button class="draw-tool-btn" id="dt-exit" title="Zeichnen beenden" style="background:rgba(239,68,68,0.25);color:#fca5a5"></button>
 </div>
 
 <!-- KI-Assistent (öffnet über den Knopf „KI“ in der unteren Leiste) -->
@@ -1418,6 +1464,16 @@ const ICONS = {
   files: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
   pdf: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
   chevronLeft: 'M15 6l-6 6 6 6',
+  marker: 'M9 14l6-9 4 3-6 9zM9 14l-2 5 6-2M4 21h7',
+  eraser: 'M4 15l8-10 8 6-6 9H8zM9 9l8 6M4 20h16',
+  line: 'M5 19L19 5',
+  arrow: 'M5 19L19 5M10 5h9v9',
+  rect: 'M4 6h16v12H4z',
+  ellipse: 'M12 19c4.4 0 8-3.1 8-7s-3.6-7-8-7-8 3.1-8 7 3.6 7 8 7z',
+  ruler: 'M3 15L15 3l6 6L9 21zM7 11l2 2M10 8l2 2M13 5l2 2',
+  undo: 'M8 5L3 10l5 5M3 10h11a5.5 5.5 0 0 1 0 11h-3',
+  redo: 'M16 5l5 5-5 5M21 10H10a5.5 5.5 0 0 0 0 11h3',
+  trash: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6',
   chevronRight: 'M9 6l6 6-6 6',
   noise: 'M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zM6 11v1a6 6 0 0 0 12 0v-1M12 18v3M9 21h6',
   poll: 'M5 20V10M12 20V4M19 20v-7',
@@ -2812,6 +2868,7 @@ function renderBoardBg() {
 // RENDER – WIDGETS
 // ══════════════════════════════════════════════════════════════
 function renderWidgets() {
+  exitWidgetFull(true);
   stopAllIntervals();
   stopAllAudioStreams();
   stopAllPollChannels(); // Poll-Renderer abonniert neu — alte Realtime-Channels nicht leaken
@@ -2848,6 +2905,59 @@ function updateLayerSize() {
   if (DRAW.canvas) DRAW._syncScroll();
 }
 
+// ── Einzelnes Element im Vollbild (PDF, Video, Timer … für die ganze Klasse) ──
+let _wfull = null;
+// Eingebettete Seiten/Videos füllen den Rahmen von selbst — nicht neu aufbauen (Video liefe sonst von vorn)
+const WFULL_NO_RERENDER = new Set(['youtube', 'browser']);
+// Im Vollbild rechnen die Elemente mit der Bildschirmgröße statt mit ihrer gespeicherten Größe.
+// Ein Proxy statt echter Änderung: die gespeicherte Größe bleibt unangetastet.
+function widgetFullProxy(w) {
+  const extra = APP.state.editMode ? 34 : 0;
+  return new Proxy(w, { get(t, k) {
+    if (k === '__full') return true;
+    if (k === 'w') return window.innerWidth;
+    if (k === 'h') return window.innerHeight + extra;
+    return t[k];
+  } });
+}
+function toggleWidgetFull(id) {
+  if (_wfull) { const same = _wfull.id === id; exitWidgetFull(); if (same) return; }
+  const board = APP.activeBoard();
+  const w = board && board.widgets.find(x => x.id === id);
+  const shell = document.querySelector('[data-wid="' + id + '"]');
+  if (!w || !shell) return;
+  const draw = () => {
+    const b = shell.querySelector('.widget-body');
+    if (b && !WFULL_NO_RERENDER.has(w.type)) renderWidgetContent(w, b);
+  };
+  const exitBtn = el('button', 'w-full-exit');
+  exitBtn.innerHTML = icon('minimize', 22);
+  exitBtn.title = 'Vollbild beenden (Esc)';
+  exitBtn.setAttribute('aria-label', 'Vollbild beenden');
+  exitBtn.addEventListener('click', e => { e.stopPropagation(); exitWidgetFull(); });
+  shell.appendChild(exitBtn);
+  shell.classList.add('wfull');
+  document.body.classList.add('wfull-on');
+  const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); exitWidgetFull(); } };
+  document.addEventListener('keydown', onKey, true);
+  window.addEventListener('resize', draw);
+  _wfull = { id, shell, w, onKey, draw, exitBtn };
+  draw();
+}
+function exitWidgetFull(skipRender) {
+  if (!_wfull) return;
+  const f = _wfull; _wfull = null;
+  document.removeEventListener('keydown', f.onKey, true);
+  window.removeEventListener('resize', f.draw);
+  document.body.classList.remove('wfull-on');
+  f.exitBtn.remove();
+  f.shell.classList.remove('wfull');
+  if (!skipRender && f.shell.isConnected && !WFULL_NO_RERENDER.has(f.w.type)) {
+    const b = f.shell.querySelector('.widget-body');
+    if (b) renderWidgetContent(f.w, b);
+  }
+}
+
 // Elemente mit Einstellungs-Dialog (muss zu openWidgetSettings passen)
 const WIDGET_HAS_SETTINGS = new Set(['timer','text','qr','names','homework','goal','timetable','image','youtube',
   'noise','poll','randomnum','groups','agenda','checklist','phases']);
@@ -2867,6 +2977,9 @@ function buildWidgetEl(w) {
     settBtn.addEventListener('click', e => { e.stopPropagation(); openWidgetSettings(w.id); });
     const delBtn = el('button','w-btn del'); delBtn.innerHTML = icon('x', 15); delBtn.title = 'Vom Board entfernen';
     delBtn.addEventListener('click', e => { e.stopPropagation(); removeWidget(w.id); });
+    const fullBtn = el('button','w-btn'); fullBtn.innerHTML = icon('maximize', 15); fullBtn.title = 'Im Vollbild zeigen';
+    fullBtn.addEventListener('click', e => { e.stopPropagation(); toggleWidgetFull(w.id); });
+    actions.append(fullBtn);
     // Zahnrad nur zeigen, wenn das Element auch Einstellungen hat
     if (WIDGET_HAS_SETTINGS.has(w.type)) actions.append(settBtn);
     actions.append(delBtn);
@@ -2883,6 +2996,15 @@ function buildWidgetEl(w) {
   const body = el('div','widget-body' + (APP.state.editMode ? ' with-header' : ''));
   renderWidgetContent(w, body);
   shell.appendChild(body);
+  if (!APP.state.editMode) {
+    // In der Ansicht: kleiner Vollbild-Knopf in der Ecke (erscheint beim Darüberfahren, auf Touch immer)
+    const fb = el('button', 'w-full-btn');
+    fb.innerHTML = icon('maximize', 17);
+    fb.title = 'Im Vollbild zeigen';
+    fb.setAttribute('aria-label', 'Im Vollbild zeigen');
+    fb.addEventListener('click', e => { e.stopPropagation(); toggleWidgetFull(w.id); });
+    shell.appendChild(fb);
+  }
 
   // Double-tap / dblclick to edit (works on both desktop and mobile)
   if (APP.state.editMode) {
@@ -3069,6 +3191,8 @@ function initResize(shell, handle, w) {
 // WIDGET CONTENT RENDERERS
 // ══════════════════════════════════════════════════════════════
 function renderWidgetContent(w, body) {
+  // Wird ein Element im Vollbild neu aufgebaut (z. B. nach einem Einstellungs-Dialog), bleibt es groß
+  if (_wfull && _wfull.id === w.id && !w.__full) w = widgetFullProxy(w);
   body.innerHTML = '';
   if (!w.config || typeof w.config !== 'object') w.config = {};
   const fn = WIDGET_RENDERERS[w.type];
@@ -3380,8 +3504,8 @@ const WIDGET_RENDERERS = {
       wrap.appendChild(digits);
     } else {
       const size = mode === 'wide'
-        ? Math.max(120, Math.min(bodyH - 24, bodyW * 0.46, 460))
-        : Math.max(120, Math.min(bodyW - 32, bodyH - 172, 460));
+        ? Math.max(120, Math.min(bodyH - 24, bodyW * 0.46, 900))
+        : Math.max(120, Math.min(bodyW - 32, bodyH - 172, 900));
       const ring = el('div', 'tm-ring');
       ring.style.width = ring.style.height = size + 'px';
       ring.innerHTML = '<svg viewBox="0 0 100 100" role="img" aria-label="Verbleibende Zeit">'
@@ -6136,6 +6260,8 @@ function openBgModal() {
     {label:'Schiefer',  v:'#262C33'},
     {label:'Nachtblau', v:'#182840'},
     {label:'Weinrot',   v:'#3A1F2B'},
+    {label:'Tafel kariert', v:'linear-gradient(rgba(255,255,255,0.16) 1px, transparent 1px) 0 0/40px 40px, linear-gradient(90deg, rgba(255,255,255,0.16) 1px, transparent 1px) 0 0/40px 40px, #1F3531'},
+    {label:'Tafel liniert', v:'linear-gradient(transparent 55px, rgba(255,255,255,0.22) 55px) 0 0/100% 56px, #1F3531'},
     {label:'Waldgrün',  v:'linear-gradient(135deg,#1a5c3a,#0f3d2e)'},
     {label:'Mitternacht', v:'linear-gradient(135deg,#0f0c29,#302b63,#24243e)'},
     {label:'Graublau',  v:'#1e293b'},
@@ -7295,13 +7421,16 @@ const DRAW = {
     // Toolbar toggle (draw button in main toolbar)
     btn('btn-draw')?.addEventListener('click', () => this.toggle());
 
-    // Tools
-    btn('dt-pen')?.addEventListener('click',       () => this._setTool('pen'));
-    btn('dt-pen-thick')?.addEventListener('click', () => this._setTool('pen-thick'));
-    btn('dt-marker')?.addEventListener('click',    () => this._setTool('marker'));
-    btn('dt-brush')?.addEventListener('click',     () => this._setTool('brush'));
-    btn('dt-text')?.addEventListener('click',      () => this._setTool('text'));
-    btn('dt-eraser')?.addEventListener('click',    () => this._setTool('eraser'));
+    // Werkzeuge (Symbole statt Emojis, damit sie auf jedem Gerät gleich aussehen)
+    document.querySelectorAll('#draw-toolbar [data-tool]').forEach(b => {
+      b.innerHTML = icon(b.dataset.tool, 20);
+      b.addEventListener('click', () => this._setTool(b.dataset.tool));
+    });
+    const setIcon = (id, name) => { const b = btn(id); if (b) b.innerHTML = icon(name, 20); };
+    setIcon('dt-ruler', 'ruler'); setIcon('dt-undo', 'undo'); setIcon('dt-redo', 'redo');
+    setIcon('dt-clear', 'trash'); setIcon('dt-exit', 'x');
+    btn('dt-ruler')?.addEventListener('click', () => this._toggleRuler());
+    btn('dt-redo')?.addEventListener('click', () => this._redo());
 
     // Colors
     document.querySelectorAll('.draw-color-btn').forEach(b => {
@@ -7329,6 +7458,7 @@ const DRAW = {
     btn('dt-undo')?.addEventListener('click', () => this._undo());
     document.addEventListener('keydown', e => {
       if (this.active && (e.ctrlKey||e.metaKey) && e.key==='z') { e.preventDefault(); this._undo(); }
+      if (this.active && (e.ctrlKey||e.metaKey) && e.key==='y') { e.preventDefault(); this._redo(); }
     });
 
     // Clear
@@ -7390,16 +7520,111 @@ const DRAW = {
     if (this.active) {
       // Turning ON — restore drawing for this board
       this.loadBoard(APP.state.activeBoardId);
+    } else {
+      this._toggleRuler(false);
     }
     this._updateKeepVisible();
   },
 
   _setTool(tool) {
     this.tool = tool;
-    document.querySelectorAll('#draw-toolbar .draw-tool-btn').forEach(b => b.classList.remove('active'));
-    const map = { pen:'dt-pen', 'pen-thick':'dt-pen-thick', marker:'dt-marker', brush:'dt-brush', text:'dt-text', eraser:'dt-eraser' };
-    document.getElementById(map[tool])?.classList.add('active');
+    document.querySelectorAll('#draw-toolbar [data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === tool));
     this.canvas.style.cursor = tool === 'eraser' ? 'cell' : tool === 'text' ? 'text' : 'crosshair';
+  },
+
+  // ── Lineal: verschiebbar, drehbar; Striche direkt an der Kante werden gerade ──
+  _ruler: null,   // { el, cx, cy, ang } in Bildschirm-Koordinaten
+  RULER_LEN: 620, RULER_H: 66,
+  _toggleRuler(force) {
+    const on = force != null ? force : !this._ruler;
+    document.getElementById('dt-ruler')?.classList.toggle('active', on);
+    if (!on) { if (this._ruler) { this._ruler.el.remove(); this._ruler = null; } return; }
+    if (this._ruler) return;
+    const r = document.createElement('div');
+    r.id = 'draw-ruler';
+    r.setAttribute('data-kb-keep', '');
+    let ticks = '';
+    for (let i = 0; i <= 12; i++) ticks += '<span style="left:' + (10 + i * 50) + 'px">' + i + '</span>';
+    r.innerHTML = '<div class="dr-scale"></div><div class="dr-nums">' + ticks + '</div><div class="dr-ang"></div>'
+      + '<div class="dr-rot" data-end="-1"></div><div class="dr-rot" data-end="1"></div>';
+    document.body.appendChild(r);
+    this._ruler = { el: r, cx: window.innerWidth / 2, cy: window.innerHeight / 2, ang: 0 };
+    this._placeRuler();
+    let mode = null, sx, sy, scx, scy;
+    r.addEventListener('pointerdown', e => {
+      e.preventDefault(); e.stopPropagation();
+      mode = e.target.classList.contains('dr-rot') ? 'rot' : 'move';
+      sx = e.clientX; sy = e.clientY; scx = this._ruler.cx; scy = this._ruler.cy;
+      this._rotEnd = Number(e.target.dataset.end) || 1;
+      r.setPointerCapture(e.pointerId);
+    });
+    r.addEventListener('pointermove', e => {
+      if (!mode || !this._ruler) return;
+      if (mode === 'move') { this._ruler.cx = scx + e.clientX - sx; this._ruler.cy = scy + e.clientY - sy; }
+      else {
+        let a = Math.atan2(e.clientY - this._ruler.cy, e.clientX - this._ruler.cx);
+        if (this._rotEnd < 0) a += Math.PI;
+        let deg = a * 180 / Math.PI;
+        // an runden Winkeln einrasten (0°, 15°, 30°, 45° …)
+        const near = Math.round(deg / 15) * 15;
+        if (Math.abs(deg - near) < 2.5) deg = near;
+        this._ruler.ang = deg * Math.PI / 180;
+      }
+      this._placeRuler();
+    });
+    const stop = () => { mode = null; };
+    r.addEventListener('pointerup', stop);
+    r.addEventListener('pointercancel', stop);
+  },
+  _placeRuler() {
+    const R = this._ruler; if (!R) return;
+    R.el.style.transform = 'translate(' + (R.cx - this.RULER_LEN / 2) + 'px,' + (R.cy - this.RULER_H / 2) + 'px) rotate(' + R.ang + 'rad)';
+    let deg = Math.round(-R.ang * 180 / Math.PI) % 180;
+    if (deg < 0) deg += 180;
+    if (deg > 90) deg = 180 - deg;   // Neigung gegen die Waagerechte: 0–90°
+    R.el.querySelector('.dr-ang').textContent = deg + '°';
+  },
+  // Beginnt ein Strich dicht an einer Lineal-Kante? Dann die Kante als Führungslinie zurückgeben.
+  _rulerSnap(p) {
+    const R = this._ruler; if (!R) return null;
+    const off = this._scrollOffset();
+    const cx = R.cx + off.x, cy = R.cy + off.y;
+    const ux = Math.cos(R.ang), uy = Math.sin(R.ang), nx = -uy, ny = ux;
+    const dx = p.x - cx, dy = p.y - cy;
+    const t = dx * ux + dy * uy, d = dx * nx + dy * ny;
+    if (Math.abs(t) > this.RULER_LEN / 2 + 30) return null;
+    if (Math.abs(Math.abs(d) - this.RULER_H / 2) > 30) return null;
+    const s = d < 0 ? -1 : 1;
+    return { ax: cx + nx * s * this.RULER_H / 2, ay: cy + ny * s * this.RULER_H / 2, ux, uy };
+  },
+  _project(p) {
+    const L = this._rulerLine;
+    const t = (p.x - L.ax) * L.ux + (p.y - L.ay) * L.uy;
+    return { x: L.ax + L.ux * t, y: L.ay + L.uy * t };
+  },
+
+  // ── Formen (Linie, Pfeil, Rechteck, Ellipse): Vorschau beim Ziehen ──
+  _previewShape() {
+    const s = this._shape;
+    if (!s || s.x1 == null) return;
+    const ctx = this.ctx;
+    if (s.snap) ctx.putImageData(s.snap, 0, 0);
+    this._applyStyle();
+    ctx.shadowBlur = 0;
+    const { x0, y0, x1, y1 } = s;
+    ctx.beginPath();
+    if (this.tool === 'rect') ctx.rect(Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0));
+    else if (this.tool === 'ellipse') ctx.ellipse((x0 + x1) / 2, (y0 + y1) / 2, Math.abs(x1 - x0) / 2, Math.abs(y1 - y0) / 2, 0, 0, Math.PI * 2);
+    else {
+      ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
+      if (this.tool === 'arrow') {
+        const a = Math.atan2(y1 - y0, x1 - x0), h = Math.max(14, this.size * 4);
+        ctx.moveTo(x1 - h * Math.cos(a - 0.45), y1 - h * Math.sin(a - 0.45));
+        ctx.lineTo(x1, y1);
+        ctx.lineTo(x1 - h * Math.cos(a + 0.45), y1 - h * Math.sin(a + 0.45));
+      }
+    }
+    ctx.stroke();
   },
 
   _showTextInput(x, y) {
@@ -7490,6 +7715,7 @@ const DRAW = {
     this.canvas.height = H;
     if (copy) this.ctx.drawImage(copy, 0, 0);
     this.history = [];   // alte Undo-Schnappschüsse passen nicht mehr zur neuen Größe
+    this.redo = [];
   },
 
   // Verschiebung der Zeichenebene = Scrollposition der Tafel
@@ -7509,7 +7735,9 @@ const DRAW = {
   },
 
   // Undo-Schnappschuss mit Speicher-Deckel: 30 Vollbilder wären bei 1920×1080 rund 250 MB
+  redo: [],
   _pushHistory() {
+    this.redo = [];   // nach einer neuen Aktion gibt es nichts mehr zu wiederholen
     try {
       this.history.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height));
     } catch(e) { this.history = []; return; }
@@ -7538,10 +7766,16 @@ const DRAW = {
     this._pushHistory();   // Undo snapshot
     this._markInk(this.tool === 'eraser' ? 'unknown' : 'ink');
 
-    const p = this._getPos(e);
+    let p = this._getPos(e);
     this.drawing = true;
-    this._pts = [p];
     this._rafPending = false;
+    // Formen: Startpunkt merken; die Vorschau wird über dem Undo-Schnappschuss gezeichnet
+    this._shape = ['line', 'arrow', 'rect', 'ellipse'].includes(this.tool)
+      ? { x0: p.x, y0: p.y, snap: this.history[this.history.length - 1] || null } : null;
+    this._rulerLine = (!this._shape && this.tool !== 'eraser') ? this._rulerSnap(p) : null;
+    if (this._rulerLine) p = this._project(p);
+    this._pts = [p];
+    if (this._shape) return;
 
     // Draw initial dot
     this._applyStyle();
@@ -7562,8 +7796,18 @@ const DRAW = {
     const coalesced = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
     const events = coalesced && coalesced.length ? coalesced : [e];
     const off = this._scrollOffset();
+    if (this._shape) {
+      const ev = events[events.length - 1];
+      this._shape.x1 = ev.clientX + off.x; this._shape.y1 = ev.clientY + off.y;
+      if (!this._rafPending) {
+        this._rafPending = true;
+        requestAnimationFrame(() => { this._rafPending = false; this._previewShape(); });
+      }
+      return;
+    }
     for (const ev of events) {
-      this._pts.push({ x: ev.clientX + off.x, y: ev.clientY + off.y });
+      const q = { x: ev.clientX + off.x, y: ev.clientY + off.y };
+      this._pts.push(this._rulerLine ? this._project(q) : q);
     }
 
     if (!this._rafPending) {
@@ -7602,8 +7846,10 @@ const DRAW = {
   _end(e) {
     if (!this.drawing) return;
     this.drawing = false;
+    if (this._shape) { this._previewShape(); this._shape = null; }
     // Flush remaining points
-    if (this._pts && this._pts.length > 1) this._flushPoints();
+    else if (this._pts && this._pts.length > 1) this._flushPoints();
+    this._rulerLine = null;
     try { this.canvas.releasePointerCapture(e.pointerId); } catch(_) {}
     // Debounced save — don't call toDataURL on every stroke end
     clearTimeout(this._saveTimer);
@@ -7657,6 +7903,18 @@ const DRAW = {
   _undo() {
     if (this.history.length === 0) return;
     const snap = this.history.pop();
+    try { this.redo.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height)); } catch(e) { this.redo = []; }
+    if (this.redo.length > 10) this.redo.shift();
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.putImageData(snap, 0, 0);
+    this._markInk('unknown');
+    clearTimeout(this._saveTimer);
+    this._saveTimer = setTimeout(() => this.saveBoard(APP.state.activeBoardId), 800);
+  },
+  _redo() {
+    if (!this.redo.length) return;
+    const snap = this.redo.pop();
+    try { this.history.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height)); } catch(e) {}
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.putImageData(snap, 0, 0);
     this._markInk('unknown');

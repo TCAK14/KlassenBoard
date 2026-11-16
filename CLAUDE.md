@@ -48,6 +48,14 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
 - **Leere Elemente:** `emptyCta(icon, text, onClick)` statt Hinweistext „⚙ Einstellungen" — funktioniert auch in der Ansicht
 - **Demo:** bewusst nur 2 Tafeln (Gratis-Limit 3), damit „+" beim ersten Besuch nicht sofort die Bezahl-Meldung zeigt
 
+## Vollbild einzelner Elemente + Zeichnen
+- `toggleWidgetFull(id)` / `exitWidgetFull()`: Element füllt den Bildschirm (Kopf-Knopf im Bearbeiten-Modus, Eck-Knopf
+  `.w-full-btn` in der Ansicht). Renderer bekommen über `widgetFullProxy()` die Bildschirmgröße als `w.w`/`w.h` —
+  die gespeicherte Größe wird NICHT verändert. `youtube`/`browser` werden dabei nicht neu aufgebaut
+- Zeichnen (`DRAW`): Werkzeuge über `data-tool` in `#draw-toolbar` (pen, marker, eraser, line, arrow, rect, ellipse, text).
+  Formen zeichnen ihre Vorschau über dem Undo-Schnappschuss (`_previewShape`). Lineal `#draw-ruler` (`_toggleRuler`):
+  Striche, die dicht an einer Kante beginnen, werden auf die Kante projiziert (`_rulerSnap`/`_project`). Undo + Redo
+
 ## PDF-Element (`pdf`)
 - Dateien liegen in IndexedDB (`PDFSTORE`, DB `classpuls_files`, bis 60 MB) — NICHT in localStorage/Cloud. Auf einem
   anderen Gerät zeigt das Element „liegt nicht auf diesem Gerät" und lässt die Datei neu wählen
