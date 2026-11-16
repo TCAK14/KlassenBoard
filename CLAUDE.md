@@ -76,6 +76,20 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
   `#tafel=…`; `checkSharedBoard()` beim Start fragt vor dem Hinzufügen nach und säubert die Adresse
 - Hintergrund: Fotosuche im Hintergrund-Dialog über `image-search` mit `size:'large'` (Pixabay 1280 px, data:-URL)
 
+## Grundschul-Paket (16.11.2026, nach Fotos aus dem echten Unterricht mit Classroomscreen)
+- `dayplan` (Tagesplan): Zeilen `{text, icon, time, done, manual}`; farbige SVG-Bildsymbole `PICTOS` (31 + 4 Jahreszeiten,
+  Auswahl `PICTO_LIST`, Picker `openPictoPicker`), `guessPicto(text)` wählt das Symbol nach Stichwort. Antippen hakt ab,
+  erste offene Zeile = „jetzt". Haken verschwinden am nächsten Tag (`config.day` = `todayKey()`, abschaltbar `autoReset`)
+- `today` (Datum): Karten (Wochentag mit Wochenfarben, Tag/Monat/Jahr, Jahreszeit über `seasonOf`) oder Satz „Heute ist …";
+  stellt sich selbst um (Intervall 30 s). `link`: Webseite (nur http/https, per `new URL` geprüft) oder andere Tafel (`switchBoard`)
+- Hintergrund-Muster: `{type:'pattern', value:key}` aus `BG_PATTERNS` (SVG erst beim Anzeigen erzeugt, gespeichert wird nur das
+  Kürzel → klein und teilbar). Immer über `boardBgCss(bg)` / `patternCss(key)` darstellen
+- Zeitkreis: Minutenskala gegen den Uhrzeigersinn, Zeit durch Tippen/Ziehen am Kreis einstellen; flach-breit = Kreis links
+- Bild „Ohne Rahmen" (`config.frameless` → `.widget.frameless`) für freigestellte PNGs; PNG bleibt transparent (notfalls verkleinert)
+- Tafel-Übersicht `openBoardOverview()` (Vorschau `boardThumb`, öffnen/kopieren inkl. Zeichnung/umbenennen/verschieben/löschen),
+  Blätter-Anzeige `#board-pager` (erst ab 1280 px oder im Vollbild), Bild-auf/ab-Tasten = Präsentations-Fernbedienung (`stepBoard`)
+- `createBoard` sichert die Zeichnung der alten Tafel und lädt die (leere) der neuen; `fitLayout` behält bei Breite 0 die Vorlagenmaße
+
 ## PDF-Element (`pdf`)
 - Dateien liegen in IndexedDB (`PDFSTORE`, DB `classpuls_files`, bis 60 MB) — NICHT in localStorage/Cloud. Auf einem
   anderen Gerät zeigt das Element „liegt nicht auf diesem Gerät" und lässt die Datei neu wählen
