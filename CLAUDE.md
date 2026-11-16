@@ -20,8 +20,21 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
 - **Single-file HTML** — kein Build-Step, kein Framework
 - **Wichtige globale Objekte:** `APP`, `AUTH`, `DRAW`, `CLASSES`, `REGISTRY`, `WIDGET_RENDERERS`
 - **Widget-System:** `REGISTRY` (Metadaten) + `WIDGET_RENDERERS` (Render-Funktionen) + `renderWidgetContent(w, body)`
-- **Startup-Sequenz:** `AUTH.init()` → `DRAW.init()` → `applyToolbarPrefs()` → `init()`
-- **Toolbar:** `z-index:99999`, `pointer-events:all` — darf nie blockiert werden
+- **Startup-Sequenz:** `AUTH.init()` → `DRAW.init()` → `initChromeIcons()` → `renderDock()` → `applyChromePrefs()` → `init()`
+- **Toolbar (oben):** `z-index:99999`, `pointer-events:all` — darf nie blockiert werden
+
+## Oberfläche (seit Nov 2026, „Etappe 1")
+- **Obere Leiste `#toolbar`:** nur Navigation (Klasse, Tafel-Reiter, Zeichnen, Bearbeiten, Vollbild, `⋯`, Anmelden)
+- **Untere Leiste `#dock`:** Elemente mit einem Klick hinzufügen — `renderDock()`, Auswahl in `kb_dock_items`
+  (`openDockCustomizer()`); „Mehr" (`#btn-add-widget`) öffnet `openWidgetMenu()`
+- **Menü `⋯`:** `openMoreMenu()` — Vorlagen, Hintergrund, Stundenplan, Sprache, Export, Karten hell/dunkel (`kb_cards`),
+  Leisten ausblenden (`kb_autohide`), Zurücksetzen. Auf schmalen Bildschirmen wandern versteckte Leisten-Knöpfe hierher
+- **Symbole:** `ICONS` + `icon(name, size)` (Inline-SVG, Schlüssel = Widget-Typ). Keine Emojis für Bedienelemente
+- **Karten-Farben:** Widgets sind standardmäßig HELL. In Renderern nie Weiß/Schwarz fest verdrahten, sondern
+  `var(--w-ink)`, `--w-muted`, `--w-faint`, `--w-line`, `--w-fill`, `--w-fill-2`, `--w-danger` … (definiert an `.widget`)
+- **Schriftgrößen in Widgets:** `cqw`/`cqh` (`.widget-body` ist Container) bzw. `fitFontSize()`; Listen setzen `--n` (Zeilenzahl)
+- **Tafelfarbe:** `DEFAULT_BG` (#1F3531). Der alte Indigo-Verlauf (`LEGACY_DEFAULT_BG`) wird beim Anzeigen wie „Standard" behandelt
+- **Einrasten:** `snapLines/snapAxis/showSnapGuide` in `initDrag`/`initResize` (8-px-Raster, Kanten anderer Widgets, Alt = frei)
 
 ## Stripe / Payments
 - **Publishable Key** (im Code erlaubt): `pk_test_51TibNc9fJyerANl5...`
@@ -62,6 +75,10 @@ Zusätzlich die Seite laden und die Konsole auf Fehler prüfen.
 - **Elemente in der Toolbar mit Dropdown:** Die Toolbar ist horizontal scrollbar (`overflow-x:auto`) und schneidet
   absolut positionierte Kinder ab → Menüs an `<body>` hängen (siehe `CLASSES.initUI`), nie in die Toolbar
 - **Vollflächige Overlays** direkt an `<body>` brauchen `class="modal-overlay"` oder `data-kb-keep`, sonst entfernt sie der Toolbar-Guardian
+- **Bash-Heredocs:** `\\n` in Python-Patches wird zu einem echten Zeilenumbruch → zerbricht JS-Strings. Patch-Skripte
+  mit JS-Escapes als Datei schreiben (Write-Tool), nicht per Heredoc
+- **Browser-Preview drosselt Animationen:** Screenshots direkt nach einer Aktion zeigen oft den Zwischenzustand
+  (Menü/Dialog noch unsichtbar) → 2–3 s warten oder per JS messen
 - **Cloud-Sync:** nie direkt `upsert` aufrufen — `APP.save()` → `AUTH.syncToCloud()` gleicht erst mit der Cloud ab
   (`_reconcile`). Automatische Speicherungen beim Start laufen mit `APP._booting = true` und gelten nicht als Nutzer-Änderung
 - **Pro-Status:** `isPro()` liest `app_metadata.plan` (nur serverseitig setzbar) — bis ein Stripe-Webhook existiert, manuell im Supabase-Dashboard setzen
@@ -72,3 +89,7 @@ Zusätzlich die Seite laden und die Konsole auf Fehler prüfen.
 - [ ] Stripe auf Live-Mode umschalten + Webhook, der nach Zahlung `app_metadata.plan` setzt
 - [ ] Preistabelle vs. tatsächliche Sperren abgleichen (Cloud-Sync, Datei-Widget, KI sind laut Landing Page Pro, technisch aber frei)
 - [ ] Text-Tool: weitere Verbesserungen (Schriftauswahl, Größe)
+- [ ] Redesign Etappe 2: Bedienung direkt im Element (Timer-Ziffern antippen usw.), Vorlagen-Galerie beim Start
+- [ ] Redesign Etappe 3: fehlende Elemente (Arbeitssymbole, Punktetafel, visueller Timer, Countdown, Kalender, Webcam)
+- [ ] Rest aus Etappe 1: Zeichen-Leiste und Dialog-Überschriften nutzen noch Emojis; Dialoge sind noch dunkel;
+      Landing Page hat noch das alte Indigo-Branding; eigene Schrift (Atkinson Hyperlegible) nur lokal hosten (DSGVO)

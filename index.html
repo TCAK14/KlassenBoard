@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>ClassPuls – Das digitale Klassenzimmer</title>
 <meta name="description" content="ClassPuls ist das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer. Widgets, KI-Assistent, Live-Umfragen, Sprachsteuerung und mehr.">
-<meta name="theme-color" content="#6366f1">
+<meta name="theme-color" content="#1F3531">
 <meta property="og:title" content="ClassPuls">
 <meta property="og:description" content="Das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer">
 <meta property="og:type" content="website">
@@ -16,8 +16,8 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 :root {
-  --brand: #6366f1;
-  --brand-dark: #4f46e5;
+  --brand: #0B7A74;
+  --brand-dark: #075E59;
   --toolbar-h: 56px;
   --glass: rgba(255,255,255,0.08);
   --glass-border: rgba(255,255,255,0.12);
@@ -71,7 +71,7 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
   font-size:13px;
 }
 .class-dd-item:hover { background:rgba(255,255,255,0.07); }
-.class-dd-item.active { background:rgba(99,102,241,0.2); color:#a5b4fc; }
+.class-dd-item.active { background:rgba(11,122,116,0.2); color:#7FE3DA; }
 .class-dd-item .class-dd-name { flex:1; font-weight:500; }
 .class-dd-item .class-dd-count { font-size:10.5px; color:rgba(255,255,255,0.3); }
 .class-dd-item .class-dd-del {
@@ -100,7 +100,7 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
   border-radius:7px; color:#fff; font-size:12.5px; padding:7px 10px;
   touch-action:auto; outline:none;
 }
-.class-dd-add-input input:focus { border-color:rgba(99,102,241,0.6); }
+.class-dd-add-input input:focus { border-color:rgba(11,122,116,0.6); }
 .class-dd-add-input button {
   padding:6px 12px; border-radius:7px; border:none; cursor:pointer;
   background:var(--brand); color:#fff; font-size:12px; font-weight:600;
@@ -162,8 +162,8 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
   display:flex; align-items:center; gap:5px; white-space:nowrap;
 }
 .tb-btn:active { transform:scale(0.95); }
-#btn-ai-board { background:linear-gradient(135deg,#7c3aed,#6366f1); color:#fff; }
-#btn-ai-board:hover { background:linear-gradient(135deg,#6d28d9,#4f46e5); }
+#btn-ai-board { background:linear-gradient(135deg,#0E9F97,#0B7A74); color:#fff; }
+#btn-ai-board:hover { background:linear-gradient(135deg,#0B7A74,#075E59); }
 #btn-add-widget { background:var(--brand); color:#fff; }
 #btn-add-widget:hover { background:var(--brand-dark); }
 
@@ -175,15 +175,15 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
 .ai-board-row .form-group { flex:1; }
 .ai-board-gen-btn {
   width:100%; padding:12px; border-radius:10px; border:none;
-  background:linear-gradient(135deg,#7c3aed,#6366f1); color:#fff;
+  background:linear-gradient(135deg,#0E9F97,#0B7A74); color:#fff;
   font-size:14px; font-weight:700; cursor:pointer; margin-top:8px;
   transition:all .2s; letter-spacing:.3px;
 }
-.ai-board-gen-btn:hover { background:linear-gradient(135deg,#6d28d9,#4f46e5); transform:translateY(-1px); }
+.ai-board-gen-btn:hover { background:linear-gradient(135deg,#0B7A74,#075E59); transform:translateY(-1px); }
 .ai-board-gen-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 .ai-board-progress {
   margin-top:14px; padding:12px; border-radius:10px;
-  background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.2);
+  background:rgba(11,122,116,0.1); border:1px solid rgba(11,122,116,0.2);
   font-size:12.5px; color:rgba(255,255,255,0.6); text-align:center; display:none;
 }
 .ai-board-progress.visible { display:block; }
@@ -225,7 +225,7 @@ input, textarea, select, [contenteditable] { touch-action:auto; user-select:text
   transition:box-shadow .15s;
   min-width:120px; min-height:80px;
 }
-.widget.selected { border-color:rgba(99,102,241,0.8); box-shadow:0 0 0 2px rgba(99,102,241,0.4), var(--shadow); }
+.widget.selected { border-color:rgba(11,122,116,0.8); box-shadow:0 0 0 2px rgba(11,122,116,0.4), var(--shadow); }
 .widget-header {
   position:absolute; top:0; left:0; right:0; height:32px;
   background:rgba(0,0,0,0.2);
@@ -362,19 +362,19 @@ label { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-botto
   width:48px; height:48px; border-radius:14px;
   background:rgba(15,15,30,0.85);
   backdrop-filter:blur(12px);
-  border:1px solid rgba(99,102,241,0.3);
+  border:1px solid rgba(11,122,116,0.3);
   cursor:pointer;
   box-shadow:0 4px 20px rgba(0,0,0,0.4);
   display:flex; align-items:center; justify-content:center;
   transition:all .2s; padding:0;
 }
-#ki-fab:hover { transform:translateY(-2px); border-color:rgba(99,102,241,0.6); box-shadow:0 8px 28px rgba(99,102,241,0.3); background:rgba(99,102,241,0.15); }
+#ki-fab:hover { transform:translateY(-2px); border-color:rgba(11,122,116,0.6); box-shadow:0 8px 28px rgba(11,122,116,0.3); background:rgba(11,122,116,0.15); }
 #ki-fab:active { transform:scale(0.95); }
 #ki-panel {
   position:fixed; bottom:80px; left:20px; z-index:2000;
   width:320px; height:420px; min-width:260px; min-height:250px; max-width:90vw; max-height:80vh;
   background:rgba(15,15,25,0.95); backdrop-filter:blur(20px);
-  border:1px solid rgba(99,102,241,0.3); border-radius:16px;
+  border:1px solid rgba(11,122,116,0.3); border-radius:16px;
   box-shadow:0 16px 48px rgba(0,0,0,0.6);
   display:flex; flex-direction:column; overflow:hidden;
   transform:scale(0.9) translateY(10px); opacity:0;
@@ -389,7 +389,7 @@ label { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-botto
 }
 #ki-panel.open { transform:scale(1) translateY(0); opacity:1; pointer-events:all; }
 #ki-panel-header {
-  padding:12px 14px; background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(99,102,241,0.2));
+  padding:12px 14px; background:linear-gradient(135deg,rgba(14,159,151,0.3),rgba(11,122,116,0.2));
   border-bottom:1px solid rgba(255,255,255,0.08);
   display:flex; align-items:center; gap:8px; flex-shrink:0;
 }
@@ -401,7 +401,7 @@ label { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-botto
   scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.1) transparent;
 }
 .ki-bubble { padding:8px 11px; border-radius:10px; font-size:12.5px; line-height:1.45; max-width:90%; word-break:break-word; }
-.ki-bubble.user { background:rgba(99,102,241,0.3); align-self:flex-end; }
+.ki-bubble.user { background:rgba(11,122,116,0.3); align-self:flex-end; }
 .ki-bubble.ai { background:rgba(255,255,255,0.07); align-self:flex-start; }
 .ki-bubble.thinking { color:rgba(255,255,255,0.4); font-style:italic; }
 #ki-input-row { display:flex; gap:6px; padding:10px; border-top:1px solid rgba(255,255,255,0.07); flex-shrink:0; }
@@ -410,7 +410,7 @@ label { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-botto
   border-radius:8px; color:#fff; font-size:12px; padding:7px 10px;
   resize:none; height:38px; font-family:inherit; touch-action:auto;
 }
-#ki-textarea:focus { outline:none; border-color:rgba(99,102,241,0.5); }
+#ki-textarea:focus { outline:none; border-color:rgba(11,122,116,0.5); }
 #ki-send { background:var(--brand); border:none; border-radius:8px; color:#fff; 
   width:36px; height:38px; cursor:pointer; font-size:14px; flex-shrink:0; transition:background .15s; }
 #ki-send:hover { background:var(--brand-dark); }
@@ -431,7 +431,7 @@ label { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-botto
   transition:all .15s; flex-shrink:0;
 }
 .draw-tool-btn:hover { background:rgba(255,255,255,0.18); }
-.draw-tool-btn.active { border-color:var(--brand); background:rgba(99,102,241,0.25); }
+.draw-tool-btn.active { border-color:var(--brand); background:rgba(11,122,116,0.25); }
 .draw-color-btn {
   width:28px; height:28px; border-radius:50%; border:3px solid transparent;
   cursor:pointer; flex-shrink:0; transition:transform .15s;
@@ -457,10 +457,10 @@ body.draw-mode #toolbar { z-index:1900 !important; } /* !important nötig — Ba
   position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
   background:rgba(30,41,59,0.95); border:1px solid rgba(255,255,255,0.15);
   color:#fff; padding:10px 20px; border-radius:12px; font-size:14px;
-  box-shadow:0 8px 24px rgba(0,0,0,0.4); z-index:9999; transition:transform .3s ease;
-  pointer-events:none;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4); z-index:100001; transition:transform .3s ease, opacity .2s ease;
+  pointer-events:none; opacity:0; max-width:calc(100vw - 24px); text-align:center;
 }
-#toast.show { transform:translateX(-50%) translateY(0); }
+#toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 
 /* ── Widget content styles ── */
 .w-clock { font-size:clamp(2rem,5vw,4rem); font-weight:700; font-variant-numeric:tabular-nums; width:100%; text-align:center; }
@@ -488,7 +488,7 @@ body.draw-mode #toolbar { z-index:1900 !important; } /* !important nötig — Ba
 .w-text-display { line-height:1.6; padding:14px; overflow:auto; width:100%; height:100%; white-space:pre-wrap; word-break:break-word; }
 .w-names-list { list-style:none; width:100%; padding:6px; overflow-y:auto; max-height:100%; }
 .w-names-list li { padding:3px 8px; border-radius:6px; transition:background .1s; line-height:1.4; }
-.w-names-list li.highlighted { background:rgba(99,102,241,0.4); font-weight:700; }
+.w-names-list li.highlighted { background:rgba(11,122,116,0.4); font-weight:700; }
 .w-homework { padding:12px; overflow-y:auto; width:100%; }
 .w-homework h3 { color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
 .w-homework ul { list-style:none; }
@@ -498,7 +498,7 @@ body.draw-mode #toolbar { z-index:1900 !important; } /* !important nötig — Ba
 .w-qr-container canvas, .w-qr-container img { border-radius:8px; max-width:100%; max-height:calc(100% - 40px); }
 .w-qr-label { font-size:11px; color:rgba(255,255,255,0.5); text-align:center; word-break:break-all; }
 .timetable-inner { width:100%; padding:10px; overflow-y:auto; max-height:100%; }
-.tt-now { border-radius:10px; padding:10px 12px; background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); margin-bottom:8px; }
+.tt-now { border-radius:10px; padding:10px 12px; background:rgba(11,122,116,0.2); border:1px solid rgba(11,122,116,0.4); margin-bottom:8px; }
 .tt-label { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:rgba(255,255,255,0.4); font-weight:700; }
 .tt-subject { font-size:20px; font-weight:700; margin:2px 0; }
 .tt-meta { font-size:12px; color:rgba(255,255,255,0.5); }
@@ -566,10 +566,10 @@ body.fullscreen #board { top:0; }
 #auth-login-btn {
   flex-shrink:0; border:none; cursor:pointer; border-radius:var(--radius-sm);
   padding:6px 12px; font-size:12px; font-weight:600;
-  background:rgba(99,102,241,0.2); color:#a5b4fc;
-  border:1px solid rgba(99,102,241,0.3); transition:all .15s; white-space:nowrap;
+  background:rgba(11,122,116,0.2); color:#7FE3DA;
+  border:1px solid rgba(11,122,116,0.3); transition:all .15s; white-space:nowrap;
 }
-#auth-login-btn:hover { background:rgba(99,102,241,0.4); color:#fff; }
+#auth-login-btn:hover { background:rgba(11,122,116,0.4); color:#fff; }
 #user-badge {
   display:none; align-items:center; gap:7px;
   background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1);
@@ -578,7 +578,7 @@ body.fullscreen #board { top:0; }
 #user-badge.visible { display:flex; }
 #user-avatar {
   width:26px; height:26px; border-radius:50%;
-  background:linear-gradient(135deg,var(--brand),#a855f7);
+  background:linear-gradient(135deg,var(--brand),#2BBCB3);
   display:flex; align-items:center; justify-content:center;
   font-size:11px; font-weight:700; color:#fff; flex-shrink:0;
 }
@@ -594,11 +594,11 @@ body.fullscreen #board { top:0; }
 .auth-modal { max-width:360px; }
 .auth-tabs { display:flex; margin-bottom:20px; border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.05); }
 .auth-tab { flex:1; padding:9px; border:none; background:transparent; color:rgba(255,255,255,0.45); cursor:pointer; font-size:13px; font-weight:600; transition:all .15s; }
-.auth-tab.active { background:rgba(99,102,241,0.35); color:#fff; }
+.auth-tab.active { background:rgba(11,122,116,0.35); color:#fff; }
 .auth-field { margin-bottom:14px; }
 .auth-field label { display:block; font-size:11px; color:rgba(255,255,255,0.45); margin-bottom:6px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; }
 .auth-field input { width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.06); color:#fff; font-size:14px; outline:none; transition:border-color .15s; touch-action:auto; user-select:text; }
-.auth-field input:focus { border-color:rgba(99,102,241,0.6); background:rgba(99,102,241,0.08); }
+.auth-field input:focus { border-color:rgba(11,122,116,0.6); background:rgba(11,122,116,0.08); }
 .auth-submit { width:100%; padding:11px; border-radius:10px; border:none; background:var(--brand); color:#fff; font-size:14px; font-weight:600; cursor:pointer; transition:all .15s; margin-top:4px; }
 .auth-submit:hover { background:var(--brand-dark); }
 .auth-submit:disabled { opacity:0.5; cursor:not-allowed; }
@@ -699,9 +699,7 @@ body.fullscreen #board { top:0; }
 .ask-clear-btn:hover { color:rgba(255,255,255,0.5); }
 
 /* ── Sprachsteuerung ── */
-#btn-voice { position:relative; transition:all .2s; }
-#btn-voice.listening { background:rgba(239,68,68,0.3) !important; color:#f87171 !important; animation:pulse 1s infinite; }
-#btn-voice.listening::after { content:''; position:absolute; inset:-3px; border-radius:50%; border:2px solid #f87171; animation:ripple 1s infinite; }
+#btn-more.listening { background:rgba(239,68,68,0.35) !important; color:#fecaca !important; animation:pulse 1s infinite; }
 @keyframes ripple { 0%{transform:scale(1);opacity:1} 100%{transform:scale(1.5);opacity:0} }
 .voice-toast {
   position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
@@ -717,98 +715,343 @@ body.fullscreen #board { top:0; }
 .group-card h4 { font-size:clamp(0.7rem, 2vw, 1.1rem); }
 .group-card li { font-size:clamp(0.65rem, 1.8vw, 1rem); }
 
-/* ── KOMPAKTE TOOLBAR (iPad quer, kleine Laptops, viele Smartboard-Browser) ──
-   Ohne das bleiben für die Tafel-Tabs bei 1024px nur ~40px übrig */
-@media (min-width: 769px) and (max-width: 1280px) {
-  #toolbar { gap:5px; padding:0 8px; }
-  #logo { margin-right:2px; }
-  #logo-text, #logo span:last-child { display:none; }
-  .toolbar-sep { display:none; }
-  #class-btn { max-width:104px; padding:5px 8px; }
-  #class-btn .class-name { max-width:70px; }
-  .tab-btn { padding:6px 10px; }
-  #auth-login-btn { padding:6px 9px; }
+/* ══════════════════════════════════════════════════════════════
+   NEUER LOOK — ruhige Tafel, helle gut lesbare Karten, Leiste unten
+   (überschreibt gezielt die älteren Regeln weiter oben)
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  --ink:#1B2422; --ink-muted:#55605D; --card:#FBFAF6; --line:#DDE2DC;
+  --accent:#0B7A74; --accent-dark:#075E59; --accent-ink:#0A5F5A; --accent-tint:#DDF1EF; --accent-soft:#7FE3DA;
+  --board:#1F3531; --on-board:#F2F5F4; --on-board-muted:#C9D5D1;
+  --brand:#0B7A74; --brand-dark:#075E59;
+  --toolbar-h:60px; --dock-h:84px; --radius:18px;
+}
+html, body { font-family:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif; }
+body { background:var(--board); color:var(--on-board); }
+.ic { flex:none; display:block; }
+
+/* ── Obere Leiste: nur Navigation, liegt über der Tafel ── */
+#toolbar {
+  height:var(--toolbar-h); gap:8px; padding:0 14px; border-bottom:none;
+  /* dezente Abdunklung, damit die Leiste auf jedem Hintergrund lesbar bleibt */
+  background:linear-gradient(rgba(8,14,13,0.46), rgba(8,14,13,0.2));
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  color:var(--on-board); transition:transform .25s ease;
+}
+#toolbar.solid { background:rgba(13,20,19,0.92); box-shadow:0 6px 18px rgba(0,0,0,0.28); }
+#logo { gap:8px; margin-right:4px; color:var(--on-board); }
+#logo .logo-mark { display:flex; color:var(--accent-soft); }
+#logo-text { font-size:18px; letter-spacing:-0.2px; }
+#class-btn {
+  height:40px; padding:0 12px; border-radius:12px; max-width:180px;
+  background:transparent; border:1.5px solid rgba(255,255,255,0.38);
+  color:var(--on-board); font-size:14px; font-weight:700; gap:6px;
+}
+#class-btn:hover { background:rgba(255,255,255,0.12); }
+#class-btn .class-name { max-width:124px; }
+#board-tabs { gap:2px; min-width:150px; flex:0 1 auto; }
+.tab-btn { height:40px; padding:0 14px; border-radius:12px; font-size:14px; font-weight:700; color:var(--on-board-muted); background:transparent; gap:6px; }
+.tab-btn:hover { background:rgba(255,255,255,0.12); color:#fff; }
+.tab-btn.active { background:var(--card); color:var(--ink); box-shadow:0 2px 8px rgba(0,0,0,0.25); }
+/* Umbenennen/Löschen nur am aktiven Tab: ruhigere Leiste, keine versehentlichen Klicks */
+.tab-btn .tab-action { display:none; width:24px; height:24px; border-radius:7px; padding:0; color:inherit; }
+.tab-btn.active .tab-action { display:flex; opacity:0.55; }
+.tab-btn.active .tab-action:hover { opacity:1; background:rgba(27,36,34,0.1); }
+#add-board-btn { width:40px; height:40px; border-radius:12px; background:transparent; color:var(--on-board-muted); font-size:0; }
+#add-board-btn:hover { background:rgba(255,255,255,0.12); color:#fff; }
+.tb-spacer { flex:1 1 0; min-width:4px; }
+.toolbar-sep { display:none; }
+.tb-icon-btn { width:40px; height:40px; border-radius:12px; background:rgba(255,255,255,0.12); color:var(--on-board); font-size:0; }
+.tb-icon-btn:hover { background:rgba(255,255,255,0.22); color:#fff; }
+.tb-icon-btn.active { background:var(--card); color:var(--ink); }
+#edit-mode-btn {
+  width:auto; height:40px; padding:0 13px; gap:7px; border-radius:12px;
+  display:flex; align-items:center; background:rgba(255,255,255,0.12); color:var(--on-board);
+  font-size:14px; font-weight:700; letter-spacing:0;
+}
+#edit-mode-btn:hover { background:rgba(255,255,255,0.22); }
+#edit-mode-btn.active { background:var(--card); color:var(--ink); }
+#auth-area { margin-left:2px; }
+#auth-login-btn { height:40px; padding:0 14px; border-radius:12px; border:none; background:var(--card); color:var(--ink); font-size:14px; font-weight:700; }
+#auth-login-btn:hover { background:#fff; color:var(--ink); }
+#user-badge { height:40px; padding:0 10px; border-radius:12px; border:none; background:rgba(255,255,255,0.12); }
+#user-avatar { background:var(--accent); }
+#user-email { color:var(--on-board); font-size:13px; font-weight:600; }
+#auth-logout-btn { color:var(--on-board-muted); width:28px; height:28px; padding:0; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0; }
+#auth-logout-btn:hover { background:rgba(255,255,255,0.16); color:#fff; }
+
+/* ── Tafel: Hintergrund reicht bis hinter die Leiste, Elemente beginnen darunter ── */
+#board { top:0; background:var(--board); }
+#widgets-layer {
+  margin-top:var(--toolbar-h); min-width:0; min-height:0;
+  /* Platz, um Elemente über die untere Leiste scrollen zu können */
+  padding-bottom:calc(var(--dock-h) + 28px); box-sizing:content-box;
+}
+body.fullscreen #widgets-layer, body.autohide #widgets-layer { margin-top:0; }
+
+/* ── Untere Leiste (Dock): Elemente mit einem Klick auf die Tafel ── */
+#dock {
+  position:fixed; left:50%; bottom:14px; transform:translateX(-50%); z-index:1700;
+  max-width:calc(100vw - 24px); display:flex; align-items:stretch; gap:2px;
+  background:var(--card); color:var(--ink); border-radius:22px; padding:7px 8px;
+  box-shadow:0 14px 36px rgba(0,0,0,0.32); transition:transform .25s ease; user-select:none;
+}
+/* Nur die Element-Knöpfe scrollen — „KI“ und „Mehr“ bleiben immer sichtbar */
+.dock-scroll {
+  display:flex; align-items:stretch; gap:2px; flex:0 1 auto; min-width:0;
+  overflow-x:auto; scrollbar-width:none; touch-action:pan-x; border-radius:14px;
+}
+.dock-scroll::-webkit-scrollbar { display:none; }
+.dock-btn {
+  flex:none; min-width:66px; height:62px; padding:5px 9px; border:0; border-radius:14px;
+  background:transparent; color:#2F3B38; font:inherit; font-size:12px; font-weight:700;
+  cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  white-space:nowrap; transition:background .12s, transform .1s;
+}
+.dock-btn:hover { background:rgba(27,36,34,0.07); }
+.dock-btn:active { transform:scale(0.94); }
+.dock-btn.accent { color:var(--accent-ink); }
+.dock-btn.on { background:var(--accent-tint); color:var(--accent-ink); }
+.dock-sep { flex:none; width:1px; margin:10px 4px; background:var(--line); }
+body.draw-mode #dock, body.fullscreen #dock { display:none; }
+
+/* ── Leisten automatisch ausblenden ── */
+body.autohide:not(.chrome-shown) #toolbar { transform:translateY(-110%); }
+body.autohide:not(.chrome-shown) #dock { transform:translate(-50%, 160%); }
+#tb-pull-tab {
+  position:fixed; left:50%; top:0; transform:translateX(-50%); z-index:99998;
+  height:26px; padding:0 16px; border:0; border-radius:0 0 12px 12px; cursor:pointer;
+  background:var(--card); color:var(--ink); font:inherit; font-size:12px; font-weight:700;
+  display:flex; align-items:center; gap:6px; box-shadow:0 6px 16px rgba(0,0,0,0.25); transition:top .25s ease;
+}
+body.autohide.chrome-shown #tb-pull-tab { top:var(--toolbar-h); }
+body.fullscreen #tb-pull-tab { display:none !important; }
+
+/* ── Karten (Elemente): hell, dunkle Schrift — am Smartboard aus der letzten Reihe lesbar ── */
+.widget {
+  --w-bg:var(--card); --w-ink:#1B2422; --w-muted:#55605D; --w-faint:#6F7A76;
+  --w-line:#DDE2DC; --w-line-strong:#B4BDB7;
+  --w-fill:rgba(27,36,34,0.05); --w-fill-2:rgba(27,36,34,0.09); --w-fill-3:rgba(27,36,34,0.15); --w-bar:rgba(27,36,34,0.06);
+  --w-danger:#B42318; --w-warn:#A8480A;
+  background:var(--w-bg); color:var(--w-ink); border:1px solid rgba(27,36,34,0.07);
+  border-radius:var(--radius); backdrop-filter:none; -webkit-backdrop-filter:none;
+  box-shadow:0 10px 30px rgba(0,0,0,0.22);
+}
+/* Wahlweise dunkle Karten (Menü ⋯ → Karten) */
+body[data-cards="dark"] .widget {
+  --w-bg:rgba(20,28,27,0.82); --w-ink:#F2F5F4; --w-muted:rgba(242,245,244,0.72); --w-faint:rgba(242,245,244,0.55);
+  --w-line:rgba(255,255,255,0.14); --w-line-strong:rgba(255,255,255,0.32);
+  --w-fill:rgba(255,255,255,0.07); --w-fill-2:rgba(255,255,255,0.12); --w-fill-3:rgba(255,255,255,0.2); --w-bar:rgba(0,0,0,0.25);
+  --w-danger:#F87171; --w-warn:#FBBF24;
+  border-color:rgba(255,255,255,0.12); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+}
+.widget.selected { border-color:var(--accent); box-shadow:0 0 0 3px rgba(11,122,116,0.38), 0 10px 30px rgba(0,0,0,0.22); }
+.widget.alarm { animation:alarmFlash .5s ease 6; }
+@keyframes alarmFlash { 0%,100% { box-shadow:0 10px 30px rgba(0,0,0,0.22); } 50% { box-shadow:0 0 0 7px rgba(180,35,24,0.85), 0 10px 30px rgba(0,0,0,0.22); } }
+/* Im Bearbeiten-Modus ist der Griff immer sichtbar — auch am Smartboard ohne Maus */
+.widget-header { height:34px; background:var(--w-bar); padding:0 5px 0 12px; opacity:1; }
+.widget-title { color:var(--w-muted); font-size:11.5px; letter-spacing:.06em; }
+.w-btn { width:26px; height:26px; border-radius:8px; background:transparent; color:var(--w-muted); font-size:0; }
+.w-btn:hover { background:var(--w-fill-2); color:var(--w-ink); }
+.w-btn.del:hover { background:rgba(180,35,24,0.14); color:var(--w-danger); }
+.widget-body.with-header { top:34px; }
+/* Schrift im Element wächst mit dem Element mit (cqw = Prozent der Element-Breite) */
+.widget-body { container-type:size; }
+.resize-handle::after { border-right-color:var(--w-line-strong); border-bottom-color:var(--w-line-strong); }
+.widget ::-webkit-scrollbar-thumb { background:var(--w-line-strong); }
+.widget input[type=text], .widget input[type=url], .widget input[type=number], .widget textarea, .widget select {
+  color:var(--w-ink); background:var(--w-fill); border-color:var(--w-line-strong);
+}
+.widget input::placeholder, .widget textarea::placeholder { color:var(--w-faint); }
+@media (hover:none) { .widget-header, .resize-handle { opacity:1; } }
+
+/* Inhalte der Elemente */
+.w-date { color:var(--w-muted); }
+.w-timer-display.urgent { color:var(--w-danger); }
+.w-action-btn { background:var(--w-fill-2); color:var(--w-ink); font-size:14px; font-weight:700; padding:8px 16px; min-height:40px; border-radius:12px; }
+.w-action-btn:hover { background:var(--w-fill-3); }
+.w-traffic-circle { border-color:rgba(27,36,34,0.2); box-shadow:inset 0 0 10px rgba(0,0,0,0.14); }
+.w-traffic-circle.dim { background:var(--w-fill-2); }
+.w-names-list li.highlighted { background:var(--accent); color:#fff; }
+.w-homework h3 { color:var(--w-muted); }
+.w-homework li { border-bottom-color:var(--w-line); }
+.w-qr-label { color:var(--w-muted); font-size:12px; }
+.tt-now { background:var(--accent-tint); border-color:rgba(11,122,116,0.35); color:#1B2422; }
+.tt-now .tt-label, .tt-now .tt-meta { color:#40504C; }
+.tt-label { color:var(--w-muted); }
+.tt-subject { font-size:clamp(18px, 7cqw, 36px); }
+.tt-meta { color:var(--w-muted); font-size:clamp(12px, 3.6cqw, 18px); }
+.tt-cancelled { color:var(--w-danger); }
+.tt-changed { color:var(--w-warn); }
+.tt-next-list li { border-bottom-color:var(--w-line); font-size:clamp(13px, 4.4cqw, 22px); }
+.tt-time { color:var(--w-muted); font-size:0.82em; width:5.6em; }
+.tt-no-data { color:var(--w-faint); }
+.group-card { background:var(--w-fill); }
+.group-card h4 { color:var(--w-muted); }
+/* Listen: so groß wie möglich, aber alle Zeilen (--n, vom Element gesetzt) sollen ins Element passen.
+   Reicht der Platz trotz kleinster Schrift nicht, scrollt die Liste statt über den Rand zu laufen. */
+.agenda-inner, .checklist-inner, .phases-inner, .w-homework { max-height:100%; }
+.agenda-inner, .checklist-inner {
+  --n:6; --row-fs:clamp(14px, min(4.8cqw, calc(((100cqh - 20px) / var(--n) - 1px) / 2.05)), 44px);
+}
+.phases-inner {
+  --n:4; --row-fs:clamp(14px, min(4.8cqw, calc(((100cqh - 20px) / var(--n) - 24px) / 1.4)), 40px);
+}
+.agenda-item { border-bottom-color:var(--w-line); gap:12px; padding:calc(var(--row-fs) * 0.3) 4px; align-items:baseline; }
+.agenda-time { color:var(--w-muted); font-size:calc(var(--row-fs) * 0.78); font-weight:700; width:3.7em; padding-top:0; font-variant-numeric:tabular-nums; }
+.agenda-text { font-size:var(--row-fs); }
+.checklist-item { border-bottom-color:var(--w-line); gap:10px; padding:calc(var(--row-fs) * 0.3) 2px; }
+.checklist-item input[type=checkbox] { width:calc(var(--row-fs) * 1.05); height:calc(var(--row-fs) * 1.05); accent-color:var(--accent); }
+.checklist-item span { font-size:var(--row-fs); }
+.checklist-item.done span { color:var(--w-faint); }
+.phase-item.active { border-color:var(--w-ink); }
+.phase-name { font-size:var(--row-fs); }
+.phase-dur { color:var(--w-muted); font-size:calc(var(--row-fs) * 0.74); }
+.status-label { color:var(--w-muted); font-size:clamp(14px, 6cqw, 26px); }
+.status-inner { width:100%; }
+/* Leeres Textfeld: im Bearbeiten-Modus zeigen, wie man hineinschreibt */
+.widget-body.with-header .w-text-display:empty::before { content:'Doppelklick: Text eingeben'; color:var(--w-faint); }
+.poll-question { color:var(--w-ink); font-size:clamp(13px, 4.6cqw, 24px); }
+.poll-bar-label { color:var(--w-ink); font-size:clamp(11px, 3.6cqw, 18px); }
+.poll-bar-bg { background:var(--w-fill-2); }
+.poll-bar-count, .poll-total { color:var(--w-muted); }
+.ai-ctrl-row input, .ai-ctrl-row select { border-color:var(--w-line-strong); background:var(--w-fill); color:var(--w-ink); }
+.ai-ctrl-row input::placeholder { color:var(--w-faint); }
+.ai-ctrl-row select option { background:#fff; color:#1B2422; }
+.ai-output { background:var(--w-fill); border-color:var(--w-line); color:var(--w-ink); font-size:13.5px; }
+.ask-input-row textarea { border-color:var(--w-line-strong); background:var(--w-fill); color:var(--w-ink); }
+.ask-input-row textarea::placeholder { color:var(--w-faint); }
+.ask-bubble.ai { background:var(--w-fill); color:var(--w-ink); border-color:var(--w-line); }
+.ask-bubble.thinking { background:var(--w-fill); color:var(--w-muted); border-color:var(--w-line-strong); }
+.ask-clear-btn { color:var(--w-muted); }
+.ask-clear-btn:hover { color:var(--w-ink); }
+
+/* Hilfslinien beim Einrasten */
+.snap-guide { position:absolute; z-index:100000; background:var(--accent-soft); pointer-events:none; display:none; }
+.snap-guide.v { width:2px; top:0; bottom:0; }
+.snap-guide.h { height:2px; left:0; right:0; }
+
+/* ── Menüs im hellen Stil der Leiste ── */
+#widget-menu {
+  background:var(--card); color:var(--ink); border:1px solid rgba(27,36,34,0.08); border-radius:20px;
+  box-shadow:0 20px 56px rgba(0,0,0,0.4); z-index:1750; width:min(720px, calc(100vw - 24px)); padding:14px;
+}
+.wm-cat { color:var(--ink-muted); font-size:11px; letter-spacing:.08em; padding:10px 4px 6px; }
+.wm-grid { gap:6px; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); }
+.wm-item { background:transparent; border:1px solid var(--line); color:var(--ink); font-size:14px; font-weight:600; min-height:44px; padding:8px 10px; border-radius:12px; gap:9px; }
+.wm-item:hover { background:var(--accent-tint); border-color:rgba(11,122,116,0.4); }
+.wm-item .wm-emoji { font-size:0; display:flex; color:var(--accent-ink); }
+#more-menu, #tb-customize-panel {
+  position:fixed; z-index:100001; background:var(--card); color:var(--ink);
+  border:1px solid rgba(27,36,34,0.08); border-radius:16px; padding:8px;
+  box-shadow:0 20px 56px rgba(0,0,0,0.4); overflow-y:auto; scrollbar-width:thin;
+}
+#more-menu { min-width:260px; max-height:calc(100vh - 90px); }
+.mm-item {
+  display:flex; align-items:center; gap:12px; width:100%; min-height:44px; padding:8px 12px;
+  border:0; border-radius:10px; background:transparent; color:var(--ink);
+  font:inherit; font-size:14.5px; font-weight:600; text-align:left; cursor:pointer;
+}
+.mm-item:hover { background:rgba(27,36,34,0.07); }
+.mm-item .ic { color:var(--ink-muted); }
+.mm-item.danger, .mm-item.danger .ic { color:#B42318; }
+.mm-note { margin-left:auto; font-size:12.5px; color:var(--ink-muted); font-weight:600; }
+.mm-sep { height:1px; background:var(--line); margin:6px 8px; }
+.mm-title { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-muted); padding:8px 12px 4px; }
+
+#class-dropdown { background:var(--card); color:var(--ink); border:1px solid rgba(27,36,34,0.08); border-radius:16px; backdrop-filter:none; box-shadow:0 20px 56px rgba(0,0,0,0.4); min-width:240px; }
+.class-dd-header { color:var(--ink-muted); font-size:11px; font-weight:700; letter-spacing:.08em; padding:12px 14px 6px; }
+.class-dd-item { font-size:14.5px; padding:10px 14px; color:var(--ink); }
+.class-dd-item:hover { background:rgba(27,36,34,0.07); }
+.class-dd-item.active { background:var(--accent-tint); color:var(--accent-ink); }
+.class-dd-item .class-dd-name { font-weight:600; }
+.class-dd-item .class-dd-del { color:var(--ink-muted); font-size:0; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:8px; }
+.class-dd-item .class-dd-del:hover { background:rgba(180,35,24,0.14); color:#B42318; }
+.class-dd-divider { background:var(--line); }
+.class-dd-add { color:var(--ink-muted); font-size:14px; font-weight:600; padding:10px 14px; }
+.class-dd-add:hover { color:var(--ink); }
+.class-dd-add-input { padding:6px 14px 12px; }
+.class-dd-add-input input { background:#fff; border:1.5px solid #B4BDB7; color:var(--ink); font-size:14px; border-radius:10px; padding:9px 11px; }
+.class-dd-add-input input:focus { border-color:var(--accent); }
+.class-dd-add-input button { background:var(--accent); font-size:14px; padding:9px 12px; border-radius:10px; }
+
+/* ── KI-Assistent sitzt jetzt in der unteren Leiste ── */
+#ki-fab { display:none !important; }
+#ki-panel { bottom:calc(var(--dock-h) + 30px); left:20px; }
+#toast { bottom:calc(var(--dock-h) + 30px); }
+/* Schüler-Abstimmungsseite (?poll=…): nur die Abstimmung, keine Lehrer-Leisten */
+body.voting #toolbar, body.voting #dock, body.voting #board { display:none !important; }
+/* Dialoge: neutrales Dunkel passend zur Tafel statt Blaugrau */
+.modal { background:#1A2321; }
+.bg-swatch { border-color:rgba(255,255,255,0.16); }
+.bg-swatch.sel { border-color:#fff; box-shadow:0 0 0 2px var(--accent-soft); }
+.voice-toast { bottom:calc(var(--dock-h) + 80px); }
+body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
+
+/* ── Schmalere Bildschirme (iPad quer, kleine Laptops) ── */
+@media (max-width: 1100px) {
+  #toolbar { gap:6px; padding:0 10px; }
+  #logo-text { display:none; }
+  #edit-mode-btn { width:40px; padding:0; justify-content:center; }
+  #edit-mode-btn .lbl { display:none; }
+  #class-btn { max-width:150px; }
+  #class-btn .class-name { max-width:96px; }
 }
 
-/* ── MOBILE RESPONSIVE ── */
+/* ── Tablets hochkant und Handys ── */
 @media (max-width: 768px) {
-  :root { --toolbar-h: 48px; }
-  #toolbar { gap:3px; padding:0 6px; flex-wrap:nowrap; }
-  #logo-text { display:none; }
-  #logo { margin-right:2px; flex-shrink:0; }
-  #logo span:first-child { font-size:18px; }
-  .toolbar-sep { display:none; }
-  .tb-btn { padding:4px 7px; font-size:11px; }
-  .tb-icon-btn { width:28px; height:28px; font-size:13px; }
-  #class-btn { padding:3px 6px; font-size:11px; max-width:90px; }
-  #class-btn .class-name { max-width:50px; }
-  #add-board-btn { width:22px; height:22px; font-size:14px; }
-  #board-tabs { flex:1; min-width:60px; flex-shrink:1; overflow-x:auto; }
-  .tab-btn { padding:3px 8px; font-size:11px; }
-  #btn-template, #btn-bg, #btn-ical, #btn-export, #btn-voice, #btn-fullscreen, #btn-customize-toolbar { display:none !important; }
-  #edit-mode-btn { padding:3px 6px; font-size:10px; }
-  #auth-login-btn { padding:3px 6px; font-size:10px; }
-  #auth-area { margin-left:0; }
-  #user-badge { padding:2px 4px; }
-  #user-email { display:none; }
-  #user-avatar { width:20px; height:20px; font-size:9px; }
+  :root { --toolbar-h:52px; --dock-h:70px; }
+  #toolbar { gap:4px; padding:0 8px; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; touch-action:pan-x; }
+  #class-btn { height:38px; padding:0 9px; font-size:13px; max-width:112px; }
+  #class-btn .class-name { max-width:70px; }
+  #board-tabs { flex:1 1 auto; min-width:90px; }
+  .tab-btn { height:38px; padding:0 11px; font-size:13px; }
+  #add-board-btn, .tb-icon-btn { width:38px; height:38px; }
+  #edit-mode-btn { width:38px; height:38px; }
+  #btn-fullscreen { display:none; }
+  #auth-area { display:none; }   /* Anmelden steckt hier im Menü ⋯ */
+
+  #dock { left:8px; right:8px; bottom:8px; transform:none; max-width:none; border-radius:18px; padding:5px 6px; }
+  .dock-scroll { flex:1 1 auto; }
+  body.autohide:not(.chrome-shown) #dock { transform:translateY(160%); }
+  .dock-btn { min-width:58px; height:56px; padding:4px 7px; font-size:11px; gap:3px; }
 
   #board::-webkit-scrollbar { display:none; }
-  #widgets-layer { min-width:900px; min-height:600px; z-index:1; }
-  .widget { z-index:2; }
+  .widget { min-width:100px; min-height:60px; }
 
-  #toolbar { overflow-x:auto; -webkit-overflow-scrolling:touch; touch-action:pan-x; }
-  #toolbar::-webkit-scrollbar { display:none; }
-  #board-tabs { flex-shrink:0; }
-
-  #widget-menu { width:calc(100vw - 20px); left:10px !important; right:10px !important; max-height:60vh; border-radius:14px; }
-  .wm-grid { grid-template-columns:1fr 1fr 1fr; }
+  #widget-menu { width:calc(100vw - 16px); left:8px !important; right:8px !important; max-height:60vh; border-radius:16px; }
+  #more-menu { left:8px !important; right:8px !important; min-width:0; }
 
   .modal { width:calc(100vw - 24px) !important; max-height:80vh; padding:18px; }
   .modal h2 { font-size:16px; }
   .modal-lg { width:calc(100vw - 24px) !important; }
   .auth-modal { max-width:calc(100vw - 24px); }
+  .upgrade-modal { max-width:calc(100vw - 24px) !important; }
+  .template-grid { grid-template-columns:1fr; }
 
-  #ki-fab { width:42px; height:42px; bottom:16px; left:16px; border-radius:12px; }
-  #ki-panel { width:calc(100vw - 20px); height:50vh; bottom:66px; left:10px; border-radius:14px; }
+  #ki-panel { width:calc(100vw - 16px); height:52vh; left:8px; bottom:calc(var(--dock-h) + 18px); border-radius:14px; }
 
-  #draw-toolbar { padding:6px 10px; gap:4px; bottom:16px; }
+  #draw-toolbar { padding:6px 10px; gap:4px; bottom:16px; max-width:calc(100vw - 12px); overflow-x:auto; }
   .draw-tool-btn { width:32px; height:32px; font-size:14px; }
   .draw-color-btn { width:24px; height:24px; }
   #draw-size-slider { width:50px; }
 
-  .widget { min-width:100px; min-height:60px; }
-  .widget-header { height:28px; }
-  .w-btn { width:20px; height:20px; font-size:11px; }
-
   #class-dropdown { min-width:200px; }
-  .class-dd-item { padding:7px 10px; font-size:12px; }
+  .class-dd-item { padding:9px 10px; font-size:13px; }
+}
 
-  .template-grid { grid-template-columns:1fr; }
-
-  .upgrade-modal { max-width:calc(100vw - 24px) !important; }
+@media (max-width: 480px) {
+  :root { --toolbar-h:50px; }
+  /* Zeichnen und Bearbeiten wandern auf dem Handy ins Menü ⋯ */
+  #btn-draw, #edit-mode-btn { display:none !important; }
+  #class-btn { max-width:96px; }
+  #ki-panel { height:58vh; }
 }
 
 /* iOS Safari zoomt beim Fokussieren von Feldern mit Schrift < 16px unerwünscht hinein */
 @supports (-webkit-touch-callout: none) {
   input[type="text"], input[type="url"], input[type="email"], input[type="password"],
   input[type="number"], input[type="search"], textarea, select { font-size:16px !important; }
-}
-
-@media (max-width: 480px) {
-  :root { --toolbar-h: 44px; }
-  #toolbar { gap:2px; padding:0 4px; }
-  .tb-btn { padding:4px 6px; font-size:10px; gap:2px; }
-  .tb-icon-btn { width:26px; height:26px; font-size:12px; }
-  #btn-add-widget { font-size:10px; padding:4px 6px; }
-  .tab-btn { padding:3px 6px; font-size:10px; }
-  #class-btn { max-width:70px; font-size:10px; }
-  #edit-mode-btn { display:none !important; }
-  #auth-area { display:none; }
-  .widget-header { opacity:1 !important; }
-  .resize-handle { opacity:1 !important; }
-  #ki-panel { height:60vh; bottom:62px; }
-  .wm-grid { grid-template-columns:1fr 1fr; }
 }
 </style>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -817,21 +1060,20 @@ body.fullscreen #board { top:0; }
 </head>
 <body>
 
-<!-- Toolbar -->
+<!-- Obere Leiste: nur Navigation (Klasse, Tafeln) und wenige Werkzeuge -->
 <div id="toolbar">
-  <a id="logo" href="landing.html" title="Zur Startseite" style="text-decoration:none;color:inherit">
-    <span style="font-size:16px;font-weight:800;color:#2bbcb3">C</span>
+  <a id="logo" href="landing.html" title="Zur Startseite" style="text-decoration:none">
+    <span class="logo-mark"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-10.6A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8 2.9c0 5.7-8 10.6-8 10.6z"/><path d="M7 12.5h2.2l1.2-2.2 1.7 4.2 1.2-2h3.7"/></svg></span>
     <span id="logo-text">ClassPuls</span>
-        <span style="font-size:9px;opacity:0.4;margin-left:2px;font-weight:400;letter-spacing:1px;text-transform:uppercase;align-self:flex-end;margin-bottom:1px">Beta</span>
   </a>
   <!-- Klassen-Wechsler -->
   <div id="class-switcher">
     <button id="class-btn" title="Klasse wechseln">
       <span class="class-name" id="class-btn-name">Klasse wählen</span>
-      <span style="opacity:0.5;font-size:10px">▾</span>
+      <svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
     </button>
     <div id="class-dropdown">
-      <div class="class-dd-header">Meine Klassen</div>
+      <div class="class-dd-header">MEINE KLASSEN</div>
       <div id="class-list"></div>
       <div class="class-dd-divider"></div>
       <div class="class-dd-add" id="class-add-trigger">＋ Neue Klasse anlegen</div>
@@ -840,35 +1082,29 @@ body.fullscreen #board { top:0; }
         <button id="class-add-confirm">Anlegen</button>
       </div>
       <div class="class-dd-divider"></div>
-      <div class="class-dd-add" id="class-reset-trigger" style="font-size:11.5px;padding-top:6px">↺ Alles zurücksetzen…</div>
+      <div class="class-dd-add" id="class-reset-trigger" style="font-size:13px">↺ Alles zurücksetzen…</div>
     </div>
   </div>
-  <div class="toolbar-sep" style="margin:0 2px"></div>
   <div id="board-tabs"></div>
-  <button id="add-board-btn" title="Neue Tafel">+</button>
-  <div class="toolbar-sep"></div>
-  <button class="tb-btn" id="btn-add-widget" title="Elemente hinzufügen (W)">＋ Elemente</button>
-  <button class="tb-icon-btn tb-item" id="btn-template" data-tbid="template" title="Vorlage laden">📋</button>
-  <button class="tb-icon-btn tb-item" id="btn-bg" data-tbid="bg" title="Hintergrund">🎨</button>
-  <button class="tb-icon-btn tb-item" id="btn-ical" data-tbid="ical" title="Stundenplan (iCal)">📅</button>
-  <button class="tb-icon-btn tb-item" id="btn-export" data-tbid="export" title="Export/Import">💾</button>
-  <div class="toolbar-sep"></div>
-  <button class="tb-icon-btn tb-item" id="btn-voice" data-tbid="voice" title="Sprachsteuerung (Mikrofon)">🎙️</button>
-  <button class="tb-icon-btn tb-item" id="btn-draw" data-tbid="draw" title="Zeichnen / Schreiben">🖊</button>
-  <button class="tb-icon-btn tb-btn tb-item" id="edit-mode-btn" data-tbid="editmode" title="Bearbeiten/Ansicht (E)">✏️ Edit</button>
-  <button class="tb-icon-btn tb-item" id="btn-fullscreen" data-tbid="fullscreen" title="Vollbild (F)">⤢</button>
-  <button class="tb-icon-btn" id="btn-customize-toolbar" title="Leiste anpassen" style="opacity:0.5;font-size:15px">⚙</button>
-  <div class="toolbar-sep"></div>
+  <button id="add-board-btn" title="Neue Tafel" aria-label="Neue Tafel"></button>
+  <div class="tb-spacer"></div>
+  <button class="tb-icon-btn" id="btn-draw" title="Zeichnen / Schreiben" aria-label="Zeichnen"></button>
+  <button id="edit-mode-btn" title="Bearbeiten/Ansicht (E)"></button>
+  <button class="tb-icon-btn" id="btn-fullscreen" title="Vollbild (F)" aria-label="Vollbild"></button>
+  <button class="tb-icon-btn" id="btn-more" title="Mehr: Vorlagen, Hintergrund, Einstellungen" aria-label="Mehr"></button>
   <div id="auth-area">
-    <button id="auth-login-btn">🔑 Anmelden</button>
+    <button id="auth-login-btn">Anmelden</button>
     <div id="user-badge">
       <div id="user-avatar">?</div>
       <span id="user-email"></span>
       <div id="sync-dot" title="Cloud-Sync aktiv"></div>
-      <button id="auth-logout-btn" title="Abmelden">✕</button>
+      <button id="auth-logout-btn" title="Abmelden" aria-label="Abmelden">✕</button>
     </div>
   </div>
 </div>
+
+<!-- Untere Leiste: Elemente mit einem Klick auf die Tafel legen (Inhalt: renderDock) -->
+<div id="dock" role="toolbar" aria-label="Elemente hinzufügen"></div>
 
 <!-- Board -->
 <div id="board">
@@ -931,11 +1167,11 @@ body.fullscreen #board { top:0; }
     <circle cx="12.5" cy="11" r="1" fill="url(#kg2)"/>
     <defs>
       <linearGradient id="kg" x1="0" y1="0" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-        <stop stop-color="#7c3aed"/>
-        <stop offset="1" stop-color="#6366f1"/>
+        <stop stop-color="#0E9F97"/>
+        <stop offset="1" stop-color="#0B7A74"/>
       </linearGradient>
       <linearGradient id="kg2" x1="0" y1="0" x2="1" y2="1" gradientUnits="userSpaceOnUse">
-        <stop stop-color="#7c3aed"/>
+        <stop stop-color="#0E9F97"/>
         <stop offset="1" stop-color="#06b6d4"/>
       </linearGradient>
     </defs>
@@ -959,6 +1195,70 @@ body.fullscreen #board { top:0; }
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 'use strict';
+
+// ══════════════════════════════════════════════════════════════
+// SYMBOLE — ein einheitlicher Strich-Stil statt Emojis
+// (Emojis sehen auf jedem Gerät anders aus; diese Symbole überall gleich)
+// Schlüssel der Element-Symbole = Element-Typ aus REGISTRY
+// ══════════════════════════════════════════════════════════════
+const ICONS = {
+  // Elemente
+  clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2',
+  timer: 'M10 2h4M12 14l3-3M12 22a8 8 0 1 0 0-16 8 8 0 0 0 0 16z',
+  stopwatch: 'M10 2h4M12 14V9.5M18.5 7.5L20 6M12 22a8 8 0 1 0 0-16 8 8 0 0 0 0 16z',
+  text: 'M5 6V4h14v2M12 4v16M9 20h6',
+  traffic: 'M9 2h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM12 7h.01M12 12h.01M12 17h.01',
+  qr: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2M18 18h2v2M14 20h2v-2',
+  names: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
+  homework: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z',
+  goal: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 12h.01',
+  timetable: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
+  image: 'M4 5h16v14H4zM4 16l4.5-4.5 4 4 2.5-2.5 5 5M9 9.5h.01',
+  youtube: 'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM10 9l5 3-5 3z',
+  dice: 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01',
+  randomnum: 'M9 4L7 20M17 4l-2 16M4.5 9h16M3.5 15h16',
+  groups: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M16 4.3a3.5 3.5 0 0 1 0 6.4M18 14.5a6.5 6.5 0 0 1 3.5 5.5',
+  agenda: 'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01',
+  checklist: 'M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17M11 6h9M11 12h9M11 18h9',
+  phases: 'M6 3h12M6 21h12M7 3v3c0 2.5 5 3.5 5 6s-5 3.5-5 6v3M17 3v3c0 2.5-5 3.5-5 6s5 3.5 5 6v3',
+  status: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01',
+  browser: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18',
+  files: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  noise: 'M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zM6 11v1a6 6 0 0 0 12 0v-1M12 18v3M9 21h6',
+  poll: 'M5 20V10M12 20V4M19 20v-7',
+  ai: 'M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7-4.7-1.8 4.7-1.8zM19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2-2.2-.8 2.2-.8z',
+  ask: 'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z',
+  favorites: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z',
+  // Bedienung
+  plus: 'M12 5v14M5 12h14',
+  x: 'M6 6l12 12M18 6L6 18',
+  dots: 'M5 12h.01M12 12h.01M19 12h.01',
+  grid: 'M5 5h4v4H5zM15 5h4v4h-4zM5 15h4v4H5zM15 15h4v4h-4z',
+  pen: 'M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19zM14 7l3 3',
+  brush: 'M18.5 3.2a1.9 1.9 0 0 1 2.7 2.7l-8.4 9.3-3.6-3.6zM8.6 12.4l3.4 3.4c.3 2.6-1.7 4.9-4.6 4.9-1.7 0-3.3-.6-4.4-1.6 1.4-.3 2.2-1.2 2.3-2.7.1-2.1 1.5-3.7 3.3-4z',
+  edit: 'M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17zM13.5 7.5l3 3',
+  eye: 'M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+  maximize: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
+  minimize: 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5',
+  settings: 'M10.3 5.1L10.7 2.5L13.3 2.5L13.7 5.1L15.7 5.9L17.8 4.3L19.7 6.2L18.1 8.3L18.9 10.3L21.5 10.7L21.5 13.3L18.9 13.7L18.1 15.7L19.7 17.8L17.8 19.7L15.7 18.1L13.7 18.9L13.3 21.5L10.7 21.5L10.3 18.9L8.3 18.1L6.2 19.7L4.3 17.8L5.9 15.7L5.1 13.7L2.5 13.3L2.5 10.7L5.1 10.3L5.9 8.3L4.3 6.2L6.2 4.3L8.3 5.9zM12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z',
+  chevronDown: 'M6 9l6 6 6-6',
+  chevronUp: 'M6 15l6-6 6 6',
+  template: 'M4 5h16v5H4zM4 14h7v5H4zM15 14h5v5h-5z',
+  palette: 'M12 21a9 9 0 1 1 9-9c0 2.2-1.8 3-3.5 3h-2a1.8 1.8 0 0 0-1.3 3c.8.9.2 3-2.2 3zM7.5 12.5h.01M9.5 8h.01M14.5 7.5h.01',
+  download: 'M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14',
+  mic: 'M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zM6 11v1a6 6 0 0 0 12 0v-1M12 18v3',
+  reset: 'M4 5v5h5M5.5 15a7.5 7.5 0 1 0 1.2-8L4 10',
+  user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
+  logout: 'M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 8l4 4-4 4M19 12H9',
+  cards: 'M4 6h16v12H4zM4 10h16',
+  dock: 'M3 5h18v14H3zM7 15.5h10',
+};
+function icon(name, size) {
+  const s = size || 20;
+  return '<svg class="ic" width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+    + ' stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'
+    + (ICONS[name] || ICONS.dots) + '"/></svg>';
+}
 
 // ══════════════════════════════════════════════════════════════
 // SUPABASE KONFIGURATION
@@ -1454,7 +1754,7 @@ const BUILT_IN_TEMPLATES = [
     widgets:[
       { type:'timer',   x:20,  y:20,  w:240, h:160, config:{ minutes:15 } },
       { type:'groups',  x:280, y:20,  w:300, h:220, config:{ names:'Anna\nBen\nClara\nDavid\nEva\nFinn', size:3 } },
-      { type:'phases',  x:20,  y:200, w:240, h:200, config:{ phases:[{name:'Einführung',color:'#6366f1',minutes:5},{name:'Gruppenarbeit',color:'#22c55e',minutes:15},{name:'Präsentation',color:'#f59e0b',minutes:10},{name:'Reflexion',color:'#ec4899',minutes:5}] } },
+      { type:'phases',  x:20,  y:200, w:240, h:200, config:{ phases:[{name:'Einführung',color:'#0B7A74',minutes:5},{name:'Gruppenarbeit',color:'#22c55e',minutes:15},{name:'Präsentation',color:'#f59e0b',minutes:10},{name:'Reflexion',color:'#ec4899',minutes:5}] } },
     ]
   },
   {
@@ -1737,7 +2037,7 @@ async function resetEverything() {
   clearTimeout(DRAW._saveTimer);
   ['classpuls_v2','classpuls_classes','classpuls_current_class','classpuls_drawings',
    'classpuls_dirty_at','classpuls_synced_at','classpuls_owner','classpuls_visited',
-   'kb_toolbar_pos','kb_toolbar_side','kb_toolbar_prefs'].forEach(k => localStorage.removeItem(k));
+   'kb_toolbar_pos','kb_toolbar_side','kb_toolbar_prefs','kb_dock_items','kb_autohide','kb_cards'].forEach(k => localStorage.removeItem(k));
   // Neu laden → die App startet wie beim ersten Besuch (ohne ?reset in der Adresse)
   window.location.replace(window.location.pathname);
   return true;
@@ -1855,7 +2155,7 @@ function normalizeWidgetConfig(type, cfg) {
   }
   if (type === 'phases') {
     // Die KI nennt die Liste "items" mit "label" — das Widget erwartet "phases" mit "name" und Farbe
-    const palette = ['#6366f1', '#22c55e', '#f59e0b', '#ec4899', '#06b6d4'];
+    const palette = ['#0B7A74', '#22c55e', '#f59e0b', '#ec4899', '#06b6d4'];
     const src = Array.isArray(cfg.phases) ? cfg.phases : (Array.isArray(cfg.items) ? cfg.items : null);
     if (src) {
       cfg.phases = src.filter(p => p && typeof p === 'object').map((p, i) => ({
@@ -1922,12 +2222,17 @@ function openModal(html, onClose) {
 // ══════════════════════════════════════════════════════════════
 // BOARD CRUD
 // ══════════════════════════════════════════════════════════════
+// Ruhige Tafelfarbe als Standard. Der frühere Standard (Indigo-Verlauf) wird beim Anzeigen
+// wie „kein eigener Hintergrund“ behandelt — so bekommen bestehende Tafeln den neuen Look,
+// ohne dass gespeicherte Daten umgeschrieben werden müssen.
+const DEFAULT_BG = { type:'color', value:'#1F3531' };
+const LEGACY_DEFAULT_BG = 'linear-gradient(135deg,#667eea,#764ba2)';
 function createBoard(name, bg, widgets=[], skipLimit=false) {
   if (!skipLimit && !checkBoardLimit()) return null;
   const board = {
     id: uid(),
     name: name || 'Neue Tafel',
-    background: bg ? { ...bg } : { type:'gradient', value:'linear-gradient(135deg,#667eea,#764ba2)' },
+    background: bg ? { ...bg } : { ...DEFAULT_BG },
     // Tief kopieren: sonst teilen sich Tafeln aus derselben Vorlage ihre Einstellungen
     // (abgehakte Checkliste auf Tafel A wäre auch auf Tafel B abgehakt)
     widgets: widgets.map((w, i) => ({ zIndex: i + 1, ...JSON.parse(JSON.stringify(w)), id: uid(), createdAt: new Date().toISOString() })),
@@ -1996,6 +2301,28 @@ function renameBoard(id, name) {
 // ══════════════════════════════════════════════════════════════
 // WIDGET CRUD
 // ══════════════════════════════════════════════════════════════
+// Sucht im gerade sichtbaren Teil der Tafel die erste freie Stelle (zeilenweise von links oben)
+function findFreeSpot(board, w, h) {
+  const boardEl = document.getElementById('board');
+  const css = getComputedStyle(document.documentElement);
+  const top = parseInt(css.getPropertyValue('--toolbar-h')) || 60;
+  const dock = parseInt(css.getPropertyValue('--dock-h')) || 84;
+  const sx = boardEl ? boardEl.scrollLeft : 0, sy = boardEl ? boardEl.scrollTop : 0;
+  const viewW = (boardEl ? boardEl.clientWidth : window.innerWidth);
+  const viewH = (boardEl ? boardEl.clientHeight : window.innerHeight) - top - dock - 16;
+  const gap = 16, step = 24, pad = 24;
+  const others = (board.widgets || []).map(o => ({ x:o.x||0, y:o.y||0, w:o.w||200, h:o.h||100 }));
+  const free = (x, y) => !others.some(o => x < o.x + o.w + gap && x + w + gap > o.x && y < o.y + o.h + gap && y + h + gap > o.y);
+  for (let y = sy + pad; y + h <= sy + viewH; y += step) {
+    for (let x = sx + pad; x + w <= sx + viewW - pad; x += step) {
+      if (free(x, y)) return { x, y };
+    }
+  }
+  // Kein freier Platz: leicht versetzt stapeln, damit nichts exakt übereinander liegt
+  const n = others.length % 8;
+  return { x: sx + 40 + n * 28, y: sy + 40 + n * 28 };
+}
+
 function addWidget(type, extraConfig={}) {
   const board = APP.activeBoard();
   if (!board) return;
@@ -2004,8 +2331,7 @@ function addWidget(type, extraConfig={}) {
   const widget = {
     id: uid(),
     type,
-    x: 40 + Math.random() * 80 | 0,
-    y: 40 + Math.random() * 60 | 0,
+    ...findFreeSpot(board, def.w, def.h),
     w: def.w,
     h: def.h,
     zIndex: nextZ(board),
@@ -2069,7 +2395,7 @@ function getDefaultConfig(type) {
     agenda:    { items: [] },
     checklist: { items: [] },
     phases:    { phases: [
-      {name:'Einführung', color:'#6366f1', minutes:5},
+      {name:'Einführung', color:'#0B7A74', minutes:5},
       {name:'Erarbeitung', color:'#22c55e', minutes:20},
       {name:'Sicherung', color:'#f59e0b', minutes:10},
       {name:'Reflexion', color:'#ec4899', minutes:5},
@@ -2140,12 +2466,12 @@ function renderBoardTabs() {
 
     const editBtn = document.createElement('span');
     editBtn.className = 'tab-action tab-edit';
-    editBtn.textContent = '✏️';
+    editBtn.innerHTML = icon('edit', 14);
     editBtn.title = 'Umbenennen';
 
     const closeX = document.createElement('span');
     closeX.className = 'tab-action tab-close';
-    closeX.textContent = '✕';
+    closeX.innerHTML = icon('x', 14);
     closeX.title = 'Tafel löschen';
 
     editBtn.addEventListener('click', e => {
@@ -2196,7 +2522,7 @@ function openRenameModal(board) {
 
   const okBtn = document.createElement('button');
   okBtn.textContent = 'Speichern';
-  okBtn.style.cssText = 'padding:8px 16px;border-radius:8px;border:none;background:#6366f1;color:#fff;cursor:pointer;font-size:13px;font-weight:600';
+  okBtn.style.cssText = 'padding:8px 16px;border-radius:8px;border:none;background:#0B7A74;color:#fff;cursor:pointer;font-size:13px;font-weight:600';
 
   const close = () => overlay.remove();
   const confirm_rename = () => {
@@ -2231,7 +2557,7 @@ function renderBoardBg() {
   if (bg.type === 'image' && bg.value) {
     // URL nicht ungeprüft interpolieren (CSS-Injection)
     boardEl.style.background = 'url("' + String(bg.value).replace(/["\\\n\r]/g, '') + '") center / cover no-repeat #1e293b';
-  } else if (bg.value) {
+  } else if (bg.value && bg.value !== LEGACY_DEFAULT_BG) {
     boardEl.style.background = bg.value;
   } else {
     boardEl.style.background = '';
@@ -2278,6 +2604,10 @@ function updateLayerSize() {
   if (DRAW.canvas) DRAW._syncScroll();
 }
 
+// Elemente mit Einstellungs-Dialog (muss zu openWidgetSettings passen)
+const WIDGET_HAS_SETTINGS = new Set(['timer','text','qr','names','homework','goal','timetable','image','youtube',
+  'noise','poll','randomnum','groups','agenda','checklist','phases']);
+
 function buildWidgetEl(w) {
   const shell = el('div','widget' + (w.id === APP.selectedId ? ' selected' : ''));
   shell.dataset.wid = w.id;
@@ -2289,11 +2619,13 @@ function buildWidgetEl(w) {
     const titleEl = el('span','widget-title');
     titleEl.textContent = REGISTRY[w.type]?.label || w.type;
     const actions = el('div','widget-actions');
-    const settBtn = el('button','w-btn'); settBtn.textContent = '⚙'; settBtn.title = 'Einstellungen';
+    const settBtn = el('button','w-btn'); settBtn.innerHTML = icon('settings', 15); settBtn.title = 'Einstellungen';
     settBtn.addEventListener('click', e => { e.stopPropagation(); openWidgetSettings(w.id); });
-    const delBtn = el('button','w-btn del'); delBtn.textContent = '✕'; delBtn.title = 'Löschen';
+    const delBtn = el('button','w-btn del'); delBtn.innerHTML = icon('x', 15); delBtn.title = 'Vom Board entfernen';
     delBtn.addEventListener('click', e => { e.stopPropagation(); removeWidget(w.id); });
-    actions.append(settBtn, delBtn);
+    // Zahnrad nur zeigen, wenn das Element auch Einstellungen hat
+    if (WIDGET_HAS_SETTINGS.has(w.type)) actions.append(settBtn);
+    actions.append(delBtn);
     hdr.append(titleEl, actions);
     shell.appendChild(hdr);
     // Resize handle
@@ -2311,7 +2643,7 @@ function buildWidgetEl(w) {
   // Double-tap / dblclick to edit (works on both desktop and mobile)
   if (APP.state.editMode) {
     const hasOwnEdit = new Set(['text','goal','homework','agenda','checklist']);
-    if (!hasOwnEdit.has(w.type)) {
+    if (!hasOwnEdit.has(w.type) && WIDGET_HAS_SETTINGS.has(w.type)) {
       body.addEventListener('dblclick', e => { e.stopPropagation(); openWidgetSettings(w.id); });
     }
     let lastTap = 0, lastTapX = 0, lastTapY = 0;
@@ -2324,6 +2656,7 @@ function buildWidgetEl(w) {
       const now = Date.now();
       const near = Math.abs(t.clientX - lastTapX) < 40 && Math.abs(t.clientY - lastTapY) < 40;
       if (now - lastTap < 350 && near) {
+        if (!WIDGET_HAS_SETTINGS.has(w.type)) { lastTap = 0; return; }
         e.preventDefault();
         lastTap = 0;
         if (hasOwnEdit.has(w.type)) {
@@ -2367,8 +2700,40 @@ function buildWidgetEl(w) {
 // ══════════════════════════════════════════════════════════════
 // DRAG & RESIZE (Pointer Events)
 // ══════════════════════════════════════════════════════════════
+// Einrasten: 8-px-Raster + Kanten/Mitten der anderen Elemente (Alt gedrückt = frei bewegen)
+const SNAP = { grid: 8, tol: 7 };
+function snapLines(w) {
+  const board = APP.activeBoard();
+  const xs = [], ys = [];
+  (board ? board.widgets : []).forEach(o => {
+    if (o === w) return;
+    xs.push(o.x, o.x + o.w / 2, o.x + o.w);
+    ys.push(o.y, o.y + o.h / 2, o.y + o.h);
+  });
+  return { xs, ys };
+}
+function snapAxis(cands, lines) {
+  let best = null;
+  cands.forEach(cnd => lines.forEach(line => {
+    const d = line - cnd;
+    if (Math.abs(d) <= SNAP.tol && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, line };
+  }));
+  return best;
+}
+function showSnapGuide(axis, pos) {
+  const layer = document.getElementById('widgets-layer');
+  if (!layer) return;
+  let g = layer.querySelector('.snap-guide.' + axis);
+  if (pos == null) { if (g) g.remove(); return; }
+  if (!g) { g = el('div', 'snap-guide ' + axis); layer.appendChild(g); }
+  g.style.display = 'block';
+  if (axis === 'v') g.style.left = (pos - 1) + 'px'; else g.style.top = (pos - 1) + 'px';
+}
+function hideSnapGuides() { showSnapGuide('v', null); showSnapGuide('h', null); }
+const snapGrid = v => Math.round(v / SNAP.grid) * SNAP.grid;
+
 function initDrag(shell, handle, w) {
-  let startX, startY, startLeft, startTop;
+  let startX, startY, startLeft, startTop, lines;
   // Ohne touch-action:none übernimmt der Browser den Touch fürs Board-Scrollen
   // und feuert pointercancel mitten im Drag
   handle.style.touchAction = 'none';
@@ -2379,14 +2744,26 @@ function initDrag(shell, handle, w) {
     handle.setPointerCapture(e.pointerId);
     startX = e.clientX; startY = e.clientY;
     startLeft = w.x; startTop = w.y;
+    lines = snapLines(w);
     handle.addEventListener('pointermove', onMove);
     handle.addEventListener('pointerup', onUp);
     handle.addEventListener('pointercancel', onUp);
   });
   function onMove(e) {
     const dx = e.clientX - startX, dy = e.clientY - startY;
-    w.x = Math.max(0, startLeft + dx);
-    w.y = Math.max(0, startTop + dy);
+    let x = Math.max(0, startLeft + dx), y = Math.max(0, startTop + dy);
+    if (e.altKey) hideSnapGuides();
+    else {
+      // Eine Achse, auf der (fast) nicht gezogen wird, bleibt exakt stehen
+      const sx = Math.abs(dx) < 3 ? null : snapAxis([x, x + w.w / 2, x + w.w], lines.xs);
+      if (sx) x += sx.d; else x = Math.abs(dx) < 3 ? startLeft : snapGrid(x);
+      showSnapGuide('v', sx ? sx.line : null);
+      const sy = Math.abs(dy) < 3 ? null : snapAxis([y, y + w.h / 2, y + w.h], lines.ys);
+      if (sy) y += sy.d; else y = Math.abs(dy) < 3 ? startTop : snapGrid(y);
+      showSnapGuide('h', sy ? sy.line : null);
+    }
+    w.x = Math.max(0, Math.round(x));
+    w.y = Math.max(0, Math.round(y));
     shell.style.left = w.x + 'px';
     shell.style.top  = w.y + 'px';
   }
@@ -2394,26 +2771,39 @@ function initDrag(shell, handle, w) {
     handle.removeEventListener('pointermove', onMove);
     handle.removeEventListener('pointerup', onUp);
     handle.removeEventListener('pointercancel', onUp);
+    hideSnapGuides();
     if (w.x !== startLeft || w.y !== startTop) { APP.save(); updateLayerSize(); }
   }
 }
 
 function initResize(shell, handle, w) {
-  let startX, startY, startW, startH;
+  let startX, startY, startW, startH, lines;
   handle.style.touchAction = 'none';
   handle.addEventListener('pointerdown', e => {
     e.preventDefault(); e.stopPropagation();
     handle.setPointerCapture(e.pointerId);
     startX = e.clientX; startY = e.clientY;
     startW = w.w; startH = w.h;
+    lines = snapLines(w);
     handle.addEventListener('pointermove', onMove);
     handle.addEventListener('pointerup', onUp);
     handle.addEventListener('pointercancel', onUp);
   });
   function onMove(e) {
     const dx = e.clientX - startX, dy = e.clientY - startY;
-    w.w = Math.max(120, startW + dx);
-    w.h = Math.max(80, startH + dy);
+    let nw = Math.max(120, startW + dx), nh = Math.max(80, startH + dy);
+    if (e.altKey) hideSnapGuides();
+    else {
+      // rechte/untere Kante rastet an anderen Elementen oder am Raster ein
+      const sx = Math.abs(dx) < 3 ? null : snapAxis([w.x + nw], lines.xs);
+      if (sx) nw += sx.d; else nw = Math.abs(dx) < 3 ? startW : snapGrid(w.x + nw) - w.x;
+      showSnapGuide('v', sx ? sx.line : null);
+      const sy = Math.abs(dy) < 3 ? null : snapAxis([w.y + nh], lines.ys);
+      if (sy) nh += sy.d; else nh = Math.abs(dy) < 3 ? startH : snapGrid(w.y + nh) - w.y;
+      showSnapGuide('h', sy ? sy.line : null);
+    }
+    w.w = Math.max(120, Math.round(nw));
+    w.h = Math.max(80, Math.round(nh));
     shell.style.width  = w.w + 'px';
     shell.style.height = w.h + 'px';
   }
@@ -2421,6 +2811,7 @@ function initResize(shell, handle, w) {
     handle.removeEventListener('pointermove', onMove);
     handle.removeEventListener('pointerup', onUp);
     handle.removeEventListener('pointercancel', onUp);
+    hideSnapGuides();
     if (w.w === startW && w.h === startH) return;
     APP.save();
     updateLayerSize();
@@ -2451,6 +2842,21 @@ function renderWidgetContent(w, body) {
     console.error('Widget-Fehler (' + w.type + '):', e);
     showError('⚠️ Dieses Element konnte nicht geladen werden. Über ✕ entfernen und neu anlegen.');
   }
+}
+
+// Größte Schriftgröße, bei der der Text voraussichtlich noch ins Feld passt.
+// Geschätzt statt gemessen, weil das Element beim Aufbau noch nicht im Dokument hängt.
+function fitFontSize(text, boxW, boxH, opts) {
+  const o = Object.assign({ min: 14, max: 72, lineHeight: 1.6, charW: 0.55 }, opts || {});
+  const paras = String(text || '').split('\n');
+  for (let fs = o.max; fs > o.min; fs--) {
+    // 0.92: Wörter werden nicht mitten im Wort umbrochen, Zeilen sind also selten ganz voll
+    const perLine = Math.max(1, Math.floor(boxW / (fs * o.charW) * 0.92));
+    let lines = 0;
+    for (const p of paras) lines += Math.max(1, Math.ceil(p.length / perLine));
+    if (lines * fs * o.lineHeight <= boxH) return fs;
+  }
+  return o.min;
 }
 
 // ── Timer-Hilfen ──
@@ -2587,15 +2993,15 @@ const WIDGET_RENDERERS = {
   stopwatch(w, body) {
     body.style.flexDirection = 'column';
     const display = el('div','w-timer-display');
-    // MM:SS = 5 chars
-    const timerFs = Math.max(28, Math.min((w.w - 16) / 3.1, w.h * 0.40));
+    // MM:SS.hh = 8 Zeichen
+    const timerFs = Math.max(24, Math.min((w.w - 20) / 4.9, w.h * 0.40));
     display.style.fontSize = timerFs + 'px';
     const row = el('div','w-btn-row');
     const startBtn = el('button','w-action-btn');
     const lapBtn = el('button','w-action-btn'); lapBtn.textContent = '⚑ Runde';
     const resetBtn = el('button','w-action-btn'); resetBtn.textContent = '↺';
     row.append(startBtn, lapBtn, resetBtn);
-    const lapsDiv = el('div'); lapsDiv.style.cssText='width:100%;overflow-y:auto;max-height:70px;margin-top:6px;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.5)';
+    const lapsDiv = el('div'); lapsDiv.style.cssText='width:100%;overflow-y:auto;max-height:70px;margin-top:6px;font-size:11px;font-family:monospace;color:var(--w-muted)';
     body.append(display, row, lapsDiv);
 
     // Laufzeit-Zustand auf dem Widget-Objekt — überlebt Re-Renders (siehe Timer)
@@ -2652,18 +3058,18 @@ const WIDGET_RENDERERS = {
   // ── Text ──
   text(w, body) {
     const div = el('div','w-text-display');
-    div.style.color = w.config.color || '#fff';
+    div.style.color = (w.config.color && !/^#?f{3,6}$/i.test(String(w.config.color).trim())) ? w.config.color : 'var(--w-ink)';
     const text = w.config.text || '';
-    const charCount = Math.max(text.length, 1);
-    const autoFs = Math.min(w.w * 0.07, w.h * 0.25) * Math.min(1, Math.pow(40 / charCount, 0.35));
-    div.style.fontSize = (w.config.fontSize || Math.max(14, Math.min(autoFs, 72))) + 'px';
+    // Höhe wie im Bearbeiten-Modus (mit Kopfzeile) rechnen → gleiche Schrift in beiden Modi
+    const autoFs = fitFontSize(text, w.w - 30, w.h - 34 - 30, { max: 96 });
+    div.style.fontSize = (w.config.fontSize || autoFs) + 'px';
     div.textContent = text;
     if (APP.state.editMode) {
       div.addEventListener('dblclick', e => {
         e.stopPropagation();
         div.contentEditable = 'true';
         div.style.cursor = 'text';
-        div.style.outline = '2px solid rgba(99,102,241,0.6)';
+        div.style.outline = '2px solid rgba(11,122,116,0.6)';
         div.style.borderRadius = '6px';
         div.focus();
         const sel = window.getSelection();
@@ -2700,7 +3106,7 @@ const WIDGET_RENDERERS = {
     const circles = [];
     const circleSize = Math.max(40, Math.min(w.w * 0.26, w.h * 0.32)) + 'px';
     const labelFs = Math.max(12, Math.min(w.w * 0.07, 22)) + 'px';
-    const labelEl = el('div'); labelEl.style.cssText=`font-size:${labelFs};font-weight:600;color:rgba(255,255,255,0.9)`;
+    const labelEl = el('div'); labelEl.style.cssText=`font-size:${labelFs};font-weight:600;color:var(--w-ink)`;
 
     states.forEach((s,i) => {
       const c = el('div','w-traffic-circle');
@@ -2800,14 +3206,24 @@ const WIDGET_RENDERERS = {
       APP.save();
     }
     const items = w.config.items || [];
-    const itemFs = Math.max(13, Math.min(28, (w.h - 60) / Math.max(items.length, 1) * 0.65));
+    let itemFs = 14;
+    {
+      const rows = items.length ? items.map(String) : ['Doppelklick zum Bearbeiten'];
+      const boxW = w.w - 26, boxH = w.h - 34 - 26;
+      for (let fs = 44; fs > 14; fs--) {
+        const perLine = Math.max(1, Math.floor(boxW / (fs * 0.55) * 0.92));
+        const lines = rows.reduce((s, it) => s + Math.max(1, Math.ceil(it.length / perLine)), 0);
+        const need = lines * fs * 1.35 + rows.length * (2 * Math.max(3, fs * 0.2) + 1) + Math.max(11, fs * 0.6) * 1.35 + 8;
+        if (need <= boxH) { itemFs = fs; break; }
+      }
+    }
     const h3 = document.createElement('h3');
     h3.style.fontSize = Math.max(11, itemFs * 0.6) + 'px';
     h3.textContent = w.config.subject || 'Hausaufgaben';
     const ul = document.createElement('ul');
     if (items.length === 0) {
       const li = document.createElement('li');
-      li.style.cssText = `font-size:${itemFs}px;color:rgba(255,255,255,0.3);font-style:italic;`;
+      li.style.cssText = `font-size:${itemFs}px;color:var(--w-faint);font-style:italic;`;
       li.textContent = 'Doppelklick zum Bearbeiten';
       ul.appendChild(li);
       div.append(h3, ul);
@@ -2837,16 +3253,16 @@ const WIDGET_RENDERERS = {
     const scaledFs = baseFontSize * Math.min(1, Math.pow(30 / charCount, 0.4));
     div.style.fontSize = Math.max(14, Math.min(scaledFs, 64)) + 'px';
     const isEmpty = !text;
-    div.style.color = isEmpty ? 'rgba(255,255,255,0.45)' : '#fff';
+    div.style.color = isEmpty ? 'var(--w-faint)' : 'var(--w-ink)';
     div.textContent = text || 'Doppelklick: Lernziel eintragen';
     if (APP.state.editMode) {
       div.addEventListener('dblclick', e => {
         e.stopPropagation();
         div.contentEditable = 'true';
         div.style.cursor = 'text';
-        div.style.outline = '2px solid rgba(99,102,241,0.6)';
+        div.style.outline = '2px solid rgba(11,122,116,0.6)';
         div.style.borderRadius = '6px';
-        div.style.color = '#fff';
+        div.style.color = 'var(--w-ink)';
         if (isEmpty) div.textContent = '';
         div.focus();
         const sel = window.getSelection();
@@ -2895,10 +3311,10 @@ const WIDGET_RENDERERS = {
     if (!w.config.src) {
       // Clickable upload area — like YouTube widget
       const wrap = el('div');
-      wrap.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;border:2px dashed rgba(255,255,255,0.2);border-radius:12px;transition:all .2s;box-sizing:border-box;';
-      wrap.innerHTML = '<div style="font-size:36px">🖼</div><div style="font-size:14px;color:rgba(255,255,255,0.5)">Klicken zum Bild hochladen</div><div style="font-size:11px;color:rgba(255,255,255,0.3)">oder URL über ⚙ eingeben</div>';
-      wrap.addEventListener('mouseenter', () => { wrap.style.borderColor='rgba(255,255,255,0.5)'; wrap.style.background='rgba(255,255,255,0.05)'; });
-      wrap.addEventListener('mouseleave', () => { wrap.style.borderColor='rgba(255,255,255,0.2)'; wrap.style.background=''; });
+      wrap.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;border:2px dashed var(--w-line-strong);border-radius:12px;transition:all .2s;box-sizing:border-box;';
+      wrap.innerHTML = '<div style="font-size:36px">🖼</div><div style="font-size:14px;color:var(--w-muted)">Klicken zum Bild hochladen</div><div style="font-size:11px;color:var(--w-faint)">oder URL über ⚙ eingeben</div>';
+      wrap.addEventListener('mouseenter', () => { wrap.style.borderColor='var(--accent)'; wrap.style.background='var(--w-fill)'; });
+      wrap.addEventListener('mouseleave', () => { wrap.style.borderColor='var(--w-line-strong)'; wrap.style.background=''; });
       wrap.addEventListener('click', () => {
         const input = document.createElement('input');
         input.type = 'file';
@@ -2931,21 +3347,21 @@ const WIDGET_RENDERERS = {
     if (!w.config.videoId) {
       // Leerer Zustand: gesamte Fläche anklickbar
       const wrap = el('div');
-      wrap.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;border:2px dashed rgba(255,255,255,0.2);border-radius:12px;transition:all .2s;';
+      wrap.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;border:2px dashed var(--w-line-strong);border-radius:12px;transition:all .2s;';
       const icon = el('div'); icon.style.cssText='font-size:40px;'; icon.textContent='▶️';
       const txt = el('div');
-      txt.style.cssText='font-size:14px;color:rgba(255,255,255,0.6);text-align:center;padding:0 16px;line-height:1.6;font-weight:500;';
+      txt.style.cssText='font-size:14px;color:var(--w-muted);text-align:center;padding:0 16px;line-height:1.6;font-weight:500;';
       txt.textContent='YouTube-Link einfügen';
       const sub = el('div');
-      sub.style.cssText='font-size:11px;color:rgba(255,255,255,0.35);text-align:center;';
+      sub.style.cssText='font-size:11px;color:var(--w-faint);text-align:center;';
       sub.textContent='Hier klicken oder ⚙ oben rechts';
       wrap.append(icon, txt, sub);
       wrap.addEventListener('mouseenter', () => {
-        wrap.style.borderColor='rgba(255,255,255,0.45)';
-        wrap.style.background='rgba(255,255,255,0.06)';
+        wrap.style.borderColor='var(--accent)';
+        wrap.style.background='var(--w-fill)';
       });
       wrap.addEventListener('mouseleave', () => {
-        wrap.style.borderColor='rgba(255,255,255,0.2)';
+        wrap.style.borderColor='var(--w-line-strong)';
         wrap.style.background='';
       });
       wrap.addEventListener('click', e => { e.stopPropagation(); openYoutubeSettings(w); });
@@ -2990,7 +3406,7 @@ const WIDGET_RENDERERS = {
     emojiEl.textContent = '😴';
 
     const labelEl = el('div');
-    labelEl.style.cssText = 'font-size:13px;font-weight:700;letter-spacing:.5px;color:#fff;transition:color .3s;';
+    labelEl.style.cssText = 'font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--w-ink);transition:color .3s;';
     labelEl.textContent = 'LEISE';
 
     // Balken-Meter (5 Balken)
@@ -3000,14 +3416,14 @@ const WIDGET_RENDERERS = {
     const barHeights = [20, 30, 45, 35, 25];
     barHeights.forEach((h, i) => {
       const b = el('div');
-      b.style.cssText = `width:10px;border-radius:4px;background:rgba(255,255,255,0.15);height:${h}%;transition:height .1s,background .3s;`;
+      b.style.cssText = `width:10px;border-radius:4px;background:var(--w-fill-3);height:${h}%;transition:height .1s,background .3s;`;
       bars.appendChild(b);
       barEls.push(b);
     });
 
     // Mikrofon-Button
     const micBtn = el('button');
-    micBtn.style.cssText = 'margin-top:4px;padding:6px 14px;border-radius:20px;border:none;background:rgba(99,102,241,0.3);color:#a5b4fc;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;';
+    micBtn.style.cssText = 'margin-top:4px;padding:6px 14px;border-radius:20px;border:none;background:var(--accent-tint);color:var(--accent-ink);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;';
     micBtn.textContent = '🎤 Mikrofon starten';
 
     body.append(emojiEl, bars, labelEl, micBtn);
@@ -3017,9 +3433,9 @@ const WIDGET_RENDERERS = {
     function getColor(level) {
       const low  = (w.config.lowThreshold  ?? 25) / 100;
       const high = (w.config.highThreshold ?? 55) / 100;
-      if (level < low)  return { bg:'#22c55e', label:'LEISE',  emoji:'😴' };
-      if (level < high) return { bg:'#f59e0b', label:'MITTEL', emoji:'🤫' };
-      return                   { bg:'#ef4444', label:'LAUT',   emoji:'🔊' };
+      if (level < low)  return { bg:'#22c55e', fg:'#15803D', label:'LEISE',  emoji:'😴' };
+      if (level < high) return { bg:'#f59e0b', fg:'#A8480A', label:'MITTEL', emoji:'🤫' };
+      return                   { bg:'#ef4444', fg:'#B42318', label:'LAUT',   emoji:'🔊' };
     }
 
     function startMic() {
@@ -3028,13 +3444,13 @@ const WIDGET_RENDERERS = {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         emojiEl.textContent = '❌';
         labelEl.textContent = 'Mikrofon nicht verfügbar';
-        labelEl.style.color = '#f87171';
+        labelEl.style.color = 'var(--w-danger)';
         return;
       }
       running = true;
       micBtn.textContent = '⏹ Stoppen';
-      micBtn.style.background = 'rgba(239,68,68,0.25)';
-      micBtn.style.color = '#fca5a5';
+      micBtn.style.background = 'rgba(180,35,24,0.12)';
+      micBtn.style.color = 'var(--w-danger)';
 
       navigator.mediaDevices.getUserMedia({ audio: true, video: false })
         .then(stream => {
@@ -3061,13 +3477,13 @@ const WIDGET_RENDERERS = {
               const active = level >= threshold * 0.8;
               const col = getColor(level);
               b.style.height = active ? `${barHeights[i] + level * 40}%` : `${barHeights[i]}%`;
-              b.style.background = active ? col.bg : 'rgba(255,255,255,0.12)';
+              b.style.background = active ? col.bg : 'var(--w-fill-2)';
             });
 
             const col = getColor(level);
             emojiEl.textContent = col.emoji;
             labelEl.textContent = col.label;
-            labelEl.style.color = col.bg;
+            labelEl.style.color = document.body.dataset.cards === 'dark' ? col.bg : col.fg;
 
             const raf = requestAnimationFrame(tick);
             AUDIO_STREAMS[w.id] = { stream, ctx, raf };
@@ -3077,11 +3493,11 @@ const WIDGET_RENDERERS = {
         .catch(err => {
           running = false;
           micBtn.textContent = '🎤 Mikrofon starten';
-          micBtn.style.background = 'rgba(99,102,241,0.3)';
-          micBtn.style.color = '#a5b4fc';
+          micBtn.style.background = 'var(--accent-tint)';
+          micBtn.style.color = 'var(--accent-ink)';
           emojiEl.textContent = '❌';
           labelEl.textContent = 'Kein Zugriff';
-          labelEl.style.color = '#f87171';
+          labelEl.style.color = 'var(--w-danger)';
         });
     }
 
@@ -3089,12 +3505,12 @@ const WIDGET_RENDERERS = {
       running = false;
       stopAudioStream(w.id);
       micBtn.textContent = '🎤 Mikrofon starten';
-      micBtn.style.background = 'rgba(99,102,241,0.3)';
-      micBtn.style.color = '#a5b4fc';
+      micBtn.style.background = 'var(--accent-tint)';
+      micBtn.style.color = 'var(--accent-ink)';
       emojiEl.textContent = '😴';
       labelEl.textContent = 'LEISE';
-      labelEl.style.color = '#fff';
-      barEls.forEach((b,i) => { b.style.height = `${barHeights[i]}%`; b.style.background = 'rgba(255,255,255,0.12)'; });
+      labelEl.style.color = 'var(--w-ink)';
+      barEls.forEach((b,i) => { b.style.height = `${barHeights[i]}%`; b.style.background = 'var(--w-fill-2)'; });
     }
 
     micBtn.addEventListener('click', () => running ? stopMic() : startMic());
@@ -3111,21 +3527,21 @@ const WIDGET_RENDERERS = {
     if (!w.config.question) {
       // Leerer Zustand
       const wrap = el('div');
-      wrap.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;border:2px dashed rgba(255,255,255,0.2);border-radius:12px;transition:all .2s;';
+      wrap.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;border:2px dashed var(--w-line-strong);border-radius:12px;transition:all .2s;';
       const icon = el('div'); icon.style.fontSize = '36px'; icon.textContent = '📊';
-      const txt = el('div'); txt.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.55);text-align:center;font-weight:500;';
+      const txt = el('div'); txt.style.cssText = 'font-size:13px;color:var(--w-muted);text-align:center;font-weight:500;';
       txt.textContent = 'Live-Umfrage erstellen';
-      const sub = el('div'); sub.style.cssText = 'font-size:11px;color:rgba(255,255,255,0.3);';
+      const sub = el('div'); sub.style.cssText = 'font-size:11px;color:var(--w-faint);';
       sub.textContent = 'Hier klicken oder ⚙ oben rechts';
       wrap.append(icon, txt, sub);
-      wrap.addEventListener('mouseenter', () => { wrap.style.borderColor='rgba(255,255,255,0.4)'; wrap.style.background='rgba(255,255,255,0.05)'; });
-      wrap.addEventListener('mouseleave', () => { wrap.style.borderColor='rgba(255,255,255,0.2)'; wrap.style.background=''; });
+      wrap.addEventListener('mouseenter', () => { wrap.style.borderColor='var(--accent)'; wrap.style.background='var(--w-fill)'; });
+      wrap.addEventListener('mouseleave', () => { wrap.style.borderColor='var(--w-line-strong)'; wrap.style.background=''; });
       wrap.addEventListener('click', e => { e.stopPropagation(); openPollSettings(w); });
       body.appendChild(wrap);
       return;
     }
 
-    const COLORS = ['#6366f1','#22c55e','#f59e0b','#ef4444'];
+    const COLORS = ['#0B7A74','#22c55e','#f59e0b','#ef4444'];
     const options = (w.config.options || []).filter(o => o.trim());
     const voteCounts = new Array(options.length).fill(0);
     const pollId = w.config.pollId;
@@ -3167,17 +3583,17 @@ const WIDGET_RENDERERS = {
     const revealBtn = el('button');
     const revealed = w.config.showResults !== false; // default: sichtbar
     revealBtn.style.cssText = revealed
-      ? 'background:rgba(34,197,94,0.2);color:#86efac;'
-      : 'background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);';
+      ? 'background:rgba(21,128,61,0.14);color:#15803D;'
+      : 'background:var(--w-fill-2);color:var(--w-muted);';
     revealBtn.textContent = revealed ? '👁 Ergebnis sichtbar' : '🙈 Ergebnis versteckt';
     const resetBtn = el('button');
-    resetBtn.style.cssText = 'background:rgba(239,68,68,0.2);color:#fca5a5;';
+    resetBtn.style.cssText = 'background:rgba(180,35,24,0.12);color:var(--w-danger);';
     resetBtn.textContent = '🗑 Reset';
     const copyBtn = el('button');
-    copyBtn.style.cssText = 'background:rgba(99,102,241,0.2);color:#a5b4fc;';
+    copyBtn.style.cssText = 'background:var(--accent-tint);color:var(--accent-ink);';
     copyBtn.textContent = '📋 Link';
     const editBtn2 = el('button');
-    editBtn2.style.cssText = 'background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);';
+    editBtn2.style.cssText = 'background:var(--w-fill-2);color:var(--w-muted);';
     editBtn2.textContent = '✏️';
     ctrl.append(revealBtn, resetBtn, copyBtn, editBtn2);
 
@@ -3190,8 +3606,8 @@ const WIDGET_RENDERERS = {
       totalEl.style.opacity  = show ? '1' : '0.25';
       revealBtn.textContent  = show ? '👁 Ergebnis sichtbar' : '🙈 Ergebnis versteckt';
       revealBtn.style.cssText = show
-        ? 'background:rgba(34,197,94,0.2);color:#86efac;'
-        : 'background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);';
+        ? 'background:rgba(21,128,61,0.14);color:#15803D;'
+        : 'background:var(--w-fill-2);color:var(--w-muted);';
     }
     applyVisibility();
 
@@ -3262,7 +3678,7 @@ const WIDGET_RENDERERS = {
       const banner = el('div');
       banner.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%;text-align:center;';
       const ico = el('div'); ico.style.cssText = 'font-size:36px;'; ico.textContent = '🤖';
-      const msg = el('div'); msg.style.cssText = 'font-size:12.5px;color:rgba(255,255,255,0.6);max-width:220px;line-height:1.5;';
+      const msg = el('div'); msg.style.cssText = 'font-size:12.5px;color:var(--w-muted);max-width:220px;line-height:1.5;';
       msg.textContent = 'Bitte zuerst anmelden um den KI-Assistenten zu nutzen.';
       banner.append(ico, msg);
       body.appendChild(banner);
@@ -3303,16 +3719,16 @@ const WIDGET_RENDERERS = {
     if (w.config.lastOutput) {
       output.textContent = w.config.lastOutput;
     } else {
-      output.style.color = 'rgba(255,255,255,0.2)';
+      output.style.color = 'var(--w-faint)';
       output.textContent = 'Hier erscheint der generierte Inhalt…';
     }
 
     // ── Bottom row ──
     const bottomRow = el('div','ai-bottom-row');
-    const copyBtn2 = el('button'); copyBtn2.textContent='📋 Kopieren'; copyBtn2.style.cssText='background:rgba(255,255,255,0.1);color:#fff;';
-    const clearBtn = el('button'); clearBtn.textContent='🗑 Löschen'; clearBtn.style.cssText='background:rgba(239,68,68,0.2);color:#fca5a5;';
+    const copyBtn2 = el('button'); copyBtn2.textContent='📋 Kopieren'; copyBtn2.style.cssText='background:var(--w-fill-2);color:var(--w-ink);';
+    const clearBtn = el('button'); clearBtn.textContent='🗑 Löschen'; clearBtn.style.cssText='background:rgba(180,35,24,0.12);color:var(--w-danger);';
     copyBtn2.addEventListener('click', e => { e.stopPropagation(); navigator.clipboard.writeText(output.textContent).then(()=>toast('📋 Kopiert!')); });
-    clearBtn.addEventListener('click', e => { e.stopPropagation(); output.textContent=''; output.style.color='rgba(255,255,255,0.2)'; w.config.lastOutput=''; APP.save(); });
+    clearBtn.addEventListener('click', e => { e.stopPropagation(); output.textContent=''; output.style.color='var(--w-faint)'; w.config.lastOutput=''; APP.save(); });
     bottomRow.append(copyBtn2, clearBtn);
 
     body.append(ctrlRow, output, bottomRow);
@@ -3326,7 +3742,7 @@ const WIDGET_RENDERERS = {
       const grade = gradeSelect.value;
 
       genBtn.disabled = true; genBtn.textContent = '⏳ Lädt…';
-      output.style.color = 'rgba(255,255,255,0.4)';
+      output.style.color = 'var(--w-faint)';
       output.textContent = '⏳ KI generiert Inhalt…';
 
       try {
@@ -3336,7 +3752,7 @@ const WIDGET_RENDERERS = {
         if (error) throw new Error(error.message || String(error));
         const text = data?.text || '(Keine Antwort)';
         output.textContent = text;
-        output.style.color = 'rgba(255,255,255,0.85)';
+        output.style.color = 'var(--w-ink)';
         w.config.lastOutput = text;
         w.config.lastTopic  = topic;
         w.config.lastType   = type;
@@ -3344,7 +3760,7 @@ const WIDGET_RENDERERS = {
         APP.save();
       } catch(err) {
         output.textContent = '❌ Fehler: ' + err.message;
-        output.style.color = '#fca5a5';
+        output.style.color = 'var(--w-danger)';
         toast('❌ KI-Fehler: ' + err.message);
       } finally {
         genBtn.disabled = false; genBtn.textContent = '✨ Generieren';
@@ -3365,10 +3781,10 @@ const WIDGET_RENDERERS = {
       const hdr = document.createElement('div');
       hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 10px 4px;flex-shrink:0';
       const title = document.createElement('div');
-      title.style.cssText = 'font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.8px';
+      title.style.cssText = 'font-size:11px;font-weight:700;color:var(--w-muted);text-transform:uppercase;letter-spacing:0.8px';
       title.textContent = '⭐ Schnell-Links';
       const addBtn = document.createElement('button');
-      addBtn.style.cssText = 'background:rgba(99,102,241,0.3);border:1px solid rgba(99,102,241,0.5);color:#a5b4fc;border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer;font-weight:600';
+      addBtn.style.cssText = 'background:var(--accent-tint);border:1px solid rgba(11,122,116,0.4);color:var(--accent-ink);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:600';
       addBtn.textContent = '+ Hinzufügen';
       addBtn.addEventListener('click', e => { e.stopPropagation(); openAddDialog(); });
       hdr.append(title, addBtn);
@@ -3380,7 +3796,7 @@ const WIDGET_RENDERERS = {
 
       cfg.links.forEach((link, idx) => {
         const tile = document.createElement('div');
-        tile.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 4px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden';
+        tile.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 4px;background:var(--w-fill);border:1px solid var(--w-line);border-radius:10px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden';
         tile.title = link.url;
 
         const domain = (() => { try { return new URL(link.url.startsWith('http') ? link.url : 'https://'+link.url).hostname; } catch(e) { return ''; } })();
@@ -3391,7 +3807,7 @@ const WIDGET_RENDERERS = {
         icon.onerror = () => { icon.style.display='none'; };
 
         const lbl = document.createElement('div');
-        lbl.style.cssText = 'font-size:10px;color:#fff;text-align:center;word-break:break-word;max-width:72px;line-height:1.2';
+        lbl.style.cssText = 'font-size:11px;color:var(--w-ink);text-align:center;word-break:break-word;max-width:72px;line-height:1.2';
         lbl.textContent = link.name || domain;
 
         const del = document.createElement('button');
@@ -3400,8 +3816,8 @@ const WIDGET_RENDERERS = {
         // Auf Touch-Geräten gibt es kein Hover — dort im Edit-Modus dauerhaft zeigen
         const touchOnly = window.matchMedia && window.matchMedia('(hover:none)').matches;
         if (touchOnly && APP.state.editMode) del.style.display = 'flex';
-        tile.addEventListener('mouseenter', () => { del.style.display='flex'; tile.style.background='rgba(255,255,255,0.12)'; });
-        tile.addEventListener('mouseleave', () => { if (!touchOnly) del.style.display='none'; tile.style.background='rgba(255,255,255,0.06)'; });
+        tile.addEventListener('mouseenter', () => { del.style.display='flex'; tile.style.background='var(--w-fill-2)'; });
+        tile.addEventListener('mouseleave', () => { if (!touchOnly) del.style.display='none'; tile.style.background='var(--w-fill)'; });
 
         tile.addEventListener('click', e => {
           if (e.target === del || del.contains(e.target)) return;
@@ -3420,7 +3836,7 @@ const WIDGET_RENDERERS = {
 
       if (cfg.links.length === 0) {
         const empty = document.createElement('div');
-        empty.style.cssText = 'color:rgba(255,255,255,0.3);font-size:12px;text-align:center;padding:20px;grid-column:1/-1';
+        empty.style.cssText = 'color:var(--w-faint);font-size:12px;text-align:center;padding:20px;grid-column:1/-1';
         empty.textContent = 'Noch keine Seiten — klicke + Hinzufügen';
         grid.appendChild(empty);
       }
@@ -3455,7 +3871,7 @@ const WIDGET_RENDERERS = {
 
       const ok = document.createElement('button');
       ok.textContent = '✓ Hinzufügen';
-      ok.style.cssText = 'padding:8px 14px;border-radius:8px;border:none;background:#6366f1;color:#fff;cursor:pointer;font-size:13px;font-weight:600';
+      ok.style.cssText = 'padding:8px 14px;border-radius:8px;border:none;background:#0B7A74;color:#fff;cursor:pointer;font-size:13px;font-weight:600';
       ok.addEventListener('click', () => {
         let url = urlInp.value.trim();
         if (!url) return;
@@ -3610,7 +4026,7 @@ const WIDGET_RENDERERS = {
         renderMessages();
       } catch(err) {
         thinkingBubble.textContent = '❌ ' + err.message;
-        thinkingBubble.style.color = '#fca5a5';
+        thinkingBubble.style.color = 'var(--w-danger)';
       } finally {
         sendBtn.disabled = false;
       }
@@ -3637,9 +4053,9 @@ const WIDGET_RENDERERS = {
 
     // URL bar
     const bar = document.createElement('div');
-    bar.style.cssText = 'display:flex;gap:4px;padding:6px;background:rgba(0,0,0,0.3);flex-shrink:0;align-items:center';
+    bar.style.cssText = 'display:flex;gap:4px;padding:6px;background:var(--w-bar);flex-shrink:0;align-items:center';
 
-    const btnStyle = 'border:none;background:rgba(255,255,255,0.1);color:#fff;border-radius:5px;padding:4px 7px;cursor:pointer;font-size:12px;flex-shrink:0';
+    const btnStyle = 'border:none;background:var(--w-fill-2);color:var(--w-ink);border-radius:5px;padding:4px 7px;cursor:pointer;font-size:12px;flex-shrink:0';
 
     const homeBtn = document.createElement('button');
     homeBtn.textContent = '🏠';
@@ -3651,7 +4067,7 @@ const WIDGET_RENDERERS = {
     urlInp.type = 'text';
     urlInp.placeholder = 'URL eingeben…';
     urlInp.value = '';
-    urlInp.style.cssText = 'flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;font-size:11px;padding:4px 8px;touch-action:auto;min-width:0';
+    urlInp.style.cssText = 'flex:1;background:var(--w-fill-2);border:1px solid var(--w-line-strong);border-radius:6px;color:var(--w-ink);font-size:12px;padding:5px 8px;touch-action:auto;min-width:0';
     urlInp.addEventListener('click', e => e.stopPropagation());
     urlInp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') navigate(urlInp.value); });
 
@@ -3663,7 +4079,7 @@ const WIDGET_RENDERERS = {
 
     // Startpage with tiles
     const startpage = document.createElement('div');
-    startpage.style.cssText = 'flex:1;overflow:hidden;background:rgba(0,0,0,0.1);padding:0;display:none;flex-direction:column;width:100%';
+    startpage.style.cssText = 'flex:1;overflow:hidden;background:var(--w-fill);padding:0;display:none;flex-direction:column;width:100%';
 
     function renderStartpage() {
       startpage.innerHTML = '';
@@ -3674,9 +4090,9 @@ const WIDGET_RENDERERS = {
       grid.style.cssText = 'display:grid;grid-template-columns:repeat(' + cols + ',1fr);grid-template-rows:repeat(' + rows + ',1fr);gap:0;flex:1;width:100%;height:100%';
       bookmarkList.forEach((bm, i) => {
         const tile = document.createElement('div');
-        tile.style.cssText = 'position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);transition:all .15s;overflow:hidden';
-        tile.addEventListener('mouseenter', function() { this.style.background='rgba(255,255,255,0.12)'; });
-        tile.addEventListener('mouseleave', function() { this.style.background='rgba(255,255,255,0.05)'; });
+        tile.style.cssText = 'position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:var(--w-fill);border:0.5px solid var(--w-line);transition:all .15s;overflow:hidden';
+        tile.addEventListener('mouseenter', function() { this.style.background='var(--w-fill-2)'; });
+        tile.addEventListener('mouseleave', function() { this.style.background='var(--w-fill)'; });
         const icon = document.createElement('img');
         try { icon.src = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(new URL(bm.url).hostname) + '&sz=128'; } catch(e) {}
         icon.style.cssText = 'width:100%;height:100%;object-fit:contain;padding:15%;';
@@ -3708,7 +4124,7 @@ const WIDGET_RENDERERS = {
           const edit = document.createElement('button');
           edit.textContent = '✏️';
           edit.title = 'Umbenennen';
-          edit.style.cssText = 'position:absolute;top:4px;right:28px;background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:10px;cursor:pointer;line-height:1;z-index:2';
+          edit.style.cssText = 'position:absolute;top:4px;right:28px;background:var(--w-fill-3);border:none;color:var(--w-ink);border-radius:50%;width:20px;height:20px;font-size:10px;cursor:pointer;line-height:1;z-index:2';
           edit.addEventListener('click', rename);
           tile.append(edit, del);
         }
@@ -3717,8 +4133,8 @@ const WIDGET_RENDERERS = {
       // Add-Tile
       if (APP.state.editMode) {
         const addTile = document.createElement('div');
-        addTile.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 4px;cursor:pointer;background:rgba(255,255,255,0.02);border:0.5px dashed rgba(255,255,255,0.15);transition:all .15s';
-        addTile.innerHTML = '<div style="font-size:20px;color:rgba(255,255,255,0.3)">+</div><div style="font-size:9px;color:rgba(255,255,255,0.25)">Seite hinzufügen</div>';
+        addTile.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 4px;cursor:pointer;background:var(--w-fill);border:0.5px dashed var(--w-line-strong);transition:all .15s';
+        addTile.innerHTML = '<div style="font-size:20px;color:var(--w-faint)">+</div><div style="font-size:9px;color:var(--w-faint)">Seite hinzufügen</div>';
         addTile.addEventListener('click', function(e) {
           e.stopPropagation();
           const raw = prompt('Webseite eingeben (z.B. wikipedia.de):');
@@ -3775,7 +4191,7 @@ const WIDGET_RENDERERS = {
       // Drop zone
       const zone = document.createElement('div');
       zone.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer';
-      zone.innerHTML = '<div style="font-size:36px">📂</div><div style="font-size:13px;color:rgba(255,255,255,0.6)">Datei hier ablegen oder klicken</div><div style="font-size:11px;color:rgba(255,255,255,0.3)">Bild · PDF · MP3 · Video · Text · und mehr</div>';
+      zone.innerHTML = '<div style="font-size:36px">📂</div><div style="font-size:13px;color:var(--w-muted)">Datei hier ablegen oder klicken</div><div style="font-size:11px;color:var(--w-faint)">Bild · PDF · MP3 · Video · Text · und mehr</div>';
 
       const fileInp = document.createElement('input');
       fileInp.type = 'file';
@@ -3817,7 +4233,7 @@ const WIDGET_RENDERERS = {
       zone.addEventListener('click', e => { e.stopPropagation(); fileInp.click(); });
 
       // Drag & Drop
-      zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.background = 'rgba(99,102,241,0.2)'; });
+      zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.background = 'rgba(11,122,116,0.2)'; });
       zone.addEventListener('dragleave', () => { zone.style.background = ''; });
       zone.addEventListener('drop', e => {
         e.preventDefault(); e.stopPropagation();
@@ -3834,7 +4250,7 @@ const WIDGET_RENDERERS = {
 
     // Header bar
     const header = document.createElement('div');
-    header.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(0,0,0,0.3);flex-shrink:0;font-size:11.5px;';
+    header.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--w-bar);flex-shrink:0;font-size:11.5px;';
     const fileIcon = document.createElement('span');
     fileIcon.style.opacity = '0.6';
     fileIcon.textContent = '📄';
@@ -3844,17 +4260,17 @@ const WIDGET_RENDERERS = {
     header.append(fileIcon, fileName);
     const changeBtn = document.createElement('button');
     changeBtn.textContent = '↺ Andere Datei';
-    changeBtn.style.cssText = 'border:none;background:rgba(255,255,255,0.1);color:#fff;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:10.5px;flex-shrink:0';
+    changeBtn.style.cssText = 'border:none;background:var(--w-fill-2);color:var(--w-ink);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:10.5px;flex-shrink:0';
     changeBtn.addEventListener('click', e => { e.stopPropagation(); w.config.fileData = null; APP.save(); renderWidgetContent(w, body); });
     header.appendChild(changeBtn);
 
     const viewer = document.createElement('div');
-    viewer.style.cssText = 'flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;background:#000;';
+    viewer.style.cssText = 'flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;background:var(--w-fill);';
 
     if (file.type.startsWith('text/')) {
       // Textdateien wurden als Roh-Text gespeichert (readAsText) — direkt anzeigen
       const pre = document.createElement('pre');
-      pre.style.cssText = 'width:100%;height:100%;margin:0;padding:12px;overflow:auto;font-size:12.5px;line-height:1.5;color:rgba(255,255,255,0.85);background:#0f172a;white-space:pre-wrap;word-break:break-word;box-sizing:border-box;text-align:left';
+      pre.style.cssText = 'width:100%;height:100%;margin:0;padding:12px;overflow:auto;font-size:12.5px;line-height:1.5;color:var(--w-ink);background:var(--w-fill);white-space:pre-wrap;word-break:break-word;box-sizing:border-box;text-align:left';
       pre.textContent = file.data;
       viewer.style.alignItems = 'stretch';
       viewer.appendChild(pre);
@@ -3882,9 +4298,9 @@ const WIDGET_RENDERERS = {
       const aud = document.createElement('audio');
       aud.src = file.data; aud.controls = true; aud.autoplay = false;
       aud.style.cssText = 'width:90%;margin:20px auto;display:block';
-      viewer.style.background = 'linear-gradient(135deg,#1e1b4b,#312e81)';
+      viewer.style.background = 'var(--w-fill)';
       const lbl = document.createElement('div');
-      lbl.style.cssText = 'color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:8px;text-align:center';
+      lbl.style.cssText = 'color:var(--w-muted);font-size:13px;margin-bottom:8px;text-align:center';
       lbl.textContent = '🎵 ' + (file.name || 'Audio');
       viewer.append(lbl, aud);
     } else {
@@ -3897,15 +4313,15 @@ const WIDGET_RENDERERS = {
       const icons = {xlsx:'📊',xls:'📊',docx:'📄',doc:'📄',pptx:'📋',ppt:'📋',zip:'📦',csv:'📊',pdf:'📕'};
       icon.textContent = icons[ext] || '📎';
       const name = document.createElement('div');
-      name.style.cssText = 'color:rgba(255,255,255,0.8);font-size:13px;text-align:center;word-break:break-all';
+      name.style.cssText = 'color:var(--w-ink);font-size:13px;text-align:center;word-break:break-all';
       name.textContent = file.name || 'Datei';
       const dl = document.createElement('a');
       dl.href = file.data;
       dl.download = file.name || 'datei';
       dl.textContent = '⬇ Herunterladen';
-      dl.style.cssText = 'background:rgba(99,102,241,0.8);color:#fff;padding:8px 20px;border-radius:8px;text-decoration:none;font-size:13px';
+      dl.style.cssText = 'background:var(--accent);color:#fff;padding:8px 20px;border-radius:8px;text-decoration:none;font-size:13px';
       wrap.append(icon, name, dl);
-      viewer.style.background = '#111';
+      viewer.style.background = 'var(--w-fill)';
       viewer.appendChild(wrap);
     }
 
@@ -3920,7 +4336,7 @@ const WIDGET_RENDERERS = {
     d.style.fontSize = Math.max(40, Math.min(w.w * 0.65, w.h * 0.68)) + 'px';
     d.textContent = FACES[w.config.value || 1];
     d.title = 'Klicken zum Würfeln';
-    const hint = el('div'); hint.style.cssText='font-size:11px;color:rgba(255,255,255,0.35)';
+    const hint = el('div'); hint.style.cssText='font-size:11px;color:var(--w-faint)';
     hint.textContent = 'Klicken zum Würfeln';
     d.addEventListener('click', () => {
       let count = 0;
@@ -3939,7 +4355,7 @@ const WIDGET_RENDERERS = {
     const display = el('div','w-randnum');
     display.style.fontSize = Math.max(32, Math.min(w.w * 0.52, w.h * 0.58)) + 'px';
     display.textContent = w.config.value ?? '?';
-    const info = el('div'); info.style.cssText='font-size:11px;color:rgba(255,255,255,0.35)';
+    const info = el('div'); info.style.cssText='font-size:11px;color:var(--w-faint)';
     const lo = Number(w.config.min ?? 1), hi = Math.max(lo, Number(w.config.max ?? 30));
     info.textContent = `${lo} – ${hi}`;
     display.style.cursor = 'pointer';
@@ -3958,7 +4374,7 @@ const WIDGET_RENDERERS = {
     const names = (w.config.names||'').split('\n').map(s=>s.trim()).filter(Boolean);
     const size = Math.max(1, parseInt(w.config.size) || 3);
     if (!names.length) {
-      const hint = el('div'); hint.style.cssText = 'font-size:12px;color:rgba(255,255,255,0.35);padding:14px;text-align:center';
+      const hint = el('div'); hint.style.cssText = 'font-size:12px;color:var(--w-faint);padding:14px;text-align:center';
       hint.textContent = 'Namen eintragen (⚙ Einstellungen)';
       body.appendChild(hint);
       return;
@@ -4028,6 +4444,7 @@ const WIDGET_RENDERERS = {
   // ── Agenda ──
   agenda(w, body) {
     const inner = el('div','agenda-inner');
+    inner.style.setProperty('--n', Math.max(1, (w.config.items || []).length));
     (w.config.items || []).forEach(item => {
       const row = el('div','agenda-item');
       const time = el('div','agenda-time'); time.textContent = item.time || '';
@@ -4036,7 +4453,7 @@ const WIDGET_RENDERERS = {
       inner.appendChild(row);
     });
     if (!(w.config.items||[]).length) {
-      const hint = el('div'); hint.style.cssText='font-size:12px;color:rgba(255,255,255,0.3);padding:12px';
+      const hint = el('div'); hint.style.cssText='font-size:12px;color:var(--w-faint);padding:12px';
       hint.textContent = 'Agenda eintragen (⚙ Einstellungen)';
       inner.appendChild(hint);
     }
@@ -4050,6 +4467,7 @@ const WIDGET_RENDERERS = {
     const items = w.config.items || [];
     function renderItems() {
       inner.innerHTML = '';
+      inner.style.setProperty('--n', Math.max(1, items.length));
       items.forEach((item, i) => {
         const row = el('div','checklist-item' + (item.done?' done':''));
         const cb = el('input'); cb.type='checkbox'; cb.checked=!!item.done;
@@ -4075,6 +4493,7 @@ const WIDGET_RENDERERS = {
     const phases = w.config.phases || [];
     let activeIdx = w.config.activeIdx ?? -1;
     const inner = el('div','phases-inner');
+    inner.style.setProperty('--n', Math.max(1, phases.length));
     const items = [];
 
     phases.forEach((p, i) => {
@@ -4103,7 +4522,7 @@ const WIDGET_RENDERERS = {
       { emoji:'😕', label:'Ich brauche Hilfe', color:'#ef4444' },
       { emoji:'🤔', label:'Ich denke nach', color:'#f59e0b' },
       { emoji:'🙂', label:'Alles okay', color:'#22c55e' },
-      { emoji:'😄', label:'Ich bin fertig!', color:'#6366f1' },
+      { emoji:'😄', label:'Ich bin fertig!', color:'#0B7A74' },
     ];
     let idx = w.config.statusIdx ?? 2;
     const inner = el('div','status-inner');
@@ -4158,7 +4577,7 @@ function renderTimetableEntries(inner, entries) {
     const meta = el('div','tt-meta');
     meta.textContent = fmtTime(current.start) + '–' + fmtTime(current.end) + (current.room ? ' · ' + current.room : '');
     box.append(lbl, subj, meta);
-    if (current.changeNote) { const n=el('div','tt-meta'); n.style.color='#fbbf24'; n.textContent=current.changeNote; box.appendChild(n); }
+    if (current.changeNote) { const n=el('div','tt-meta'); n.style.color='var(--w-warn)'; n.textContent=current.changeNote; box.appendChild(n); }
     inner.appendChild(box);
   }
 
@@ -4446,7 +4865,7 @@ function openNoiseSettings(w) {
           <input type="range" id="ns-sens" min="1" max="5" step="0.5" value="${sens}" style="flex:1">
           <span style="font-size:12px;color:rgba(255,255,255,0.4);">Hoch</span>
         </div>
-        <div style="text-align:center;font-size:12px;color:#a5b4fc;margin-top:4px;" id="ns-sens-val">${sens}x</div>
+        <div style="text-align:center;font-size:12px;color:#7FE3DA;margin-top:4px;" id="ns-sens-val">${sens}x</div>
       </div>
       <div class="form-group">
         <label>Grenze Leise → Mittel (%)</label>
@@ -4875,7 +5294,7 @@ function openPhasesEdit(w) {
     <div class="modal">
       <button class="modal-close" data-close>✕</button>
       <h2>⏳ Arbeitsphasen</h2>
-      <p style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:10px">Format: <code>Einführung|5|#6366f1</code> (Name|Minuten|Farbe)</p>
+      <p style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:10px">Format: <code>Einführung|5|#0B7A74</code> (Name|Minuten|Farbe)</p>
       <div class="form-group">
         <textarea id="ph-items" rows="6" style="resize:vertical">${safeText(lines)}</textarea>
       </div>
@@ -4885,7 +5304,7 @@ function openPhasesEdit(w) {
   overlay.querySelector('#ph-save').addEventListener('click', () => {
     w.config.phases = overlay.querySelector('#ph-items').value
       .split('\n').map(s=>s.trim()).filter(Boolean)
-      .map(s=>{ const [name,min,color]=s.split('|'); return {name:(name||'Phase').trim(),minutes:parseInt(min)||5,color:(color||'#6366f1').trim()}; });
+      .map(s=>{ const [name,min,color]=s.split('|'); return {name:(name||'Phase').trim(),minutes:parseInt(min)||5,color:(color||'#0B7A74').trim()}; });
     w.config.activeIdx = -1;
     APP.save();
     const shell = document.querySelector('[data-wid="'+w.id+'"]');
@@ -4953,10 +5372,15 @@ function openWidgetMenu() {
     cat.types.forEach(type => {
       const def = REGISTRY[type];
       const btn = el('button','wm-item');
-      const icon = el('span','wm-emoji'); icon.textContent = def.emoji;
+      const ic = el('span','wm-emoji'); ic.innerHTML = icon(type, 18);
       const lbl = el('span','wm-label'); lbl.textContent = def.label;
-      btn.append(icon, lbl);
-      btn.addEventListener('click', () => { addWidget(type); menu.remove(); });
+      btn.append(ic, lbl);
+      btn.addEventListener('click', () => {
+        menu.remove();
+        // Neues Element soll sich sofort verschieben lassen
+        if (!APP.state.editMode) toggleEditMode();
+        if (addWidget(type)) toast('✅ ' + def.label + ' hinzugefügt');
+      });
       grid.appendChild(btn);
     });
     menu.appendChild(grid);
@@ -5022,14 +5446,19 @@ function openTemplateModal() {
 
 function openBgModal() {
   const PRESETS = [
-    {label:'Indigo',    v:'linear-gradient(135deg,#667eea,#764ba2)'},
+    {label:'Tafelgrün', v:'#1F3531'},
+    {label:'Schiefer',  v:'#262C33'},
+    {label:'Nachtblau', v:'#182840'},
+    {label:'Weinrot',   v:'#3A1F2B'},
+    {label:'Waldgrün',  v:'linear-gradient(135deg,#1a5c3a,#0f3d2e)'},
+    {label:'Mitternacht', v:'linear-gradient(135deg,#0f0c29,#302b63,#24243e)'},
+    {label:'Graublau',  v:'#1e293b'},
+    {label:'Nacht',     v:'#0f172a'},
+    // Kräftige Verläufe (der Indigo-Wert weicht bewusst minimal vom alten Standard ab)
+    {label:'Indigo',    v:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)'},
     {label:'Ozean',     v:'linear-gradient(135deg,#0093E9,#80D0C7)'},
     {label:'Sonnenuntergang', v:'linear-gradient(135deg,#f093fb,#f5576c)'},
-    {label:'Wald',      v:'linear-gradient(135deg,#43e97b,#38f9d7)'},
-    {label:'Mitternacht', v:'linear-gradient(135deg,#0f0c29,#302b63,#24243e)'},
-    {label:'Schiefer',  v:'#1e293b'},
-    {label:'Dunkelblau', v:'#1a1a2e'},
-    {label:'Nacht',     v:'#0f172a'},
+    {label:'Wiese',     v:'linear-gradient(135deg,#43e97b,#38f9d7)'},
   ];
   const board = APP.activeBoard();
   const { overlay, close } = openModal(`
@@ -5040,7 +5469,7 @@ function openBgModal() {
       <div class="form-group" style="margin-top:8px">
         <label>Eigene Farbe</label>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="color" id="bg-color" value="#1e293b" style="width:48px;height:36px;padding:2px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.2);background:transparent">
+          <input type="color" id="bg-color" value="#1F3531" style="width:48px;height:36px;padding:2px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.2);background:transparent">
           <button class="btn-secondary" id="bg-apply-color">Anwenden</button>
         </div>
       </div>
@@ -5056,6 +5485,8 @@ function openBgModal() {
   const grid = overlay.querySelector('#bg-grid');
   PRESETS.forEach(p => {
     const sw = el('div','bg-swatch'); sw.title=p.label; sw.style.background=p.v;
+    const cur = board && board.background && board.background.value;
+    if (cur === p.v || (p.v === DEFAULT_BG.value && (!cur || cur === LEGACY_DEFAULT_BG))) sw.classList.add('sel');
     sw.addEventListener('click', () => {
       if (board) { board.background={type: p.v.startsWith('linear') ? 'gradient':'color', value:p.v}; APP.save(); renderBoardBg(); }
       close();
@@ -5128,6 +5559,7 @@ document.addEventListener('keydown', e => {
     document.getElementById('widget-menu')?.remove();
     document.getElementById('rename-modal-overlay')?.remove();
     document.getElementById('tb-customize-panel')?.remove();
+    document.getElementById('more-menu')?.remove();
     // Close dropdowns
     document.getElementById('class-dropdown')?.classList.remove('open');
     // Exit draw mode if active
@@ -5159,7 +5591,7 @@ function toggleFullscreen() {
     }
   }
   const btn = document.getElementById('btn-fullscreen');
-  if (btn) btn.textContent = document.body.classList.contains('fullscreen') ? '⤡' : '⤢';
+  updateFullscreenBtn();
   document.getElementById('widget-menu')?.remove();
 }
 document.getElementById('fs-exit')?.addEventListener('click', toggleFullscreen);
@@ -5169,14 +5601,12 @@ document.getElementById('fs-exit')?.addEventListener('click', toggleFullscreen);
   const fs = !!(document.fullscreenElement || document.webkitFullscreenElement);
   document.body.classList.toggle('fullscreen', fs);
   const btn = document.getElementById('btn-fullscreen');
-  if (btn) btn.textContent = fs ? '⤡' : '⤢';
+  updateFullscreenBtn();
 }));
 
 function toggleEditMode() {
   APP.state.editMode = !APP.state.editMode;
-  const btn = document.getElementById('edit-mode-btn');
-  btn.textContent = APP.state.editMode ? '✏️ Edit' : '👁 Ansicht';
-  btn.classList.toggle('active', APP.state.editMode);
+  updateEditModeBtn();
   APP.selectedId = null;
   renderWidgets();
 }
@@ -5376,8 +5806,7 @@ const VOICE = {
 
   setActive() {
     this.active = true;
-    const btn = document.getElementById('btn-voice');
-    btn.classList.add('listening');
+    document.getElementById('btn-more')?.classList.add('listening');
     // show listening toast
     if (!this.toastEl) {
       this.toastEl = document.createElement('div');
@@ -5390,8 +5819,7 @@ const VOICE = {
 
   setInactive() {
     this.active = false;
-    const btn = document.getElementById('btn-voice');
-    if (btn) btn.classList.remove('listening');
+    document.getElementById('btn-more')?.classList.remove('listening');
     if (this.toastEl) this.toastEl.style.display = 'none';
   },
 
@@ -5629,25 +6057,13 @@ function openAiBoardGenerator() {
 // ══════════════════════════════════════════════════════════════
 // TOOLBAR WIRING
 // ══════════════════════════════════════════════════════════════
-document.getElementById('btn-voice').addEventListener('click', () => VOICE.toggle());
-
-document.getElementById('btn-add-widget').addEventListener('click', openWidgetMenu);
-document.getElementById('btn-template').addEventListener('click', openTemplateModal);
-document.getElementById('btn-bg').addEventListener('click', openBgModal);
-document.getElementById('btn-ical').addEventListener('click', () => {
-  const board = APP.activeBoard();
-  const w = board?.widgets.find(w=>w.type==='timetable');
-  if (w) openTimetableSettings(w);
-  else { toast('Füge zuerst ein Stundenplan-Widget hinzu'); }
-});
-document.getElementById('btn-export').addEventListener('click', openExportModal);
 document.getElementById('add-board-btn').addEventListener('click', () => {
-  createBoard('Tafel ' + (APP.state.boards.length + 1));
-  toast('✅ Neue Tafel erstellt');
+  // Nur melden, wenn wirklich eine Tafel entstanden ist (Gratis-Limit!)
+  if (createBoard('Tafel ' + (APP.state.boards.length + 1))) toast('✅ Neue Tafel erstellt');
 });
 document.getElementById('edit-mode-btn').addEventListener('click', toggleEditMode);
 document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
-document.getElementById('btn-customize-toolbar').addEventListener('click', e => { e.stopPropagation(); openToolbarCustomizer(); });
+document.getElementById('btn-more').addEventListener('click', e => { e.stopPropagation(); openMoreMenu(); });
 document.getElementById('auth-login-btn').addEventListener('click', openLoginModal);
 document.getElementById('auth-logout-btn').addEventListener('click', () => AUTH.logout());
 
@@ -5672,7 +6088,7 @@ document.getElementById('board').addEventListener('dblclick', e => {
   const ta = document.createElement('textarea');
   ta.placeholder = 'Text eingeben…';
   ta.style.cssText = `position:fixed;left:${e.clientX}px;top:${e.clientY}px;z-index:9998;
-    background:rgba(20,20,40,0.92);color:#fff;border:2px solid rgba(129,140,248,0.6);
+    background:rgba(20,20,40,0.92);color:#fff;border:2px solid rgba(94,211,201,0.6);
     border-radius:10px;padding:10px 14px;font-size:16px;resize:none;min-width:180px;
     min-height:44px;outline:none;backdrop-filter:blur(8px);box-shadow:0 8px 32px rgba(0,0,0,0.4);`;
   document.body.appendChild(ta);
@@ -5751,10 +6167,7 @@ function initApp() {
     if (!APP.state.activeBoardId) APP.state.activeBoardId = APP.state.boards[0].id;
     renderAll();
   }
-  // update edit mode button
-  const btn = document.getElementById('edit-mode-btn');
-  btn.textContent = APP.state.editMode ? '✏️ Edit' : '👁 Ansicht';
-  btn.classList.toggle('active', APP.state.editMode);
+  updateEditModeBtn();
   CLASSES.initUI();
   DRAW.restoreDrawings();
 
@@ -5770,14 +6183,37 @@ function setupDemo() {
   APP.state.boards = [];
   APP.state.activeBoardId = null;
 
+  // Die Demo-Tafeln sind für 1076×532 entworfen und werden an den Bildschirm angepasst:
+  // am Smartboard größer, auf dem Tablet etwas kleiner — die Schrift wächst mit.
+  const boardEl = document.getElementById('board');
+  const css = getComputedStyle(document.documentElement);
+  const availW = (boardEl ? boardEl.clientWidth : window.innerWidth);
+  const availH = (boardEl ? boardEl.clientHeight : window.innerHeight)
+    - (parseInt(css.getPropertyValue('--toolbar-h')) || 60) - (parseInt(css.getPropertyValue('--dock-h')) || 84) - 16;
+  const k = Math.max(0.75, Math.min(1.8, availW / 1076, availH / 532));
+  const fit = widgets => {
+    if (availW < 600) {
+      // Handy: volle Breite, untereinander
+      let y = 12;
+      return widgets.map(w => {
+        const h = Math.round(w.h * 0.85);
+        const r = { ...w, x: 12, y, w: availW - 24, h };
+        y += h + 12;
+        return r;
+      });
+    }
+    return widgets.map(w => ({ ...w,
+      x: Math.round(w.x * k), y: Math.round(w.y * k), w: Math.round(w.w * k), h: Math.round(w.h * k) }));
+  };
+
   // Tafel 1: Morgenstart
   createBoard('Morgenstart',
-    { type:'gradient', value:'linear-gradient(135deg,#667eea,#764ba2)' },
-    [
-      { type:'clock',    x:30,  y:20,  w:240, h:140, config:{} },
-      { type:'goal',     x:290, y:20,  w:340, h:120, config:{ text:'Die Schüler kennen die Planeten unseres Sonnensystems.' } },
-      { type:'traffic',  x:650, y:20,  w:160, h:140, config:{ state:'green' } },
-      { type:'agenda',   x:30,  y:180, w:300, h:260, config:{ items:[
+    { type:'color', value:'#1F3531' },
+    fit([
+      { type:'clock',    x:24,  y:24,  w:300, h:170, config:{} },
+      { type:'goal',     x:348, y:24,  w:460, h:170, config:{ text:'Die Schüler kennen die Planeten unseres Sonnensystems.' } },
+      { type:'traffic',  x:832, y:24,  w:220, h:170, config:{ state:'green' } },
+      { type:'agenda',   x:24,  y:218, w:500, h:290, config:{ items:[
         {time:'08:00', text:'Begrüßung & Morgenkreis'},
         {time:'08:15', text:'Sachunterricht: Planeten'},
         {time:'09:00', text:'Frühstückspause'},
@@ -5785,42 +6221,42 @@ function setupDemo() {
         {time:'10:05', text:'Hofpause'},
         {time:'10:25', text:'Deutsch: Lesezeit'}
       ]}},
-      { type:'homework', x:350, y:180, w:300, h:260, config:{ subject:'Hausaufgaben', items:[
+      { type:'homework', x:548, y:218, w:504, h:290, config:{ subject:'Hausaufgaben', items:[
         'Sachbuch S. 34 lesen',
         'Einmaleins-Blatt fertig',
         'Lesebuch: Geschichte zu Ende lesen'
       ]}},
-    ], true);
+    ]), true);
 
   // Tafel 2: Gruppenarbeit
   createBoard('Gruppenarbeit',
-    { type:'gradient', value:'linear-gradient(135deg,#1a5c3a,#0f3d2e)' },
-    [
-      { type:'timer',   x:30,  y:20,  w:260, h:170, config:{ minutes:15 } },
-      { type:'groups',  x:310, y:20,  w:340, h:240, config:{ names:'Emma\nLeon\nMia\nNoah\nSophie\nBen\nHanna\nLuca\nLina\nFinn\nEmilia\nPaul', size:3 } },
-      { type:'phases',  x:30,  y:210, w:260, h:220, config:{ phases:[
-        {name:'Aufgabe lesen', color:'#6366f1', minutes:3},
+    { type:'color', value:'#262C33' },
+    fit([
+      { type:'timer',   x:24,  y:24,  w:330, h:200, config:{ minutes:15 } },
+      { type:'groups',  x:378, y:24,  w:674, h:290, config:{ names:'Emma\nLeon\nMia\nNoah\nSophie\nBen\nHanna\nLuca\nLina\nFinn\nEmilia\nPaul', size:3 } },
+      { type:'phases',  x:24,  y:248, w:330, h:260, config:{ phases:[
+        {name:'Aufgabe lesen', color:'#0B7A74', minutes:3},
         {name:'Gruppenarbeit', color:'#22c55e', minutes:15},
         {name:'Ergebnisse vorstellen', color:'#f59e0b', minutes:10},
         {name:'Feedback', color:'#ec4899', minutes:5}
       ]}},
-      { type:'text', x:310, y:280, w:340, h:100, config:{ text:'Arbeitet leise zusammen und notiert eure Ergebnisse auf dem Plakat.' } },
-    ], true);
+      { type:'text', x:378, y:338, w:674, h:170, config:{ text:'Arbeitet leise zusammen und notiert eure Ergebnisse auf dem Plakat.' } },
+    ]), true);
 
   // Tafel 3: Wochenplan
   createBoard('Wochenplan',
-    { type:'gradient', value:'linear-gradient(135deg,#0093E9,#80D0C7)' },
-    [
-      { type:'clock',     x:30,  y:20,  w:200, h:120, config:{} },
-      { type:'checklist', x:250, y:20,  w:320, h:300, config:{ items:[
+    { type:'color', value:'#182840' },
+    fit([
+      { type:'clock',     x:24,  y:24,  w:300, h:170, config:{} },
+      { type:'text',      x:24,  y:218, w:300, h:290, config:{ text:'Wochenplan\n\nArbeite die Aufgaben in deinem Tempo ab. Hake fertige Aufgaben ab.' } },
+      { type:'checklist', x:348, y:24,  w:704, h:484, config:{ items:[
         {text:'Mathe-Arbeitsblatt S. 12', done:true},
         {text:'Diktat üben (10 Wörter)', done:true},
         {text:'Sachunterricht: Steckbrief Tier', done:false},
         {text:'Lesetagebuch: 2 Seiten', done:false},
         {text:'Kunst: Bild fertigmalen', done:false}
       ]}},
-      { type:'text', x:30, y:160, w:200, h:160, config:{ text:'Wochenplan KW 26\n\nArbeite die Aufgaben in deinem Tempo ab. Hake fertige Aufgaben ab.' } },
-    ], true);
+    ]), true);
 
   APP.state.activeBoardId = APP.state.boards[0].id;
   APP.save();
@@ -5837,10 +6273,11 @@ async function showVotingPage(pollId) {
     AUTH.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
 
+  document.body.classList.add('voting');
   const page = document.createElement('div'); page.id = 'voting-page';
   const logo = document.createElement('div');
   logo.style.cssText = 'font-size:22px;font-weight:800;color:#fff;margin-bottom:28px;letter-spacing:-0.5px;';
-  logo.innerHTML = '<span style="color:#818cf8">Class</span>Puls';
+  logo.innerHTML = '<span style="color:#5ED3C9">Class</span>Puls';
   const card = document.createElement('div'); card.className = 'voting-card';
   card.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);padding:20px;">Lade Umfrage…</div>';
   page.append(logo, card);
@@ -5862,7 +6299,7 @@ async function showVotingPage(pollId) {
     return;
   }
 
-  const COLORS = ['#6366f1','#22c55e','#f59e0b','#ef4444'];
+  const COLORS = ['#0B7A74','#22c55e','#f59e0b','#ef4444'];
   const options = poll.options.filter(o => o.trim());
   card.innerHTML = `<div class="voting-q">${safeText(poll.question)}</div><div id="v-opts"></div>`;
   const optsEl = card.querySelector('#v-opts');
@@ -5983,7 +6420,7 @@ const CLASSES = {
 
   _createDefaultBoard(className) {
     const id = 'b-' + Date.now();
-    APP.state.boards = [{ id, name: 'Tafel 1', background: { type:'gradient', value:'linear-gradient(135deg,#667eea,#764ba2)' }, widgets: [] }];
+    APP.state.boards = [{ id, name: 'Tafel 1', background: { ...DEFAULT_BG }, widgets: [] }];
     APP.state.activeBoardId = id;
   },
 
@@ -6062,7 +6499,7 @@ const CLASSES = {
     listEl.innerHTML = '';
 
     if (classes.length === 0) {
-      listEl.innerHTML = '<div style="padding:8px 12px;font-size:11.5px;color:rgba(255,255,255,0.3);font-style:italic">Noch keine Klassen angelegt</div>';
+      listEl.innerHTML = '<div style="padding:8px 14px;font-size:13px;color:var(--ink-muted)">Noch keine Klassen angelegt</div>';
       return;
     }
 
@@ -6070,12 +6507,12 @@ const CLASSES = {
       const item = document.createElement('div');
       item.className = 'class-dd-item' + (cls === current ? ' active' : '');
       item.innerHTML = `
-        <span style="font-size:16px">${this._emoji(cls)}</span>
+        ${icon('groups', 18)}
         <span class="class-dd-name">${safeText(cls)}</span>
-        <button class="class-dd-del" title="Klasse löschen">✕</button>
+        <button class="class-dd-del" title="Klasse löschen" aria-label="Klasse löschen">${icon('x', 14)}</button>
       `;
       item.addEventListener('click', e => {
-        if (e.target.classList.contains('class-dd-del')) return;
+        if (e.target.closest('.class-dd-del')) return;
         this.switchTo(cls);
       });
       item.querySelector('.class-dd-del').addEventListener('click', e => {
@@ -6298,8 +6735,6 @@ const DRAW = {
     const drawBtn = document.getElementById('btn-draw');
     if (drawBtn) {
       drawBtn.classList.toggle('active', this.active);
-      drawBtn.style.background = this.active ? 'rgba(251,191,36,0.3)' : '';
-      drawBtn.style.color = this.active ? '#fbbf24' : '';
     }
     if (this.active) {
       // Turning ON — restore drawing for this board
@@ -6708,7 +7143,9 @@ const DRAW = {
   const syncFab = () => {
     const open = panel.classList.contains('open');
     if (open) fab.textContent = '✕'; else fab.innerHTML = fabIcon;
+    document.getElementById('dock-ki')?.classList.toggle('on', open);
   };
+  window.toggleKiPanel = () => fab.click();
   fab.addEventListener('click', () => {
     const open = panel.classList.toggle('open');
     syncFab();
@@ -6763,10 +7200,10 @@ const DRAW = {
       link.href = googleUrl;
       link.target = '_blank';
       link.rel = 'noopener';
-      link.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;font-size:13px;font-weight:600;text-decoration:none;transition:all .15s';
+      link.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;background:rgba(11,122,116,0.15);border:1px solid rgba(11,122,116,0.3);color:#7FE3DA;font-size:13px;font-weight:600;text-decoration:none;transition:all .15s';
       link.textContent = '🔍 Google Bilder öffnen';
-      link.addEventListener('mouseenter', function() { this.style.background='rgba(99,102,241,0.25)'; });
-      link.addEventListener('mouseleave', function() { this.style.background='rgba(99,102,241,0.15)'; });
+      link.addEventListener('mouseenter', function() { this.style.background='rgba(11,122,116,0.25)'; });
+      link.addEventListener('mouseleave', function() { this.style.background='rgba(11,122,116,0.15)'; });
       b.append(text, link);
     }
 
@@ -6864,41 +7301,277 @@ const DRAW = {
 })();
 
 // ══════════════════════════════════════════════════════════════
-// TOOLBAR ANPASSEN
+// LEISTEN — obere Navigation, untere Element-Leiste (Dock), Menü „Mehr“
 // ══════════════════════════════════════════════════════════════
-const TOOLBAR_ITEMS = [
-  { id:'template',  label:'📋 Vorlage',      default:true },
-  { id:'bg',        label:'🎨 Hintergrund',   default:true },
-  { id:'ical',      label:'📅 Stundenplan',   default:true },
-  { id:'export',    label:'💾 Export',        default:true },
-  { id:'voice',     label:'🎙️ Sprache',       default:true },
-  { id:'draw',      label:'🖊 Zeichnen',      default:true },
-  { id:'editmode',  label:'✏️ Edit-Modus',    default:true },
-  { id:'fullscreen',label:'⤢ Vollbild',       default:true },
-  ...Object.entries(REGISTRY).map(([type, reg]) => ({
-    id: 'qadd-' + type,
-    label: reg.emoji + ' + ' + reg.label,
-    default: false,
-    widgetType: type,
-  })),
-];
+const DOCK_DEFAULT = ['clock','timer','traffic','text','goal','checklist','names','groups','noise','poll'];
+// Kurze Beschriftungen für die Leiste
+const DOCK_LABEL = {
+  goal: 'Ziel', names: 'Namen', poll: 'Umfrage', phases: 'Phasen', status: 'Status',
+  randomnum: 'Zufall', ai: 'KI-Text', ask: 'KI-Frage', homework: 'Hausaufg.', timetable: 'Plan',
+};
 
-// Create quick-add widget buttons in toolbar
-(function initWidgetToolbarButtons() {
-  const sep = document.getElementById('btn-add-widget');
-  Object.entries(REGISTRY).forEach(([type, reg]) => {
-    const btn = document.createElement('button');
-    btn.className = 'tb-icon-btn tb-item';
-    btn.dataset.tbid = 'qadd-' + type;
-    btn.title = reg.label + ' hinzufügen';
-    btn.textContent = reg.emoji;
-    btn.style.display = 'none';
-    btn.addEventListener('click', () => {
+function getDockItems() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('kb_dock_items') || 'null');
+    if (Array.isArray(saved)) return saved.filter(t => REGISTRY[t]);
+  } catch(e) {}
+  // Schnell-Knöpfe, die jemand in der früheren Leiste eingeschaltet hatte, übernehmen
+  const items = DOCK_DEFAULT.slice();
+  try {
+    const old = JSON.parse(localStorage.getItem('kb_toolbar_prefs') || 'null') || {};
+    Object.keys(old).forEach(k => {
+      const t = k.replace('qadd-', '');
+      if (k.startsWith('qadd-') && old[k] && REGISTRY[t] && !items.includes(t)) items.push(t);
+    });
+  } catch(e) {}
+  return items;
+}
+
+function renderDock() {
+  const dock = document.getElementById('dock');
+  if (!dock) return;
+  dock.innerHTML = '';
+  // Die Element-Knöpfe liegen in einem eigenen Scroll-Bereich, damit „KI“ und „Mehr“
+  // auch auf schmalen Bildschirmen immer erreichbar bleiben
+  const scroll = document.createElement('div');
+  scroll.className = 'dock-scroll';
+  scroll.addEventListener('wheel', e => {
+    if (!e.deltaY || e.deltaX || scroll.scrollWidth <= scroll.clientWidth) return;
+    scroll.scrollLeft += e.deltaY;
+    e.preventDefault();
+  }, { passive: false });
+  dock.appendChild(scroll);
+  const add = (parent, cls, iconName, label, title, onClick, id) => {
+    const b = document.createElement('button');
+    b.className = 'dock-btn' + (cls ? ' ' + cls : '');
+    if (id) b.id = id;
+    b.title = title;
+    b.innerHTML = icon(iconName, 24) + '<span>' + safeText(label) + '</span>';
+    b.addEventListener('click', onClick);
+    parent.appendChild(b);
+    return b;
+  };
+  getDockItems().forEach(type => {
+    const reg = REGISTRY[type];
+    add(scroll, '', type, DOCK_LABEL[type] || reg.label, reg.label + ' auf die Tafel legen', () => {
+      // Wer ein Element hinzufügt, will es auch platzieren können → Bearbeiten einschalten
+      if (!APP.state.editMode) toggleEditMode();
       if (addWidget(type)) toast('✅ ' + reg.label + ' hinzugefügt');
     });
-    sep.parentNode.insertBefore(btn, sep);
   });
-})();
+  const sep = document.createElement('div');
+  sep.className = 'dock-sep';
+  dock.appendChild(sep);
+  add(dock, 'accent', 'ai', 'KI', 'KI-Assistent: Fragen stellen', () => { if (window.toggleKiPanel) window.toggleKiPanel(); }, 'dock-ki');
+  add(dock, 'accent', 'grid', 'Mehr', 'Alle Elemente anzeigen (W)', () => openWidgetMenu(), 'btn-add-widget');
+}
+
+function updateEditModeBtn() {
+  const btn = document.getElementById('edit-mode-btn');
+  if (!btn) return;
+  const on = APP.state.editMode;
+  btn.innerHTML = icon(on ? 'edit' : 'eye', 18) + '<span class="lbl">' + (on ? 'Bearbeiten' : 'Ansicht') + '</span>';
+  btn.classList.toggle('active', on);
+  btn.setAttribute('aria-pressed', String(on));
+  btn.title = on ? 'Bearbeiten ist an — zur Ansicht wechseln (E)' : 'Ansicht — zum Bearbeiten wechseln (E)';
+}
+
+function updateFullscreenBtn() {
+  const btn = document.getElementById('btn-fullscreen');
+  if (btn) btn.innerHTML = icon(document.body.classList.contains('fullscreen') ? 'minimize' : 'maximize', 20);
+}
+
+function initChromeIcons() {
+  const set = (id, name, size) => { const e = document.getElementById(id); if (e) e.innerHTML = icon(name, size || 20); };
+  set('add-board-btn', 'plus', 20);
+  set('btn-draw', 'brush', 20);
+  set('btn-more', 'dots', 22);
+  set('auth-logout-btn', 'logout', 16);
+  updateFullscreenBtn();
+  updateEditModeBtn();
+}
+
+function openTimetableFromMenu() {
+  const board = APP.activeBoard();
+  if (!board) return;
+  const w = board.widgets.find(x => x.type === 'timetable') || addWidget('timetable');
+  if (w) openTimetableSettings(w);
+}
+
+function setCardTheme(theme) {
+  if (theme === 'dark') { document.body.dataset.cards = 'dark'; localStorage.setItem('kb_cards', 'dark'); }
+  else { delete document.body.dataset.cards; localStorage.removeItem('kb_cards'); }
+  renderWidgets();
+}
+
+function setAutoHide(on) {
+  if (on) localStorage.setItem('kb_autohide', '1');
+  else { localStorage.removeItem('kb_autohide'); localStorage.removeItem('kb_toolbar_pos'); }
+  applyChromePrefs();
+  if (on) toast('Leisten ausgeblendet — oben über „Leisten“ wieder einblenden', 4000);
+}
+
+// Gespeicherte Darstellungs-Einstellungen anwenden (Karten hell/dunkel, Leisten ausblenden)
+function applyChromePrefs() {
+  if (localStorage.getItem('kb_cards') === 'dark') document.body.dataset.cards = 'dark';
+  const auto = localStorage.getItem('kb_autohide') === '1' || localStorage.getItem('kb_toolbar_pos') === 'autohide';
+  document.body.classList.toggle('autohide', auto);
+  document.body.classList.remove('chrome-shown');
+  let tab = document.getElementById('tb-pull-tab');
+  if (!auto) { if (tab) tab.remove(); return; }
+  const label = shown => icon(shown ? 'chevronUp' : 'chevronDown', 16) + '<span>Leisten</span>';
+  if (!tab) {
+    tab = document.createElement('button');
+    tab.id = 'tb-pull-tab';
+    tab.addEventListener('click', e => {
+      e.stopPropagation();
+      tab.innerHTML = label(document.body.classList.toggle('chrome-shown'));
+    });
+    document.body.appendChild(tab);
+  }
+  tab.innerHTML = label(false);
+}
+// Scrollt die Tafel, liegen Elemente unter der oberen Leiste → Leiste deckend machen
+document.getElementById('board').addEventListener('scroll', e => {
+  document.getElementById('toolbar').classList.toggle('solid', e.currentTarget.scrollTop > 4);
+}, { passive: true });
+// Klick auf die Tafel blendet eingeblendete Leisten wieder aus
+document.getElementById('board').addEventListener('click', () => {
+  if (!document.body.classList.contains('autohide') || !document.body.classList.contains('chrome-shown')) return;
+  document.body.classList.remove('chrome-shown');
+  const tab = document.getElementById('tb-pull-tab');
+  if (tab) tab.innerHTML = icon('chevronDown', 16) + '<span>Leisten</span>';
+});
+
+// Menü „Mehr“: alles, was man selten braucht, raus aus der Leiste
+function openMoreMenu() {
+  const existing = document.getElementById('more-menu');
+  if (existing) { existing.remove(); return; }
+  const menu = document.createElement('div');
+  menu.id = 'more-menu';
+  const item = (iconName, label, fn, opts) => {
+    opts = opts || {};
+    const b = document.createElement('button');
+    b.className = 'mm-item' + (opts.danger ? ' danger' : '');
+    b.innerHTML = icon(iconName, 20) + '<span>' + safeText(label) + '</span>'
+      + (opts.note ? '<span class="mm-note">' + safeText(opts.note) + '</span>' : '');
+    b.addEventListener('click', () => { menu.remove(); fn(); });
+    menu.appendChild(b);
+  };
+  const sep = () => { const s = document.createElement('div'); s.className = 'mm-sep'; menu.appendChild(s); };
+  const hidden = id => { const e = document.getElementById(id); return !e || getComputedStyle(e).display === 'none'; };
+
+  // Auf kleinen Bildschirmen wandern diese Knöpfe aus der Leiste hierher
+  let moved = false;
+  if (hidden('btn-draw')) { item('brush', 'Zeichnen', () => DRAW.toggle()); moved = true; }
+  if (hidden('edit-mode-btn')) {
+    item(APP.state.editMode ? 'eye' : 'edit', APP.state.editMode ? 'Zur Ansicht wechseln' : 'Tafel bearbeiten', toggleEditMode);
+    moved = true;
+  }
+  if (hidden('btn-fullscreen')) { item('maximize', 'Vollbild', toggleFullscreen); moved = true; }
+  if (hidden('auth-area')) {
+    if (AUTH.user) item('logout', 'Abmelden', () => AUTH.logout(), { note: (AUTH.user.email || '').split('@')[0] });
+    else item('user', 'Anmelden', openLoginModal);
+    moved = true;
+  }
+  if (moved) sep();
+
+  item('template', 'Vorlage laden', openTemplateModal);
+  item('palette', 'Hintergrund', openBgModal);
+  item('timetable', 'Stundenplan verbinden', openTimetableFromMenu);
+  item('mic', 'Sprachbefehl', () => VOICE.toggle());
+  item('download', 'Export / Import', openExportModal);
+  sep();
+  item('dock', 'Leiste anpassen', openDockCustomizer);
+  const dark = document.body.dataset.cards === 'dark';
+  item('cards', 'Karten', () => setCardTheme(dark ? 'light' : 'dark'), { note: dark ? 'dunkel' : 'hell' });
+  const auto = document.body.classList.contains('autohide');
+  item('eye', 'Leisten ausblenden', () => setAutoHide(!auto), { note: auto ? 'an' : 'aus' });
+  sep();
+  item('reset', 'Alles zurücksetzen …', openResetDialog, { danger: true });
+
+  const r = document.getElementById('btn-more').getBoundingClientRect();
+  menu.style.top = (r.bottom + 8) + 'px';
+  menu.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
+  document.body.appendChild(menu);
+  setTimeout(() => {
+    document.addEventListener('pointerdown', function closeMore(e) {
+      if (!menu.isConnected) { document.removeEventListener('pointerdown', closeMore); return; }
+      if (!menu.contains(e.target) && !e.target.closest('#btn-more')) {
+        menu.remove();
+        document.removeEventListener('pointerdown', closeMore);
+      }
+    });
+  }, 0);
+}
+
+// „Leiste anpassen“: welche Elemente unten direkt erreichbar sind
+function openDockCustomizer() {
+  document.getElementById('tb-customize-panel')?.remove();
+  const panel = document.createElement('div');
+  panel.id = 'tb-customize-panel';
+  panel.style.cssText = 'right:12px;top:calc(var(--toolbar-h) + 8px);width:min(320px, calc(100vw - 24px));max-height:calc(100vh - var(--toolbar-h) - 110px)';
+  const title = document.createElement('div');
+  title.style.cssText = 'padding:8px 12px 2px;font-size:15px;font-weight:700';
+  title.textContent = 'Untere Leiste anpassen';
+  const hint = document.createElement('div');
+  hint.style.cssText = 'padding:0 12px 6px;font-size:13px;color:var(--ink-muted)';
+  hint.textContent = 'Antippen, um ein Element in die Leiste zu legen oder herauszunehmen.';
+  panel.append(title, hint);
+
+  let current = getDockItems();
+  // dieselben Elemente und Gruppen wie im Menü „Mehr“ der unteren Leiste
+  WIDGET_CATS.forEach(cat => cat.types.forEach((type, i) => {
+    if (i === 0) {
+      const t = document.createElement('div');
+      t.className = 'mm-title';
+      t.textContent = cat.label;
+      panel.appendChild(t);
+    }
+    const row = document.createElement('button');
+    row.className = 'mm-item';
+    const paint = () => {
+      const on = current.includes(type);
+      row.setAttribute('aria-pressed', String(on));
+      row.innerHTML = icon(type, 20) + '<span>' + safeText(REGISTRY[type].label) + '</span>'
+        + '<span class="mm-note" style="color:' + (on ? 'var(--accent-ink)' : 'var(--ink-muted)') + '">' + (on ? '✓ in der Leiste' : 'hinzufügen') + '</span>';
+    };
+    row.addEventListener('click', () => {
+      current = current.includes(type) ? current.filter(t => t !== type) : current.concat(type);
+      localStorage.setItem('kb_dock_items', JSON.stringify(current));
+      renderDock();
+      paint();
+    });
+    paint();
+    panel.appendChild(row);
+  }));
+
+  const sep = document.createElement('div');
+  sep.className = 'mm-sep';
+  panel.appendChild(sep);
+  const reset = document.createElement('button');
+  reset.className = 'mm-item';
+  reset.innerHTML = icon('reset', 20) + '<span>Standard wiederherstellen</span>';
+  reset.addEventListener('click', () => {
+    localStorage.removeItem('kb_dock_items');
+    localStorage.removeItem('kb_toolbar_prefs');
+    renderDock();
+    panel.remove();
+    openDockCustomizer();
+  });
+  panel.appendChild(reset);
+
+  document.body.appendChild(panel);
+  setTimeout(() => {
+    document.addEventListener('pointerdown', function outside(ev) {
+      if (!panel.isConnected) { document.removeEventListener('pointerdown', outside); return; }
+      if (!panel.contains(ev.target)) {
+        panel.remove();
+        document.removeEventListener('pointerdown', outside);
+      }
+    });
+  }, 0);
+}
 
 // Ausstehende (debounced) Speicherungen sofort schreiben, wenn der Tab verschwindet —
 // sonst gehen die letzten ~2 Sekunden Arbeit beim Schließen verloren
@@ -6919,201 +7592,12 @@ window.addEventListener('online', () => {
   else if (localStorage.getItem('classpuls_dirty_at')) AUTH.syncToCloud();
 });
 
-function getToolbarPrefs() {
-  try { return JSON.parse(localStorage.getItem('kb_toolbar_prefs') || 'null'); } catch { return null; }
-}
-function saveToolbarPrefs(prefs) {
-  localStorage.setItem('kb_toolbar_prefs', JSON.stringify(prefs));
-}
-function applyToolbarPosition(pos) {
-  const tb = document.getElementById('toolbar');
-  const board = document.getElementById('board');
-  if (!tb || !board) return;
-  tb.removeAttribute('data-pos');
-  board.style.top = ''; board.style.bottom = ''; board.style.left = ''; board.style.right = '';
-  tb.style.cssText = '';
-
-  // Remove vertical class
-  tb.classList.remove('toolbar-vertical');
-  document.querySelectorAll('#toolbar .tb-btn').forEach(b => b.style.fontSize = '');
-  const logo = document.getElementById('logo');
-  const logoText = document.getElementById('logo-text');
-  const boardTabs = document.getElementById('board-tabs');
-  const classSwitcher = document.getElementById('class-switcher');
-  const addBoardBtn = document.getElementById('add-board-btn');
-  const authArea = document.getElementById('auth-area');
-
-  if (pos === 'bottom') {
-    tb.dataset.pos = 'bottom';
-    tb.style.cssText = 'position:fixed;bottom:0;left:0;right:0;top:auto;height:var(--toolbar-h);display:flex;align-items:center;gap:8px;padding:0 12px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);border-top:1px solid var(--glass-border);overflow-x:auto;scrollbar-width:none';
-    board.style.top = '0';
-    board.style.bottom = 'var(--toolbar-h)';
-    document.getElementById('tb-pull-tab')?.remove();
-  } else if (pos === 'autohide') {
-    tb.dataset.pos = 'autohide';
-    const side = localStorage.getItem('kb_toolbar_side') || 'top';
-    const isBottom = side === 'bottom';
-    board.style.top = '0'; board.style.bottom = '0';
-    if (isBottom) {
-      tb.style.cssText = 'position:fixed;bottom:0;left:0;right:0;top:auto;height:var(--toolbar-h);display:flex;align-items:center;gap:8px;padding:0 12px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.6);backdrop-filter:blur(16px);border-top:1px solid var(--glass-border);overflow-x:auto;scrollbar-width:none;transform:translateY(100%);transition:transform .25s ease';
-    } else {
-      tb.style.cssText = 'position:fixed;top:0;left:0;right:0;height:var(--toolbar-h);display:flex;align-items:center;gap:8px;padding:0 12px;z-index:99999;user-select:none;pointer-events:all;background:rgba(0,0,0,0.6);backdrop-filter:blur(16px);border-bottom:1px solid var(--glass-border);overflow-x:auto;scrollbar-width:none;transform:translateY(-100%);transition:transform .25s ease';
-    }
-    let pullTab = document.getElementById('tb-pull-tab');
-    if (pullTab) pullTab.remove();
-    pullTab = document.createElement('div');
-    pullTab.id = 'tb-pull-tab';
-    if (isBottom) {
-      pullTab.style.cssText = 'position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:99998;cursor:pointer;background:rgba(99,102,241,0.5);border-radius:10px 10px 0 0;padding:2px 20px;font-size:10px;color:rgba(255,255,255,0.7);transition:all .2s;backdrop-filter:blur(8px)';
-      pullTab.textContent = '▲ Leiste';
-    } else {
-      pullTab.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99998;cursor:pointer;background:rgba(99,102,241,0.5);border-radius:0 0 10px 10px;padding:2px 20px;font-size:10px;color:rgba(255,255,255,0.7);transition:all .2s;backdrop-filter:blur(8px)';
-      pullTab.textContent = '▼ Leiste';
-    }
-    document.body.appendChild(pullTab);
-    let tbVisible = false;
-    pullTab.addEventListener('click', function() {
-      tbVisible = !tbVisible;
-      if (isBottom) {
-        tb.style.transform = tbVisible ? 'translateY(0)' : 'translateY(100%)';
-        pullTab.textContent = tbVisible ? '▼ Leiste' : '▲ Leiste';
-        pullTab.style.bottom = tbVisible ? 'var(--toolbar-h)' : '0';
-      } else {
-        tb.style.transform = tbVisible ? 'translateY(0)' : 'translateY(-100%)';
-        pullTab.textContent = tbVisible ? '▲ Leiste' : '▼ Leiste';
-        pullTab.style.top = tbVisible ? 'var(--toolbar-h)' : '0';
-      }
-    });
-    // Alten Listener entfernen — sonst stapelt sich bei jedem Umschalten einer
-    if (window._kbAutohideHider) board.removeEventListener('click', window._kbAutohideHider);
-    window._kbAutohideHider = function() {
-      if (tb.dataset.pos === 'autohide' && tbVisible) {
-        tbVisible = false;
-        tb.style.transform = isBottom ? 'translateY(100%)' : 'translateY(-100%)';
-        pullTab.textContent = isBottom ? '▲ Leiste' : '▼ Leiste';
-        if (isBottom) pullTab.style.bottom = '0'; else pullTab.style.top = '0';
-      }
-    };
-    board.addEventListener('click', window._kbAutohideHider);
-    pullTab.style.display = 'block';
-  } else {
-    if (logo) logo.style.display = '';
-    if (logoText) logoText.style.display = '';
-    if (boardTabs) { boardTabs.style.display = ''; boardTabs.style.flexDirection = ''; boardTabs.style.flex = ''; boardTabs.style.overflow = ''; }
-    if (classSwitcher) classSwitcher.style.display = '';
-    if (addBoardBtn) addBoardBtn.style.display = '';
-    if (authArea) authArea.style.display = '';
-    document.querySelectorAll('#toolbar .tb-btn').forEach(b => { b.style.fontSize = ''; b.style.padding = ''; b.style.width = ''; });
-    document.querySelectorAll('#toolbar .tb-icon-btn').forEach(b => { b.style.width = ''; });
-    board.style.top = 'var(--toolbar-h)';
-    board.style.transition = '';
-    tb.style.transform = '';
-    const colBtn = document.getElementById('tb-collapse-btn');
-    if (colBtn) colBtn.remove();
-    const hoverZone = document.getElementById('tb-hover-zone');
-    if (hoverZone) hoverZone.style.display = 'none';
-    document.getElementById('tb-pull-tab')?.remove();
-  }
-}
-
-function applyToolbarPrefs() {
-  const prefs = getToolbarPrefs();
-  TOOLBAR_ITEMS.forEach(item => {
-    const el = document.querySelector(`[data-tbid="${item.id}"]`);
-    if (!el) return;
-    const visible = prefs ? (item.id in prefs ? prefs[item.id] : item.default) : item.default;
-    el.style.display = visible ? '' : 'none';
-  });
-}
-
-function openToolbarCustomizer() {
-  document.getElementById('tb-customize-panel')?.remove();
-  const prefs = getToolbarPrefs() || {};
-  const panel = document.createElement('div');
-  panel.id = 'tb-customize-panel';
-  panel.style.cssText = 'position:fixed;top:56px;right:12px;z-index:9990;background:rgba(18,18,38,0.97);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:16px 18px;min-width:220px;max-height:calc(100vh - 80px);overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.6);backdrop-filter:blur(12px);scrollbar-width:thin;';
-  panel.innerHTML = '<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px;letter-spacing:0.3px">⚙ Leiste anpassen</div>';
-
-  // Toolbar position selector
-  const posRow = document.createElement('div');
-  posRow.style.cssText = 'display:flex;gap:4px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08)';
-  const currentPos = localStorage.getItem('kb_toolbar_pos') || 'top';
-  [{id:'top',icon:'↑ Oben'},{id:'bottom',icon:'↓ Unten'},{id:'autohide',icon:'👁 Auto-Hide'}].forEach(p => {
-    const b = document.createElement('button');
-    b.textContent = p.icon;
-    b.title = p.icon;
-    b.style.cssText = 'flex:1;padding:6px;border-radius:8px;border:1px solid ' + (currentPos === p.id ? '#6366f1' : 'rgba(255,255,255,0.1)') + ';background:' + (currentPos === p.id ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.05)') + ';color:#fff;font-size:14px;cursor:pointer';
-    b.addEventListener('click', function() {
-      if (p.id === 'top' || p.id === 'bottom') localStorage.setItem('kb_toolbar_side', p.id);
-      localStorage.setItem('kb_toolbar_pos', p.id);
-      applyToolbarPosition(p.id);
-      panel.remove();
-      openToolbarCustomizer();
-    });
-    posRow.appendChild(b);
-  });
-  panel.appendChild(posRow);
-
-  TOOLBAR_ITEMS.forEach(item => {
-    // gleiche Logik wie applyToolbarPrefs — sonst zeigt der Toggle AN für versteckte Buttons
-    const visible = item.id in prefs ? prefs[item.id] : item.default;
-    const row = document.createElement('label');
-    row.style.cssText = 'display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 4px;border-radius:8px;transition:.15s;';
-    row.innerHTML = `
-      <span style="flex:1;font-size:13px;color:rgba(255,255,255,0.85)">${item.label}</span>
-      <span class="tb-cust-toggle ${visible ? 'on' : ''}" data-id="${item.id}" style="
-        width:36px;height:20px;border-radius:10px;position:relative;cursor:pointer;
-        background:${visible ? '#6366f1' : 'rgba(255,255,255,0.12)'};transition:.2s;flex-shrink:0;display:inline-block">
-        <span style="position:absolute;top:2px;left:${visible ? '18px' : '2px'};width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s;"></span>
-      </span>`;
-    row.querySelector('.tb-cust-toggle').addEventListener('click', e => {
-      e.preventDefault();
-      const tog = e.currentTarget;
-      const id = tog.dataset.id;
-      const nowOn = !tog.classList.contains('on');
-      tog.classList.toggle('on', nowOn);
-      tog.style.background = nowOn ? '#6366f1' : 'rgba(255,255,255,0.12)';
-      tog.querySelector('span').style.left = nowOn ? '18px' : '2px';
-      const newPrefs = getToolbarPrefs() || {};
-      newPrefs[id] = nowOn;
-      saveToolbarPrefs(newPrefs);
-      applyToolbarPrefs();
-    });
-    panel.appendChild(row);
-  });
-
-  const resetBtn = document.createElement('button');
-  resetBtn.textContent = 'Nur die Leiste zurücksetzen';
-  resetBtn.style.cssText = 'margin-top:12px;width:100%;border:none;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);border-radius:8px;padding:7px;cursor:pointer;font-size:12px;';
-  resetBtn.addEventListener('click', () => {
-    localStorage.removeItem('kb_toolbar_prefs');
-    applyToolbarPrefs();
-    panel.remove();
-    openToolbarCustomizer();
-  });
-  panel.appendChild(resetBtn);
-
-  const resetAllBtn = document.createElement('button');
-  resetAllBtn.textContent = '↺ Alles zurücksetzen…';
-  resetAllBtn.style.cssText = 'margin-top:8px;width:100%;border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.12);color:#fca5a5;border-radius:8px;padding:7px;cursor:pointer;font-size:12px;';
-  resetAllBtn.addEventListener('click', () => { panel.remove(); openResetDialog(); });
-  panel.appendChild(resetAllBtn);
-
-  document.body.appendChild(panel);
-  document.addEventListener('pointerdown', function outside(ev) {
-    if (!panel.contains(ev.target) && ev.target.id !== 'btn-customize-toolbar') {
-      panel.remove();
-      document.removeEventListener('pointerdown', outside);
-    }
-  });
-}
-
 // ══════════════════════════════════════════════════════════════
 // TOOLBAR GUARDIAN — auto-removes any element blocking the toolbar
 // ══════════════════════════════════════════════════════════════
 setInterval(() => {
   if (document.hidden) return;
-  const safe = new Set(['toolbar','board','board-bg','widgets-layer','toast','ki-fab','ki-panel','draw-canvas','draw-toolbar','draw-text-input','class-dropdown','fs-exit']);
+  const safe = new Set(['toolbar','board','board-bg','widgets-layer','toast','ki-fab','ki-panel','draw-canvas','draw-toolbar','draw-text-input','class-dropdown','fs-exit','dock','more-menu','tb-pull-tab']);
   document.querySelectorAll('body > *').forEach(el => {
     if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return;
     if (safe.has(el.id)) return;
@@ -7142,8 +7626,9 @@ if (_pollParam) {
 } else {
   AUTH.init();
   DRAW.init();
-  applyToolbarPrefs();
-  applyToolbarPosition(localStorage.getItem('kb_toolbar_pos') || 'top');
+  initChromeIcons();
+  renderDock();
+  applyChromePrefs();
   init();
   if (new URLSearchParams(window.location.search).has('reset')) openResetDialog();
 }
