@@ -48,6 +48,12 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
 - **Leere Elemente:** `emptyCta(icon, text, onClick)` statt Hinweistext „⚙ Einstellungen" — funktioniert auch in der Ansicht
 - **Demo:** bewusst nur 2 Tafeln (Gratis-Limit 3), damit „+" beim ersten Besuch nicht sofort die Bezahl-Meldung zeigt
 
+## PDF-Element (`pdf`)
+- Dateien liegen in IndexedDB (`PDFSTORE`, DB `classpuls_files`, bis 60 MB) — NICHT in localStorage/Cloud. Auf einem
+  anderen Gerät zeigt das Element „liegt nicht auf diesem Gerät" und lässt die Datei neu wählen
+- Anzeige über PDF.js 3.11.174 von cdnjs, erst bei Bedarf geladen (`loadPdfJs()`); Großansicht `openPdfFullscreen()`
+- Das ältere Element „Dateien" kann PDFs nur bis 2 MB per iframe — für PDFs immer das PDF-Element nehmen
+
 ## KI-Assistent (Fenster `#ki-panel`, Knopf „KI" in der unteren Leiste)
 - Antworten kommen als Markdown und werden mit `renderMarkdown()` sicher als DOM aufgebaut (nie `innerHTML`)
 - Aktionen an der Antwort: „Auf die Tafel" (`addWidget('text', …, size)`), „Ohne Lösungen" (der Prompt verlangt

@@ -1040,6 +1040,27 @@ body[data-cards="dark"] .tm-ring .prg { stroke:var(--accent-soft); }
   .tpl-desc2 { display:none; }
 }
 
+/* ── PDF ── */
+.pdf-bar { flex:none; display:flex; align-items:center; gap:4px; padding:5px 8px; background:var(--w-bar); }
+.pdf-btn { flex:none; width:40px; height:36px; border:0; border-radius:9px; background:transparent; color:var(--w-ink); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.pdf-btn:hover { background:var(--w-fill-3); }
+.pdf-no { flex:none; min-width:58px; text-align:center; font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; }
+.pdf-name { flex:1 1 0; min-width:0; padding:0 8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; color:var(--w-muted); }
+.pdf-stage { flex:1 1 0; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; background:var(--w-fill-2); }
+.pdf-stage canvas { display:block; background:#fff; box-shadow:0 2px 12px rgba(0,0,0,0.25); }
+.pdf-loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:16px; text-align:center; font-size:14px; color:var(--w-muted); }
+.pdf-empty { margin:auto; display:flex; flex-direction:column; align-items:center; gap:10px; padding:16px; text-align:center; }
+.pdf-empty-text { font-size:14px; color:var(--w-ink); max-width:300px; }
+.pdf-empty-hint { font-size:12.5px; color:var(--w-faint); }
+.widget-body.pdf-drop { outline:3px dashed var(--accent); outline-offset:-6px; }
+.modal-overlay.pdf-full { z-index:100002; background:rgba(10,14,13,0.96); backdrop-filter:none; flex-direction:column; align-items:stretch; justify-content:flex-start; }
+.pdf-full-stage { flex:1 1 0; min-height:0; display:flex; align-items:center; justify-content:center; cursor:pointer; touch-action:pan-y; }
+.pdf-full-stage canvas { background:#fff; box-shadow:0 8px 40px rgba(0,0,0,0.6); }
+.pdf-full-bar { flex:none; display:flex; align-items:center; justify-content:center; gap:10px; padding:10px; }
+.pdf-full-bar button { width:56px; height:48px; border:0; border-radius:12px; background:rgba(255,255,255,0.14); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.pdf-full-bar button:hover { background:rgba(255,255,255,0.26); }
+.pdf-full-no { min-width:90px; text-align:center; color:#fff; font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; }
+
 /* Hilfslinien beim Einrasten */
 .snap-guide { position:absolute; z-index:100000; background:var(--accent-soft); pointer-events:none; display:none; }
 .snap-guide.v { width:2px; top:0; bottom:0; }
@@ -1395,6 +1416,9 @@ const ICONS = {
   status: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01',
   browser: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18',
   files: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  pdf: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
+  chevronLeft: 'M15 6l-6 6 6 6',
+  chevronRight: 'M9 6l6 6-6 6',
   noise: 'M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zM6 11v1a6 6 0 0 0 12 0v-1M12 18v3M9 21h6',
   poll: 'M5 20V10M12 20V4M19 20v-7',
   ai: 'M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7-4.7-1.8 4.7-1.8zM19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2-2.2-.8 2.2-.8z',
@@ -1827,6 +1851,7 @@ const REGISTRY = {
   status:       { label:'Klassenstatus', emoji:'😊', w:240, h:200 },
   browser:      { label:'Browser',      emoji:'🌐', w:600, h:450 },
   files:        { label:'Dateien',       emoji:'📂', w:500, h:400 },
+  pdf:          { label:'PDF',           emoji:'📕', w:520, h:660 },
   noise:        { label:'Lautstärke',    emoji:'🎤', w:260, h:220 },
   poll:         { label:'Live-Umfrage',  emoji:'📊', w:340, h:280 },
   ai:           { label:'KI-Assistent', emoji:'🤖', w:360, h:300 },
@@ -1839,7 +1864,7 @@ const WIDGET_CATS = [
   { label:'Unterricht',  types:['text','goal','homework','traffic','names'] },
   { label:'Tools',       types:['qr','dice','randomnum','groups','noise','poll'] },
   { label:'Planung',     types:['agenda','checklist','phases','status'] },
-  { label:'Medien',      types:['youtube','files','browser','favorites'] },
+  { label:'Medien',      types:['pdf','youtube','files','browser','favorites'] },
   { label:'Stundenplan', types:['timetable'] },
 ];
 
@@ -2245,6 +2270,7 @@ async function resetEverything() {
   ['classpuls_v2','classpuls_classes','classpuls_current_class','classpuls_drawings',
    'classpuls_dirty_at','classpuls_synced_at','classpuls_owner','classpuls_visited',
    'kb_toolbar_pos','kb_toolbar_side','kb_toolbar_prefs','kb_dock_items','kb_autohide','kb_cards'].forEach(k => localStorage.removeItem(k));
+  try { indexedDB.deleteDatabase('classpuls_files'); } catch(e) {}
   // Neu laden → die App startet wie beim ersten Besuch (ohne ?reset in der Adresse)
   window.location.replace(window.location.pathname);
   return true;
@@ -3137,6 +3163,155 @@ setInterval(() => {
     });
   });
 }, 500);
+
+// ══════════════════════════════════════════════════════════════
+// PDF — Dateien liegen lokal im Browser (IndexedDB), nicht in der Cloud:
+// PDFs sind zu groß für localStorage/Cloud-Sync und enthalten oft Material, das das Gerät nicht verlassen soll.
+// ══════════════════════════════════════════════════════════════
+const PDF_MAX_BYTES = 60 * 1024 * 1024;
+const PDFSTORE = {
+  _db: null,
+  open() {
+    if (this._db) return this._db;
+    this._db = new Promise((resolve, reject) => {
+      const req = indexedDB.open('classpuls_files', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('pdf');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => { this._db = null; reject(req.error); };
+    });
+    return this._db;
+  },
+  async put(id, buf) {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('pdf', 'readwrite');
+      tx.objectStore('pdf').put(buf, id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = tx.onabort = () => reject(tx.error);
+    });
+  },
+  async get(id) {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const req = db.transaction('pdf').objectStore('pdf').get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  },
+  async del(id) {
+    try {
+      const db = await this.open();
+      db.transaction('pdf', 'readwrite').objectStore('pdf').delete(id);
+    } catch(e) {}
+  },
+};
+// PDF.js erst laden, wenn wirklich ein PDF geöffnet wird (spart ~1 MB beim Start)
+const PDFJS_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+let _pdfjsLoading = null;
+function loadPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (_pdfjsLoading) return _pdfjsLoading;
+  _pdfjsLoading = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = PDFJS_BASE + 'pdf.min.js';
+    s.onload = () => {
+      if (!window.pdfjsLib) { _pdfjsLoading = null; reject(new Error('pdfjs')); return; }
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_BASE + 'pdf.worker.min.js';
+      resolve(window.pdfjsLib);
+    };
+    s.onerror = () => { _pdfjsLoading = null; s.remove(); reject(new Error('offline')); };
+    document.head.appendChild(s);
+  });
+  return _pdfjsLoading;
+}
+// geöffnete Dokumente behalten, damit Blättern und Neuaufbau nicht jedes Mal neu einlesen
+const _pdfDocs = new Map();
+async function getPdfDoc(fileId) {
+  if (_pdfDocs.has(fileId)) return _pdfDocs.get(fileId);
+  const p = (async () => {
+    const buf = await PDFSTORE.get(fileId);
+    if (!buf) return null;
+    const lib = await loadPdfJs();
+    // Kopie übergeben: PDF.js übernimmt den Puffer und macht das Original unbrauchbar
+    return lib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise;
+  })();
+  _pdfDocs.set(fileId, p);
+  p.then(d => { if (!d) _pdfDocs.delete(fileId); }, () => _pdfDocs.delete(fileId));
+  return p;
+}
+// Eine Seite so groß wie möglich in den Kasten zeichnen
+async function drawPdfPage(doc, pageNo, canvas, boxW, boxH) {
+  const page = await doc.getPage(pageNo);
+  const base = page.getViewport({ scale: 1 });
+  const fit = Math.max(0.1, Math.min(boxW / base.width, boxH / base.height));
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const vp = page.getViewport({ scale: fit * dpr });
+  canvas.width = Math.floor(vp.width); canvas.height = Math.floor(vp.height);
+  canvas.style.width = Math.floor(vp.width / dpr) + 'px';
+  canvas.style.height = Math.floor(vp.height / dpr) + 'px';
+  await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+}
+async function pickPdf(w, file, onDone) {
+  if (!file) return;
+  if (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name || '')) { toast('Bitte eine PDF-Datei auswählen'); return; }
+  if (file.size > PDF_MAX_BYTES) { toast('Diese PDF ist zu groß (maximal 60 MB).', 4000); return; }
+  try {
+    const buf = await file.arrayBuffer();
+    const fileId = 'pdf_' + uid();
+    await PDFSTORE.put(fileId, buf);
+    if (w.config.fileId) { PDFSTORE.del(w.config.fileId); _pdfDocs.delete(w.config.fileId); }
+    w.config = { fileId, name: file.name || 'Dokument.pdf', page: 1 };
+    APP.save();
+    onDone();
+  } catch (e) {
+    console.error('PDF speichern:', e);
+    toast('Die PDF konnte nicht gespeichert werden (Speicher des Browsers voll oder gesperrt).', 5000);
+  }
+}
+// Großansicht: eine Seite bildschirmfüllend, Blättern mit Knöpfen, Pfeiltasten oder Wischen
+function openPdfFullscreen(w, onClose) {
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay pdf-full';
+  ov.innerHTML = '<div class="pdf-full-stage"><canvas></canvas></div>'
+    + '<div class="pdf-full-bar"><button data-a="prev" aria-label="Vorherige Seite">' + icon('chevronLeft', 26) + '</button>'
+    + '<span class="pdf-full-no"></span><button data-a="next" aria-label="Nächste Seite">' + icon('chevronRight', 26) + '</button>'
+    + '<button data-a="close" aria-label="Schließen">' + icon('x', 24) + '</button></div>';
+  document.body.appendChild(ov);
+  const stage = ov.querySelector('.pdf-full-stage'), canvas = ov.querySelector('canvas'), no = ov.querySelector('.pdf-full-no');
+  let doc = null, busy = false, queued = false;
+  const show = async () => {
+    if (!doc) return;
+    if (busy) { queued = true; return; }
+    busy = true;
+    const p = Math.max(1, Math.min(doc.numPages, w.config.page || 1));
+    w.config.page = p;
+    no.textContent = p + ' / ' + doc.numPages;
+    try { await drawPdfPage(doc, p, canvas, stage.clientWidth - 16, stage.clientHeight - 16); } catch(e) {}
+    busy = false;
+    if (queued) { queued = false; show(); }
+  };
+  const go = d => { if (!doc) return; const p = Math.max(1, Math.min(doc.numPages, (w.config.page || 1) + d)); if (p !== w.config.page) { w.config.page = p; no.textContent = p + ' / ' + doc.numPages; APP.save(); show(); } };
+  const close = () => { document.removeEventListener('keydown', onKey, true); window.removeEventListener('resize', show); ov.remove(); onClose && onClose(); };
+  const onKey = e => {
+    if (e.key === 'Escape') { e.stopPropagation(); close(); }
+    else if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); e.stopPropagation(); go(1); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); go(-1); }
+  };
+  document.addEventListener('keydown', onKey, true);
+  window.addEventListener('resize', show);
+  ov.querySelector('[data-a=prev]').addEventListener('click', () => go(-1));
+  ov.querySelector('[data-a=next]').addEventListener('click', () => go(1));
+  ov.querySelector('[data-a=close]').addEventListener('click', close);
+  let tx = null;
+  stage.addEventListener('pointerdown', e => { tx = e.clientX; });
+  stage.addEventListener('pointerup', e => {
+    if (tx == null) return;
+    const dx = e.clientX - tx; tx = null;
+    if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+    else go(e.clientX > window.innerWidth / 2 ? 1 : -1);   // Tippen: rechte Hälfte = weiter
+  });
+  getPdfDoc(w.config.fileId).then(d => { doc = d; if (!d) close(); else show(); }, close);
+}
 
 // Leeres Element: ein deutlicher Knopf statt eines Hinweises auf das Zahnrad
 function emptyCta(iconName, text, onClick) {
@@ -4685,6 +4860,89 @@ const WIDGET_RENDERERS = {
     }
 
     body.append(header, viewer);
+  },
+
+  // ── PDF ── Seite für Seite, Großansicht für die Klasse
+  pdf(w, body) {
+    body.style.flexDirection = 'column';
+    body.style.padding = '0';
+    body.style.overflow = 'hidden';
+    const rerender = () => { if (body.isConnected) renderWidgetContent(w, body); };
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'application/pdf,.pdf'; inp.style.display = 'none';
+    inp.addEventListener('change', () => pickPdf(w, inp.files[0], rerender));
+    body.appendChild(inp);
+    // PDF per Ziehen auf das Element ablegen
+    body.ondragover = e => { e.preventDefault(); body.classList.add('pdf-drop'); };
+    body.ondragleave = () => body.classList.remove('pdf-drop');
+    body.ondrop = e => { e.preventDefault(); e.stopPropagation(); body.classList.remove('pdf-drop'); pickPdf(w, e.dataTransfer.files[0], rerender); };
+
+    const empty = (text, btnLabel) => {
+      const box = el('div', 'pdf-empty');
+      if (text) { const t = el('div', 'pdf-empty-text'); t.textContent = text; box.appendChild(t); }
+      const b = emptyCta('pdf', btnLabel, () => inp.click());
+      b.style.margin = '0';
+      const hint = el('div', 'pdf-empty-hint');
+      hint.textContent = 'oder Datei hierher ziehen · bleibt nur auf diesem Gerät';
+      box.append(b, hint);
+      body.appendChild(box);
+    };
+    if (!w.config.fileId) { empty('', 'PDF öffnen'); return; }
+
+    const bar = el('div', 'pdf-bar');
+    const mk = (iconName, title, fn) => {
+      const b = el('button', 'pdf-btn'); b.innerHTML = icon(iconName, 20); b.title = title; b.setAttribute('aria-label', title);
+      b.addEventListener('click', e => { e.stopPropagation(); fn(); });
+      return b;
+    };
+    const no = el('span', 'pdf-no'); no.textContent = '…';
+    const name = el('span', 'pdf-name'); name.textContent = w.config.name || 'PDF';
+    const stage = el('div', 'pdf-stage');
+    const canvas = document.createElement('canvas');
+    stage.appendChild(canvas);
+    let doc = null, busy = false, queued = false;
+    const show = async () => {
+      if (!doc || !body.isConnected) return;
+      if (busy) { queued = true; return; }
+      busy = true;
+      const p = Math.max(1, Math.min(doc.numPages, w.config.page || 1));
+      w.config.page = p;
+      no.textContent = p + ' / ' + doc.numPages;
+      try { await drawPdfPage(doc, p, canvas, stage.clientWidth - 12, stage.clientHeight - 12); } catch(e) {}
+      busy = false;
+      if (queued) { queued = false; show(); }
+    };
+    const go = d => {
+      if (!doc) return;
+      const p = Math.max(1, Math.min(doc.numPages, (w.config.page || 1) + d));
+      if (p === w.config.page) return;
+      w.config.page = p; no.textContent = p + ' / ' + doc.numPages; APP.save(); show();
+    };
+    bar.append(
+      mk('chevronLeft', 'Vorherige Seite', () => go(-1)), no, mk('chevronRight', 'Nächste Seite', () => go(1)),
+      name,
+      mk('maximize', 'Groß anzeigen', () => openPdfFullscreen(w, show)),
+      mk('files', 'Andere PDF öffnen', () => inp.click())
+    );
+    body.append(bar, stage);
+    const loading = el('div', 'pdf-loading'); loading.textContent = 'PDF wird geladen …';
+    stage.appendChild(loading);
+    getPdfDoc(w.config.fileId).then(d => {
+      if (!body.isConnected) return;
+      loading.remove();
+      if (!d) {
+        // Tafel kommt von einem anderen Gerät oder der Browser-Speicher wurde geleert
+        bar.remove(); stage.remove();
+        empty('„' + (w.config.name || 'Die PDF') + '“ liegt nicht auf diesem Gerät.', 'PDF erneut auswählen');
+        return;
+      }
+      doc = d; show();
+    }, err => {
+      if (!body.isConnected) return;
+      loading.textContent = /offline/.test(String(err && err.message)) || !navigator.onLine
+        ? 'Zum Anzeigen von PDFs wird einmalig eine Internetverbindung gebraucht.'
+        : 'Diese PDF kann nicht angezeigt werden (beschädigt oder geschützt).';
+    });
   },
 
   // ── Dice ──
