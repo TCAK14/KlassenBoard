@@ -941,6 +941,105 @@ body[data-cards="dark"] .widget {
 .ask-clear-btn { color:var(--w-muted); }
 .ask-clear-btn:hover { color:var(--w-ink); }
 
+/* ── Timer: Ring + direkte Bedienung ── */
+.tm { width:100%; height:100%; box-sizing:border-box; padding:10px 14px; display:flex; align-items:center; justify-content:center; gap:clamp(12px, 4cqw, 30px); }
+.tm-tall, .tm-compact { flex-direction:column; gap:10px; }
+.tm-ring { position:relative; flex:none; }
+.tm-ring svg { display:block; width:100%; height:100%; transform:rotate(-90deg); }
+.tm-ring .trk { fill:none; stroke:var(--w-fill-3); stroke-width:7; }
+.tm-ring .prg { fill:none; stroke:var(--accent); stroke-width:7; stroke-linecap:round; transition:stroke-dashoffset .3s linear, stroke .3s; }
+body[data-cards="dark"] .tm-ring .prg { stroke:var(--accent-soft); }
+.tm.urgent .tm-ring .prg { stroke:var(--w-danger); }
+.tm-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+.tm-digits { font-weight:700; line-height:1; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.tm.urgent .tm-digits { color:var(--w-danger); }
+.tm-state { color:var(--w-muted); line-height:1.2; }
+.tm-ctrl { flex:1 1 0; min-width:0; max-width:300px; display:flex; flex-direction:column; gap:8px; }
+.tm-tall .tm-ctrl, .tm-compact .tm-ctrl { flex:none; width:100%; max-width:340px; }
+.tm-row { display:flex; gap:6px; }
+.tm-btn {
+  flex:1 1 0; min-width:0; min-height:42px; padding:0 6px; border-radius:12px; cursor:pointer;
+  border:1.5px solid var(--w-line-strong); background:transparent; color:var(--w-ink);
+  font:inherit; font-size:16px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:7px;
+}
+.tm-btn:hover { background:var(--w-fill-2); }
+.tm-btn:active { transform:scale(0.96); }
+.tm-btn.on { background:var(--accent-tint); border-color:var(--accent); color:#0A5F5A; }
+.tm-go { min-height:50px; border:0; background:var(--accent); color:#fff; font-size:19px; }
+.tm-go:hover { background:var(--accent-dark); }
+.tm-go.done { background:var(--w-fill-3); color:var(--w-ink); }
+.tm-compact .tm-go { flex:2.2 1 0; min-height:42px; font-size:16px; }
+.tm-compact .tm-go .ic { display:none; }
+
+/* ── Ampel als „Arbeitsform“ ── */
+.tl { width:100%; height:100%; box-sizing:border-box; padding:10px; display:flex; flex-direction:column; gap:8px; }
+.tl-row {
+  flex:1 1 0; min-height:0; display:flex; align-items:center; gap:0.55em; padding:0 0.65em; cursor:pointer;
+  border-radius:14px; border:2px solid var(--w-line); background:transparent; color:var(--w-muted);
+  font:inherit; font-size:inherit; text-align:left; transition:background .15s, color .15s, border-color .15s;
+}
+.tl-row:hover { border-color:var(--w-line-strong); }
+.tl-dot { flex:none; width:1.5em; height:1.5em; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; }
+.tl-row.r .tl-dot { background:#D92D20; }
+.tl-row.y .tl-dot { background:#E6A700; }
+.tl-row.g .tl-dot { background:#16A34A; }
+.tl-txt { display:flex; flex-direction:column; min-width:0; line-height:1.15; }
+.tl-label { font-weight:700; }
+.tl-sub { font-size:max(12px, 0.46em); opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tl-row.on.r { background:#D92D20; border-color:#D92D20; color:#fff; }
+.tl-row.on.y { background:#F5B301; border-color:#F5B301; color:#1B2422; }
+.tl-row.on.g { background:#16A34A; border-color:#16A34A; color:#fff; }
+.tl-row.on .tl-dot { background:rgba(255,255,255,0.28); color:inherit; }
+
+/* ── Leeres Element: Knopf zum Ausfüllen ── */
+.w-empty-cta {
+  margin:auto; display:flex; align-items:center; justify-content:center; gap:8px; min-height:46px; padding:10px 18px;
+  border-radius:12px; border:1.5px dashed var(--w-line-strong); background:transparent; color:var(--w-muted);
+  font:inherit; font-size:15px; font-weight:700; cursor:pointer;
+}
+.w-empty-cta:hover { border-style:solid; border-color:var(--accent); background:var(--accent-tint); color:#0A5F5A; }
+
+/* ── Start-Dialog: Vorlagen-Galerie + KI-Feld (heller Dialog) ── */
+.modal.start-modal {
+  background:var(--card); color:var(--ink); border:0; border-radius:24px; padding:28px 30px 26px;
+  /* Höhe so begrenzen, dass der Dialog nicht unter die obere Leiste rutscht (er steht mittig) */
+  width:min(1040px, calc(100vw - 32px)); max-height:calc(100vh - 2 * var(--toolbar-h) - 24px);
+}
+.start-modal h2 { font-size:clamp(22px, 3vw, 30px); letter-spacing:-0.01em; margin:0 44px 6px 0; color:var(--ink); }
+.start-modal .start-sub { margin:0 0 18px; font-size:16px; color:var(--ink-muted); }
+.start-modal h3 { margin:20px 0 12px; font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-muted); }
+.modal.start-modal { position:relative; }
+.start-modal .modal-close { position:absolute; float:none; padding:0; color:var(--ink-muted); width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; top:18px; right:18px; }
+.start-modal .modal-close:hover { background:rgba(27,36,34,0.08); color:var(--ink); }
+.start-ai { background:var(--accent-tint); border-radius:18px; padding:16px 18px 18px; display:flex; flex-direction:column; gap:10px; }
+.start-ai label { display:flex; align-items:center; gap:8px; font-size:16px; font-weight:700; color:var(--accent-ink); margin:0; text-transform:none; letter-spacing:0; }
+.start-ai-row { display:flex; gap:10px; flex-wrap:wrap; }
+.start-ai-row input {
+  flex:1 1 280px; min-width:0; min-height:50px; box-sizing:border-box; padding:0 16px; border-radius:12px;
+  border:1.5px solid #9FBFBB; background:#fff; color:var(--ink); font:inherit; font-size:17px;
+}
+.start-ai-row input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(11,122,116,0.2); }
+.start-ai-row button { flex:none; min-height:50px; padding:0 22px; border-radius:12px; border:0; background:var(--accent); color:#fff; font:inherit; font-size:17px; font-weight:700; cursor:pointer; }
+.start-ai-row button:hover { background:var(--accent-dark); }
+.start-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:12px; }
+.tpl-card2 {
+  display:flex; flex-direction:column; gap:10px; padding:9px 9px 12px; border-radius:16px; cursor:pointer; text-align:left;
+  border:1.5px solid #DADFD9; background:#fff; color:var(--ink); font:inherit; transition:border-color .12s, box-shadow .12s, transform .1s;
+}
+.tpl-card2:hover { border-color:var(--accent); box-shadow:0 6px 18px rgba(11,122,116,0.18); }
+.tpl-card2:active { transform:scale(0.98); }
+.tpl-thumb { position:relative; display:block; width:100%; aspect-ratio:1076 / 532; border-radius:10px; overflow:hidden; }
+.tpl-thumb span { position:absolute; border-radius:3px; background:rgba(251,250,246,0.92); }
+.tpl-txt { display:flex; flex-direction:column; gap:2px; padding:0 4px; }
+.tpl-name2 { font-size:17px; font-weight:700; }
+.tpl-desc2 { font-size:13.5px; color:var(--ink-muted); line-height:1.3; }
+@media (max-width: 600px) {
+  .modal.start-modal { padding:20px 16px 18px; border-radius:18px; }
+  .start-grid { grid-template-columns:repeat(2, 1fr); gap:8px; }
+  .tpl-name2 { font-size:15px; }
+  .tpl-desc2 { display:none; }
+}
+
 /* Hilfslinien beim Einrasten */
 .snap-guide { position:absolute; z-index:100000; background:var(--accent-soft); pointer-events:none; display:none; }
 .snap-guide.v { width:2px; top:0; bottom:0; }
@@ -1246,6 +1345,13 @@ const ICONS = {
   favorites: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z',
   // Bedienung
   plus: 'M12 5v14M5 12h14',
+  minus: 'M5 12h14',
+  play: 'M7 4.5l12 7.5-12 7.5z',
+  pause: 'M8 5v14M16 5v14',
+  volOff: 'M4 9.5h3l4-3.5v12l-4-3.5H4zM15.5 9.5l5 5M20.5 9.5l-5 5',
+  volLow: 'M4 9.5h3l4-3.5v12l-4-3.5H4zM15.5 9.5a3.5 3.5 0 0 1 0 5',
+  volHigh: 'M4 9.5h3l4-3.5v12l-4-3.5H4zM15.5 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10',
+  blank: 'M5 4h14v16H5zM12 9v6M9 12h6',
   x: 'M6 6l12 12M18 6L6 18',
   dots: 'M5 12h.01M12 12h.01M19 12h.01',
   grid: 'M5 5h4v4H5zM15 5h4v4h-4zM5 15h4v4H5zM15 15h4v4h-4z',
@@ -1643,10 +1749,10 @@ const AUTH = {
 // ══════════════════════════════════════════════════════════════
 const REGISTRY = {
   clock:        { label:'Uhr',           emoji:'🕐', w:300, h:150 },
-  timer:        { label:'Timer',         emoji:'⏱', w:280, h:200 },
+  timer:        { label:'Timer',         emoji:'⏱', w:460, h:250 },
   stopwatch:    { label:'Stoppuhr',      emoji:'⏲', w:280, h:200 },
   text:         { label:'Text',          emoji:'📝', w:320, h:200 },
-  traffic:      { label:'Ampel',         emoji:'🚦', w:220, h:160 },
+  traffic:      { label:'Ampel',         emoji:'🚦', w:300, h:260 },
   qr:           { label:'QR-Code',       emoji:'📱', w:220, h:240 },
   names:        { label:'Namensrad',     emoji:'🎯', w:260, h:300 },
   homework:     { label:'Hausaufgaben',  emoji:'📚', w:300, h:240 },
@@ -1740,90 +1846,117 @@ function openUpgradeModal(reason) {
   document.body.appendChild(overlay);
 }
 
+// Vorlagen sind für eine Fläche von 1076×532 entworfen. fitLayout() rechnet sie beim Anwenden
+// auf den jeweiligen Bildschirm um (Smartboard größer, Tablet kleiner, Handy untereinander).
+const LAYOUT_BASE = { w: 1076, h: 532 };
+const TPL_BG = {
+  green: { type:'color', value:'#1F3531' },
+  slate: { type:'color', value:'#262C33' },
+  night: { type:'color', value:'#182840' },
+};
 const BUILT_IN_TEMPLATES = [
-  {
-    id:'tpl-morgen', name:'Morgenstart', emoji:'🌅',
-    desc:'Uhr, Tagesplan, Stundenziel',
-    bg:{ type:'gradient', value:'linear-gradient(135deg,#667eea,#764ba2)' },
-    widgets:[
-      { type:'clock',    x:20,  y:20,  w:220, h:130, config:{} },
-      { type:'goal',     x:260, y:20,  w:320, h:110, config:{ text:'Heutiges Lernziel…' } },
-      { type:'agenda',   x:20,  y:170, w:280, h:240, config:{ items:[{time:'08:00',text:'Begrüßung'},{time:'08:15',text:'Wiederholung'},{time:'08:30',text:'Neues Thema'}] } },
-      { type:'homework', x:320, y:150, w:280, h:200, config:{ subject:'Hausaufgaben', items:[] } },
-    ]
-  },
-  {
-    id:'tpl-still', name:'Stillarbeit', emoji:'🤫',
-    desc:'Timer, Ampel, Aufgabentext',
-    bg:{ type:'gradient', value:'linear-gradient(135deg,#0f0c29,#302b63,#24243e)' },
-    widgets:[
-      { type:'timer',    x:20,  y:20,  w:260, h:180, config:{ minutes:20 } },
-      { type:'traffic',  x:300, y:20,  w:180, h:120, config:{ state:'red' } },
-      { type:'text',     x:20,  y:220, w:460, h:160, config:{ text:'Bearbeite die Aufgaben still und selbstständig.' } },
-    ]
-  },
-  {
-    id:'tpl-gruppe', name:'Gruppenarbeit', emoji:'👥',
-    desc:'Timer, Gruppen, Phasen',
-    bg:{ type:'gradient', value:'linear-gradient(135deg,#1a5c3a,#0f3d2e)' },
-    widgets:[
-      { type:'timer',   x:20,  y:20,  w:240, h:160, config:{ minutes:15 } },
-      { type:'groups',  x:280, y:20,  w:300, h:220, config:{ names:'Anna\nBen\nClara\nDavid\nEva\nFinn', size:3 } },
-      { type:'phases',  x:20,  y:200, w:240, h:200, config:{ phases:[{name:'Einführung',color:'#0B7A74',minutes:5},{name:'Gruppenarbeit',color:'#22c55e',minutes:15},{name:'Präsentation',color:'#f59e0b',minutes:10},{name:'Reflexion',color:'#ec4899',minutes:5}] } },
-    ]
-  },
-  {
-    id:'tpl-klausur', name:'Klassenarbeit', emoji:'✍️',
-    desc:'Timer, Stoppuhr, Ampel',
-    bg:{ type:'color', value:'#0f172a' },
-    widgets:[
-      { type:'timer',     x:20,  y:20,  w:280, h:180, config:{ minutes:45 } },
-      { type:'traffic',   x:320, y:20,  w:180, h:120, config:{ state:'red' } },
-      { type:'stopwatch', x:320, y:160, w:220, h:160, config:{} },
-      { type:'text',      x:20,  y:220, w:280, h:120, config:{ text:'Klassenarbeit – Bitte keine Hilfsmittel.' } },
-    ]
-  },
-  {
-    id:'tpl-vertretung', name:'Vertretungsstunde', emoji:'👋',
-    desc:'Aufgabe, Namensrad, Würfel',
-    bg:{ type:'gradient', value:'linear-gradient(135deg,#f093fb,#f5576c)' },
-    widgets:[
-      { type:'text',      x:20,  y:20,  w:400, h:140, config:{ text:'Bearbeite die Aufgaben auf dem Arbeitsblatt.\nBei Fragen meldet euch ruhig.' } },
-      { type:'names',     x:440, y:20,  w:220, h:260, config:{ names:'Schüler 1\nSchüler 2\nSchüler 3\nSchüler 4\nSchüler 5' } },
-      { type:'dice',      x:20,  y:180, w:160, h:140, config:{} },
-    ]
-  },
-  {
-    id:'tpl-tagesplan', name:'Tagesplan', emoji:'📅',
-    desc:'Stundenplan, Uhr, Agenda',
-    bg:{ type:'gradient', value:'linear-gradient(135deg,#0093E9,#80D0C7)' },
-    widgets:[
-      { type:'timetable', x:20,  y:20,  w:320, h:320, config:{ icalUrl:'', entries:[] } },
-      { type:'clock',     x:360, y:20,  w:220, h:130, config:{} },
-      { type:'agenda',    x:360, y:170, w:280, h:200, config:{ items:[] } },
-    ]
-  },
-  {
-    id:'tpl-hausaufgaben', name:'Hausaufgaben', emoji:'📚',
-    desc:'Hausaufgaben, Checkliste',
-    bg:{ type:'color', value:'#1e293b' },
-    widgets:[
-      { type:'homework',  x:20,  y:20,  w:300, h:280, config:{ subject:'Hausaufgaben', items:[] } },
-      { type:'checklist', x:340, y:20,  w:280, h:240, config:{ items:[] } },
-      { type:'text',      x:340, y:280, w:280, h:100, config:{ text:'Denk an dein Heft und die Materialien!' } },
-    ]
-  },
-  {
-    id:'tpl-reflexion', name:'Reflexion', emoji:'💬',
-    desc:'Klassenstatus, Checkliste, Text',
-    bg:{ type:'gradient', value:'linear-gradient(135deg,#a18cd1,#fbc2eb)' },
-    widgets:[
-      { type:'status',    x:20,  y:20,  w:220, h:180, config:{ statusIdx:2 } },
-      { type:'checklist', x:260, y:20,  w:280, h:200, config:{ items:[{text:'Lernziel erreicht?',done:false},{text:'Aufgaben fertig?',done:false},{text:'Fragen beantwortet?',done:false}] } },
-      { type:'text',      x:20,  y:220, w:520, h:120, config:{ text:'Was habe ich heute gelernt?' } },
-    ]
-  },
+  { id:'tpl-morgen', name:'Morgenstart', desc:'Uhr, Stundenziel, Tagesplan, Hausaufgaben', bg:TPL_BG.green, widgets:[
+    { type:'clock',    x:24,  y:24,  w:300, h:170, config:{} },
+    { type:'goal',     x:348, y:24,  w:704, h:170, config:{ text:'' } },
+    { type:'agenda',   x:24,  y:218, w:500, h:290, config:{ items:[{time:'08:00',text:'Begrüßung'},{time:'08:15',text:'Wiederholung'},{time:'08:30',text:'Neues Thema'},{time:'09:15',text:'Pause'}] } },
+    { type:'homework', x:548, y:218, w:504, h:290, config:{ subject:'Hausaufgaben', items:[] } },
+  ]},
+  { id:'tpl-still', name:'Stillarbeit', desc:'Timer, Arbeitsform, Aufgabentext', bg:TPL_BG.slate, widgets:[
+    { type:'timer',   x:24,  y:24,  w:500, h:250, config:{ minutes:20 } },
+    { type:'traffic', x:548, y:24,  w:504, h:250, config:{ state:'red' } },
+    { type:'text',    x:24,  y:298, w:1028, h:210, config:{ text:'Bearbeite die Aufgaben still und selbstständig.\nWer fertig ist, liest in seinem Buch.' } },
+  ]},
+  { id:'tpl-gruppe', name:'Gruppenarbeit', desc:'Timer, Phasen, Gruppen', bg:TPL_BG.green, widgets:[
+    { type:'timer',  x:24,  y:24,  w:500, h:250, config:{ minutes:15 } },
+    { type:'phases', x:548, y:24,  w:504, h:250, config:{ phases:[{name:'Aufgabe lesen',color:'#0B7A74',minutes:3},{name:'Gruppenarbeit',color:'#22c55e',minutes:15},{name:'Ergebnisse vorstellen',color:'#f59e0b',minutes:10},{name:'Feedback',color:'#ec4899',minutes:5}] } },
+    { type:'groups', x:24,  y:298, w:1028, h:210, config:{ names:'', size:3 } },
+  ]},
+  { id:'tpl-klausur', name:'Klassenarbeit', desc:'Großer Timer, Ruhe-Ampel, Hinweis', bg:TPL_BG.night, widgets:[
+    { type:'timer',   x:24,  y:24,  w:620, h:300, config:{ minutes:45 } },
+    { type:'traffic', x:668, y:24,  w:384, h:300, config:{ state:'red' } },
+    { type:'text',    x:24,  y:348, w:1028, h:160, config:{ text:'Klassenarbeit – bitte leise arbeiten.\nNur die erlaubten Hilfsmittel.' } },
+  ]},
+  { id:'tpl-vertretung', name:'Vertretungsstunde', desc:'Aufgabe, Timer, Namensrad, Würfel', bg:TPL_BG.slate, widgets:[
+    { type:'text',    x:24,  y:24,  w:564, h:230, config:{ text:'Bearbeitet die Aufgaben auf dem Arbeitsblatt.\nBei Fragen meldet euch.' } },
+    { type:'timer',   x:612, y:24,  w:440, h:230, config:{ minutes:30 } },
+    { type:'names',   x:24,  y:278, w:500, h:230, config:{ names:'' } },
+    { type:'dice',    x:548, y:278, w:230, h:230, config:{} },
+    { type:'traffic', x:802, y:278, w:250, h:230, config:{ state:'yellow' } },
+  ]},
+  { id:'tpl-tagesplan', name:'Tagesplan', desc:'Stundenplan, Uhr, Agenda', bg:TPL_BG.night, widgets:[
+    { type:'timetable', x:24,  y:24,  w:500, h:484, config:{ icalUrl:'', entries:[] } },
+    { type:'clock',     x:548, y:24,  w:504, h:170, config:{} },
+    { type:'agenda',    x:548, y:218, w:504, h:290, config:{ items:[] } },
+  ]},
+  { id:'tpl-hausaufgaben', name:'Hausaufgaben', desc:'Hausaufgaben, Checkliste, Hinweis', bg:TPL_BG.green, widgets:[
+    { type:'homework',  x:24,  y:24,  w:620, h:484, config:{ subject:'Hausaufgaben', items:[] } },
+    { type:'checklist', x:668, y:24,  w:384, h:300, config:{ items:[] } },
+    { type:'text',      x:668, y:348, w:384, h:160, config:{ text:'Denk an dein Heft und die Materialien!' } },
+  ]},
+  { id:'tpl-reflexion', name:'Reflexion', desc:'Klassenstatus, Checkliste, Frage', bg:TPL_BG.slate, widgets:[
+    { type:'status',    x:24,  y:24,  w:330, h:250, config:{ statusIdx:2 } },
+    { type:'checklist', x:378, y:24,  w:674, h:250, config:{ items:[{text:'Lernziel erreicht?',done:false},{text:'Aufgaben fertig?',done:false},{text:'Fragen geklärt?',done:false}] } },
+    { type:'text',      x:24,  y:298, w:1028, h:210, config:{ text:'Was habe ich heute gelernt?' } },
+  ]},
+  { id:'tpl-lesezeit', name:'Lesezeit', desc:'Timer, Ruhe-Ampel, Hinweis', bg:TPL_BG.green, widgets:[
+    { type:'timer',   x:24,  y:24,  w:500, h:250, config:{ minutes:15 } },
+    { type:'traffic', x:548, y:24,  w:504, h:250, config:{ state:'red' } },
+    { type:'text',    x:24,  y:298, w:1028, h:210, config:{ text:'Lesezeit\nJeder liest still in seinem Buch.' } },
+  ]},
+  { id:'tpl-stationen', name:'Stationenlernen', desc:'Stationen, Timer, Gruppen', bg:TPL_BG.green, widgets:[
+    { type:'phases', x:24,  y:24,  w:500, h:320, config:{ phases:[{name:'Station 1',color:'#0B7A74',minutes:10},{name:'Station 2',color:'#22c55e',minutes:10},{name:'Station 3',color:'#f59e0b',minutes:10},{name:'Station 4',color:'#ec4899',minutes:10}] } },
+    { type:'timer',  x:548, y:24,  w:504, h:250, config:{ minutes:10 } },
+    { type:'groups', x:548, y:298, w:504, h:210, config:{ names:'', size:4 } },
+    { type:'text',   x:24,  y:368, w:500, h:140, config:{ text:'Beim Signal wechselt ihr zur nächsten Station.' } },
+  ]},
+  { id:'tpl-praesentation', name:'Präsentationen', desc:'Reihenfolge, Timer, Feedback-Kriterien', bg:TPL_BG.night, widgets:[
+    { type:'names',     x:24,  y:24,  w:330, h:484, config:{ names:'' } },
+    { type:'timer',     x:378, y:24,  w:674, h:250, config:{ minutes:5 } },
+    { type:'checklist', x:378, y:298, w:674, h:210, config:{ items:[{text:'Laut und deutlich gesprochen',done:false},{text:'Inhalt verständlich erklärt',done:false},{text:'Zeit eingehalten',done:false}] } },
+  ]},
+  { id:'tpl-wochenplan', name:'Wochenplan', desc:'Uhr, Hinweis, Aufgabenliste', bg:TPL_BG.night, widgets:[
+    { type:'clock',     x:24,  y:24,  w:300, h:170, config:{} },
+    { type:'text',      x:24,  y:218, w:300, h:290, config:{ text:'Wochenplan\n\nArbeite in deinem Tempo. Hake fertige Aufgaben ab.' } },
+    { type:'checklist', x:348, y:24,  w:704, h:484, config:{ items:[] } },
+  ]},
+  { id:'tpl-umfrage', name:'Blitzumfrage', desc:'Live-Umfrage, Timer, Hinweis', bg:TPL_BG.slate, widgets:[
+    { type:'poll',  x:24,  y:24,  w:620, h:484, config:{} },
+    { type:'timer', x:668, y:24,  w:384, h:250, config:{ minutes:3 } },
+    { type:'text',  x:668, y:298, w:384, h:210, config:{ text:'Scannt den QR-Code und stimmt ab.' } },
+  ]},
+  { id:'tpl-aufraeumen', name:'Aufräumen', desc:'Timer, Aufräum-Liste, Hinweis', bg:TPL_BG.green, widgets:[
+    { type:'timer',     x:24,  y:24,  w:620, h:300, config:{ minutes:5 } },
+    { type:'checklist', x:668, y:24,  w:384, h:484, config:{ items:[{text:'Platz aufräumen',done:false},{text:'Material wegräumen',done:false},{text:'Müll wegbringen',done:false},{text:'Stuhl hochstellen',done:false}] } },
+    { type:'text',      x:24,  y:348, w:620, h:160, config:{ text:'Aufräumzeit! Wenn der Timer endet, sitzen alle am Platz.' } },
+  ]},
+  { id:'tpl-leise', name:'Leise arbeiten', desc:'Lautstärke-Ampel, Timer, Arbeitsform', bg:TPL_BG.slate, widgets:[
+    { type:'noise',   x:24,  y:24,  w:330, h:484, config:{} },
+    { type:'timer',   x:378, y:24,  w:674, h:250, config:{ minutes:20 } },
+    { type:'traffic', x:378, y:298, w:674, h:210, config:{ state:'yellow' } },
+  ]},
 ];
+
+// Entwurfsfläche (1076×532) → tatsächlicher Bildschirm
+function fitLayout(widgets) {
+  const boardEl = document.getElementById('board');
+  const css = getComputedStyle(document.documentElement);
+  const availW = (boardEl && boardEl.clientWidth) || window.innerWidth;
+  const availH = ((boardEl && boardEl.clientHeight) || window.innerHeight)
+    - (parseInt(css.getPropertyValue('--toolbar-h')) || 60) - (parseInt(css.getPropertyValue('--dock-h')) || 84) - 16;
+  if (availW < 600) {
+    // Handy: volle Breite, untereinander (in Lesereihenfolge der Vorlage)
+    let y = 12;
+    return widgets.slice().sort((a, b) => (a.y - b.y) || (a.x - b.x)).map(w => {
+      const h = Math.round(w.h * 0.85);
+      const r = { ...w, x: 12, y, w: availW - 24, h };
+      y += h + 12;
+      return r;
+    });
+  }
+  const k = Math.max(0.75, Math.min(1.8, availW / LAYOUT_BASE.w, availH / LAYOUT_BASE.h));
+  return widgets.map(w => ({ ...w,
+    x: Math.round(w.x * k), y: Math.round(w.y * k), w: Math.round(w.w * k), h: Math.round(w.h * k) }));
+}
 
 // ══════════════════════════════════════════════════════════════
 // APP STATE
@@ -2333,9 +2466,13 @@ function findFreeSpot(board, w, h) {
       if (free(x, y)) return { x, y };
     }
   }
+  // Handy: Elemente stehen untereinander → neues Element ans Ende hängen
+  if (viewW < 600) {
+    return { x: 12, y: others.reduce((m, o) => Math.max(m, o.y + o.h), 0) + 12 };
+  }
   // Kein freier Platz: leicht versetzt stapeln, damit nichts exakt übereinander liegt
   const n = others.length % 8;
-  return { x: sx + 40 + n * 28, y: sy + 40 + n * 28 };
+  return { x: sx + Math.max(12, Math.min(40 + n * 28, viewW - w - 12)), y: sy + 40 + n * 28 };
 }
 
 function addWidget(type, extraConfig={}) {
@@ -2343,11 +2480,13 @@ function addWidget(type, extraConfig={}) {
   if (!board) return;
   APP.snapshotUndo();
   const def = REGISTRY[type];
+  // auf dem Handy nicht breiter als der Bildschirm
+  const maxNewW = Math.max(200, ((document.getElementById('board') || {}).clientWidth || window.innerWidth) - 24);
   const widget = {
     id: uid(),
     type,
-    ...findFreeSpot(board, def.w, def.h),
-    w: def.w,
+    ...findFreeSpot(board, Math.min(def.w, maxNewW), def.h),
+    w: Math.min(def.w, maxNewW),
     h: def.h,
     zIndex: nextZ(board),
     locked: false,
@@ -2360,7 +2499,11 @@ function addWidget(type, extraConfig={}) {
   // select new widget
   APP.selectedId = widget.id;
   const wEl = document.querySelector('[data-wid="'+widget.id+'"]');
-  if (wEl) wEl.classList.add('selected');
+  if (wEl) {
+    wEl.classList.add('selected');
+    // liegt das neue Element außerhalb des sichtbaren Bereichs (Handy: ganz unten), dorthin scrollen
+    if (wEl.scrollIntoView) wEl.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
   return widget;
 }
 
@@ -2935,6 +3078,14 @@ setInterval(() => {
   });
 }, 500);
 
+// Leeres Element: ein deutlicher Knopf statt eines Hinweises auf das Zahnrad
+function emptyCta(iconName, text, onClick) {
+  const b = el('button', 'w-empty-cta');
+  b.innerHTML = icon(iconName, 22) + '<span>' + safeText(text) + '</span>';
+  b.addEventListener('click', e => { e.stopPropagation(); onClick(); });
+  return b;
+}
+
 const WIDGET_RENDERERS = {
 
   // ── Clock ──
@@ -2960,63 +3111,125 @@ const WIDGET_RENDERERS = {
     startInterval(w.id, update, 1000);
   },
 
-  // ── Timer ──
+  // ── Timer ── Ring mit Restzeit, Zeit direkt am Element einstellen (−/+, Voreinstellungen)
   timer(w, body) {
-    body.style.flexDirection = 'column';
-    const display = el('div','w-timer-display');
-    // MM:SS = 5 chars
-    const timerFs = Math.max(28, Math.min((w.w - 16) / 3.1, w.h * 0.40));
-    display.style.fontSize = timerFs + 'px';
-    const row = el('div','w-btn-row');
-    const startBtn = el('button','w-action-btn');
-    const resetBtn = el('button','w-action-btn');
-    resetBtn.textContent = '↺';
-    resetBtn.title = 'Zurücksetzen';
-    row.append(startBtn, resetBtn);
-    body.append(display, row);
-
-    // Laufzeit-Zustand liegt auf dem Widget-Objekt, damit ein Re-Render
-    // (Ansicht wechseln, Widget hinzufügen, Tafelwechsel) den Timer nicht zurücksetzt.
-    // Das Ablaufen selbst überwacht TIMER_WATCH — auch wenn gerade eine andere Tafel offen ist.
-    const full = timerFullSeconds(w);
+    // Laufzeit-Zustand liegt auf dem Widget-Objekt, damit ein Re-Render (Ansicht wechseln,
+    // Element hinzufügen, Tafelwechsel) den Timer nicht zurücksetzt. Das Ablaufen selbst
+    // überwacht der Timer-Wächter weiter oben — auch wenn gerade eine andere Tafel offen ist.
+    let full = timerFullSeconds(w);
     let running = !!w._timerRunning;
     let endAt = w._timerEndAt || null;
     let remaining;
-    if (running && endAt) {
-      remaining = Math.max(0, Math.round((endAt - Date.now())/1000));
-    } else if (typeof w._timerRemaining === 'number') {
-      remaining = w._timerRemaining;
+    if (running && endAt) remaining = Math.max(0, Math.round((endAt - Date.now()) / 1000));
+    else if (typeof w._timerRemaining === 'number') remaining = w._timerRemaining;
+    else remaining = full;
+    let ringFull = Math.max(full, remaining);   // 100 % des Rings
+
+    // Aufbau je nach Größe: breit = Ring links + Bedienung rechts, hoch = Ring oben, klein = nur Ziffern
+    const bodyW = w.w, bodyH = w.h - (APP.state.editMode ? 34 : 0);
+    const mode = (bodyW >= 400 && bodyH >= 170) ? 'wide' : (bodyH >= 330 ? 'tall' : 'compact');
+    const wrap = el('div', 'tm tm-' + mode);
+
+    const fmt = s => {
+      s = Math.max(0, s);
+      return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    };
+    const digits = el('div', 'tm-digits');
+    const stateEl = el('div', 'tm-state');
+    let prog = null;
+    const C = 2 * Math.PI * 44;
+
+    if (mode === 'compact') {
+      const fs = Math.max(26, Math.min((bodyW - 24) / 3.1, (bodyH - 70) * 0.82));
+      digits.style.fontSize = fs + 'px';
+      wrap.appendChild(digits);
     } else {
-      remaining = full;
+      const size = mode === 'wide'
+        ? Math.max(120, Math.min(bodyH - 24, bodyW * 0.46, 460))
+        : Math.max(120, Math.min(bodyW - 32, bodyH - 172, 460));
+      const ring = el('div', 'tm-ring');
+      ring.style.width = ring.style.height = size + 'px';
+      ring.innerHTML = '<svg viewBox="0 0 100 100" role="img" aria-label="Verbleibende Zeit">'
+        + '<circle class="trk" cx="50" cy="50" r="44"/><circle class="prg" cx="50" cy="50" r="44" stroke-dasharray="' + C.toFixed(2) + '"/></svg>';
+      prog = ring.querySelector('.prg');
+      const center = el('div', 'tm-center');
+      // Ziffern so groß, wie der Ring innen breit ist (auch bei 120:00)
+      const widest = fmt(Math.max(full, remaining)).replace(/\d/g, '0');
+      digits.style.fontSize = Math.floor(size * 0.72 / Math.max(2.4, textWidthEm(widest, 700))) + 'px';
+      stateEl.style.fontSize = Math.max(11, Math.round(size * 0.075)) + 'px';
+      center.append(digits, stateEl);
+      ring.appendChild(center);
+      wrap.appendChild(ring);
     }
 
-    function fmt(s) {
-      const m = Math.floor(s/60), sec = s%60;
-      return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+    // Bedienung
+    const ctrl = el('div', 'tm-ctrl');
+    const mkBtn = (cls, html, title, fn) => {
+      const b = el('button', 'tm-btn' + (cls ? ' ' + cls : ''));
+      b.innerHTML = html; b.title = title; b.setAttribute('aria-label', title);
+      b.addEventListener('click', e => { e.stopPropagation(); fn(); });
+      return b;
+    };
+    const minusBtn = mkBtn('', icon('minus', 20), 'Eine Minute weniger', () => adjust(-60));
+    const plusBtn  = mkBtn('', icon('plus', 20), 'Eine Minute mehr', () => adjust(60));
+    const resetBtn = mkBtn('', icon('reset', 19), 'Zurücksetzen', reset);
+    const goBtn    = mkBtn('tm-go', '', 'Start', toggle);
+    const presetBtns = [5, 10, 15, 20].map(min => {
+      const b = mkBtn('tm-preset', String(min), min + ' Minuten', () => setFull(min * 60));
+      b.dataset.sec = min * 60;
+      return b;
+    });
+    const row1 = el('div', 'tm-row'); row1.append(minusBtn, plusBtn, resetBtn);
+    if (mode === 'compact') {
+      row1.appendChild(goBtn);
+      ctrl.appendChild(row1);
+    } else {
+      const row2 = el('div', 'tm-row'); row2.append(...presetBtns);
+      ctrl.append(row1, row2, goBtn);
     }
+    wrap.appendChild(ctrl);
+    body.appendChild(wrap);
+
     function updateDisplay() {
-      display.textContent = fmt(Math.max(0,remaining));
-      display.classList.toggle('urgent', remaining <= 30 && (running || remaining === 0));
-      startBtn.textContent = running ? '⏸ Pause' : (remaining <= 0 ? '⏰ Abgelaufen' : (remaining < full ? '▶ Weiter' : '▶ Start'));
+      const r = Math.max(0, remaining);
+      digits.textContent = fmt(r);
+      const urgent = r <= 30 && (running || r === 0);
+      wrap.classList.toggle('urgent', urgent);
+      if (prog) prog.style.strokeDashoffset = (C * (1 - Math.min(1, r / Math.max(1, ringFull)))).toFixed(2);
+      const paused = isPaused();
+      stateEl.textContent = running ? 'läuft' : (r === 0 ? 'Zeit ist um' : (paused ? 'pausiert' : 'bereit'));
+      const label = running ? 'Pause' : (r === 0 ? 'Nochmal' : (paused ? 'Weiter' : 'Start'));
+      goBtn.innerHTML = icon(running ? 'pause' : (r === 0 ? 'reset' : 'play'), 20) + '<span>' + label + '</span>';
+      goBtn.title = label;
+      goBtn.classList.toggle('done', r === 0);
+      presetBtns.forEach(b => b.classList.toggle('on', !running && !paused && r === full && Number(b.dataset.sec) === full));
     }
+    // pausiert = angehalten mit gemerkter Restzeit (auch wenn sie per „+“ über der Startzeit liegt)
+    function isPaused() { return !running && typeof w._timerRemaining === 'number' && remaining > 0; }
     function tick() {
       if (!w._timerRunning) {
-        // von TIMER_WATCH beendet (oder extern gestoppt)
+        // vom Timer-Wächter beendet (oder extern gestoppt)
         running = false;
         remaining = typeof w._timerRemaining === 'number' ? w._timerRemaining : 0;
         stopInterval(w.id);
         updateDisplay();
         return;
       }
-      remaining = Math.max(0, Math.round((endAt - Date.now())/1000));
+      remaining = Math.max(0, Math.round((endAt - Date.now()) / 1000));
       updateDisplay();
     }
-    startBtn.addEventListener('click', () => {
-      if (remaining <= 0) return;
+    function reset() {
+      running = false; stopInterval(w.id);
+      resetTimerState(w);
+      remaining = full; ringFull = full;
+      updateDisplay();
+    }
+    function toggle() {
+      if (remaining <= 0) { reset(); return; }
       running = !running;
       if (running) {
         primeAlarm(); // Ton braucht eine Nutzer-Geste — hier ist sie
-        endAt = Date.now() + remaining*1000;
+        endAt = Date.now() + remaining * 1000;
         w._timerRunning = true; w._timerEndAt = endAt; delete w._timerRemaining;
         startInterval(w.id, tick, 250);
       } else {
@@ -3024,13 +3237,32 @@ const WIDGET_RENDERERS = {
         stopInterval(w.id);
       }
       updateDisplay();
-    });
-    resetBtn.addEventListener('click', () => {
+    }
+    // Neue Gesamtzeit (Voreinstellung oder −/+ im Zustand „bereit“) — wird gespeichert
+    function setFull(sec) {
+      sec = Math.max(60, Math.min(180 * 60, sec));
+      w.config.minutes = Math.floor(sec / 60);
+      w.config.seconds = sec % 60;
+      full = sec;
       running = false; stopInterval(w.id);
       resetTimerState(w);
-      remaining = full;
+      remaining = full; ringFull = full;
+      APP.save();
       updateDisplay();
-    });
+    }
+    function adjust(delta) {
+      if (!running && !isPaused() && remaining > 0) { setFull(full + delta); return; }
+      // läuft oder pausiert: nur die Restzeit ändern, die eingestellte Zeit bleibt
+      remaining = Math.max(0, Math.min(180 * 60, remaining + delta));
+      ringFull = Math.max(ringFull, remaining);
+      if (running) {
+        endAt = Date.now() + remaining * 1000;
+        w._timerEndAt = endAt;
+      } else {
+        w._timerRemaining = remaining;
+      }
+      updateDisplay();
+    }
     if (running) startInterval(w.id, tick, 250); // laufenden Timer nach Re-Render fortsetzen
     updateDisplay();
   },
@@ -3146,42 +3378,66 @@ const WIDGET_RENDERERS = {
 
   // ── Traffic Light ──
   traffic(w, body) {
-    const states = ['red','yellow','green'];
-    const labels = ['🔴 Ruhe','🟡 Flüstern','🟢 Sprechen'];
-    body.style.flexDirection = 'column'; body.style.gap = '10px';
-    const circles = [];
-    const circleSize = Math.max(40, Math.min(w.w * 0.26, w.h * 0.32)) + 'px';
-    const labelFs = Math.max(12, Math.min(w.w * 0.07, 22)) + 'px';
-    const labelEl = el('div'); labelEl.style.cssText=`font-size:${labelFs};font-weight:600;color:var(--w-ink)`;
+    const MODES = [
+      { state:'red',    cls:'r', label:'Ruhe',     sub:'Niemand spricht',        icon:'volOff' },
+      { state:'yellow', cls:'y', label:'Flüstern', sub:'Leise mit dem Nachbarn', icon:'volLow' },
+      { state:'green',  cls:'g', label:'Sprechen', sub:'Normale Lautstärke',     icon:'volHigh' },
+    ];
+    const bodyH = w.h - (APP.state.editMode ? 34 : 0);
+    const pick = state => {
+      // nochmal antippen = keine Stufe aktiv
+      w.config.state = (w.config.state === state) ? '' : state;
+      APP.save();
+      update();
+    };
+    let update;
 
-    states.forEach((s,i) => {
-      const c = el('div','w-traffic-circle');
-      c.dataset.state = s;
-      c.style.width = circleSize; c.style.height = circleSize;
-      circles.push(c);
-      c.addEventListener('click', () => {
-        w.config.state = s;
-        updateCircles();
-        APP.save();
+    if (bodyH >= 170 && w.w >= 230) {
+      // Liste: Wort + Symbol statt nur Farbe (auch bei Farbsehschwäche eindeutig, aus der letzten Reihe lesbar)
+      const rowH = (bodyH - 20 - 16) / 3;
+      const wrap = el('div', 'tl');
+      const longest = Math.max(...MODES.map(m => textWidthEm(m.label, 700)));
+      wrap.style.fontSize = Math.max(15, Math.min(rowH * 0.42, (w.w - 26) / (longest + 3.4), 64)) + 'px';
+      const rows = MODES.map(m => {
+        const b = el('button', 'tl-row ' + m.cls);
+        b.innerHTML = '<span class="tl-dot">' + icon(m.icon, 18) + '</span><span class="tl-txt"><span class="tl-label">'
+          + m.label + '</span>' + (rowH >= 58 ? '<span class="tl-sub">' + m.sub + '</span>' : '') + '</span>';
+        const svg = b.querySelector('svg'); svg.style.width = svg.style.height = '0.9em';
+        b.addEventListener('click', e => { e.stopPropagation(); pick(m.state); });
+        wrap.appendChild(b);
+        return b;
       });
-    });
-
-    function updateCircles() {
-      circles.forEach((c,i) => {
-        c.className = 'w-traffic-circle';
-        if (states[i] === w.config.state) {
-          c.classList.add('active-' + states[i].charAt(0));
-        } else {
-          c.classList.add('dim');
-        }
+      update = () => rows.forEach((b, i) => {
+        const on = MODES[i].state === w.config.state;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', String(on));
       });
-      const idx = states.indexOf(w.config.state);
-      labelEl.textContent = labels[idx] || '';
+      body.appendChild(wrap);
+    } else {
+      // Klein: drei Lichter + Wort darunter
+      body.style.flexDirection = 'column'; body.style.gap = '10px';
+      const circleSize = Math.max(36, Math.min(w.w * 0.26, bodyH * 0.42)) + 'px';
+      const labelEl = el('div');
+      labelEl.style.cssText = 'font-size:' + Math.max(13, Math.min(w.w * 0.08, 24)) + 'px;font-weight:700;color:var(--w-ink);min-height:1.2em';
+      const circles = MODES.map(m => {
+        const cEl = el('div', 'w-traffic-circle');
+        cEl.style.width = circleSize; cEl.style.height = circleSize;
+        cEl.title = m.label;
+        cEl.addEventListener('click', () => pick(m.state));
+        return cEl;
+      });
+      update = () => {
+        circles.forEach((cEl, i) => {
+          cEl.className = 'w-traffic-circle ' + (MODES[i].state === w.config.state ? 'active-' + MODES[i].cls : 'dim');
+        });
+        const cur = MODES.find(m => m.state === w.config.state);
+        labelEl.textContent = cur ? cur.label : '';
+      };
+      const circleRow = el('div'); circleRow.style.cssText = 'display:flex;gap:12px;align-items:center';
+      circleRow.append(...circles);
+      body.append(circleRow, labelEl);
     }
-    const circleRow = el('div'); circleRow.style.cssText='display:flex;gap:12px;align-items:center';
-    circleRow.append(...circles);
-    body.append(circleRow, labelEl);
-    updateCircles();
+    update();
   },
 
   // ── QR Code ──
@@ -3205,6 +3461,10 @@ const WIDGET_RENDERERS = {
   names(w, body) {
     body.style.flexDirection = 'column';
     const names = (w.config.names || '').split('\n').map(s=>s.trim()).filter(Boolean);
+    if (!names.length) {
+      body.appendChild(emptyCta('names', 'Namen eintragen', () => openNamesEdit(w)));
+      return;
+    }
     let highlighted = w.config.highlighted ?? -1;
     const list = el('ul','w-names-list');
     const btn = el('button','w-action-btn'); btn.style.margin='0 auto 8px'; btn.textContent = '🎲 Zufällig';
@@ -3267,13 +3527,10 @@ const WIDGET_RENDERERS = {
     h3.textContent = w.config.subject || 'Hausaufgaben';
     const ul = document.createElement('ul');
     if (items.length === 0) {
-      const li = document.createElement('li');
-      li.style.cssText = `font-size:${itemFs}px;color:var(--w-faint);font-style:italic;`;
-      li.textContent = 'Doppelklick zum Bearbeiten';
-      ul.appendChild(li);
-      div.append(h3, ul);
+      h3.style.fontSize = '14px';
+      div.style.cssText = 'display:flex;flex-direction:column;height:100%;box-sizing:border-box';
+      div.append(h3, emptyCta('homework', 'Hausaufgaben eintragen', () => openHomeworkEdit(w)));
       body.appendChild(div);
-      if (APP.state.editMode) div.addEventListener('dblclick', () => openHomeworkEdit(w));
       return;
     }
     items.forEach(item => {
@@ -3342,9 +3599,7 @@ const WIDGET_RENDERERS = {
     const entries = cache.entries || [];
 
     if (!cache.url && !w.config.icalUrl) {
-      const hint = el('div','tt-no-data');
-      hint.textContent = '📅 iCal-URL eintragen (⚙ Einstellungen)';
-      inner.appendChild(hint);
+      inner.appendChild(emptyCta('timetable', 'Stundenplan verbinden', () => openTimetableSettings(w)));
     } else {
       renderTimetableEntries(inner, entries);
     }
@@ -4419,9 +4674,7 @@ const WIDGET_RENDERERS = {
     const names = (w.config.names||'').split('\n').map(s=>s.trim()).filter(Boolean);
     const size = Math.max(1, parseInt(w.config.size) || 3);
     if (!names.length) {
-      const hint = el('div'); hint.style.cssText = 'font-size:12px;color:var(--w-faint);padding:14px;text-align:center';
-      hint.textContent = 'Namen eintragen (⚙ Einstellungen)';
-      body.appendChild(hint);
+      body.appendChild(emptyCta('groups', 'Namen eintragen', () => openGroupsSettings(w)));
       return;
     }
     // Die Einteilung wird gespeichert. Früher wurde bei JEDEM Neuzeichnen der Tafel neu
@@ -4498,9 +4751,8 @@ const WIDGET_RENDERERS = {
       inner.appendChild(row);
     });
     if (!(w.config.items||[]).length) {
-      const hint = el('div'); hint.style.cssText='font-size:12px;color:var(--w-faint);padding:12px';
-      hint.textContent = 'Agenda eintragen (⚙ Einstellungen)';
-      inner.appendChild(hint);
+      inner.style.display = 'flex';
+      inner.appendChild(emptyCta('agenda', 'Tagesplan eintragen', () => openAgendaEdit(w)));
     }
     if (APP.state.editMode) inner.addEventListener('dblclick', () => openAgendaEdit(w));
     body.appendChild(inner);
@@ -4513,6 +4765,8 @@ const WIDGET_RENDERERS = {
     function renderItems() {
       inner.innerHTML = '';
       inner.style.setProperty('--n', Math.max(1, items.length));
+      inner.style.display = items.length ? '' : 'flex';
+      if (!items.length) inner.appendChild(emptyCta('checklist', 'Aufgaben eintragen', () => openChecklistEdit(w)));
       items.forEach((item, i) => {
         const row = el('div','checklist-item' + (item.done?' done':''));
         const cb = el('input'); cb.type='checkbox'; cb.checked=!!item.done;
@@ -5457,37 +5711,107 @@ function openWidgetMenu() {
   }, 0);
 }
 
-function openTemplateModal() {
+// Vorlage anwenden: als neue Tafel ('new') oder in die aktuelle Tafel ('replace')
+function applyTemplate(tpl, mode) {
+  const widgets = fitLayout(tpl.widgets).map(w => ({ ...w, locked: false,
+    config: { ...getDefaultConfig(w.type), ...JSON.parse(JSON.stringify(w.config || {})) } }));
+  if (mode === 'new') {
+    if (!createBoard(tpl.name, tpl.bg, widgets)) return false;
+  } else {
+    const board = APP.activeBoard();
+    if (!board) return false;
+    APP.snapshotUndo();
+    board.widgets.forEach(w => { stopInterval(w.id); });
+    board.background = { ...tpl.bg };
+    board.widgets = widgets.map((w, i) => ({ zIndex: i + 1, ...JSON.parse(JSON.stringify(w)), id: uid(), createdAt: new Date().toISOString() }));
+    APP.save();
+    renderAll();
+  }
+  if (!APP.state.editMode) toggleEditMode();
+  toast('✅ Vorlage „' + tpl.name + '“ geladen');
+  return true;
+}
+
+// Kleine Vorschau einer Vorlage: die Elemente als Kästchen auf der Tafelfarbe
+function templateThumb(tpl) {
+  const t = el('span', 'tpl-thumb');
+  t.style.background = (tpl.bg && tpl.bg.value) || DEFAULT_BG.value;
+  (tpl.widgets || []).forEach(w => {
+    const r = el('span');
+    r.style.cssText = 'left:' + (w.x / LAYOUT_BASE.w * 100).toFixed(2) + '%;top:' + (w.y / LAYOUT_BASE.h * 100).toFixed(2)
+      + '%;width:' + (w.w / LAYOUT_BASE.w * 100).toFixed(2) + '%;height:' + (w.h / LAYOUT_BASE.h * 100).toFixed(2) + '%';
+    t.appendChild(r);
+  });
+  return t;
+}
+
+// Start-Dialog: „Womit startest du?“ — mode 'new' = neue Tafel, 'replace' = aktuelle Tafel ersetzen
+function openStartDialog(mode) {
+  mode = mode === 'replace' ? 'replace' : 'new';
+  if (mode === 'new' && !checkBoardLimit()) return;
+  const isNew = mode === 'new';
   const { overlay, close } = openModal(`
-    <div class="modal modal-lg">
-      <button class="modal-close" data-close>✕</button>
-      <h2>📋 Vorlage laden</h2>
-      <p style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:16px">Wähle eine Vorlage. Die aktuelle Tafel wird ersetzt.</p>
-      <div class="template-grid" id="tpl-grid"></div>
+    <div class="modal start-modal">
+      <button class="modal-close" data-close aria-label="Schließen">${icon('x', 20)}</button>
+      <h2>${isNew ? 'Neue Tafel – womit startest du?' : 'Vorlage laden'}</h2>
+      <p class="start-sub">${isNew
+        ? 'Beschreibe deine Stunde oder wähle eine Vorlage. Alles lässt sich danach frei anpassen.'
+        : 'Die Elemente der aktuellen Tafel werden durch die Vorlage ersetzt (mit Strg+Z rückgängig).'}</p>
+      ${isNew ? `<div class="start-ai">
+        <label for="start-topic">${icon('ai', 20)}<span>Stunde beschreiben – ClassPuls baut die Tafel</span></label>
+        <div class="start-ai-row">
+          <input id="start-topic" type="text" maxlength="120" placeholder="z. B. Photosynthese, Klasse 7, Einführung">
+          <button id="start-ai-go">Tafel erstellen</button>
+        </div>
+      </div>` : ''}
+      <h3>${isNew ? 'Oder mit einer Vorlage starten' : 'Vorlagen'}</h3>
+      <div class="start-grid" id="start-grid"></div>
     </div>
   `);
-  const grid = overlay.querySelector('#tpl-grid');
-  BUILT_IN_TEMPLATES.forEach(tpl => {
-    const card = el('div','tpl-card');
-    const emoji = el('div','tpl-emoji'); emoji.textContent = tpl.emoji;
-    const name = el('div','tpl-name'); name.textContent = tpl.name;
-    const desc = el('div','tpl-desc'); desc.textContent = tpl.desc;
-    card.append(emoji, name, desc);
-    card.addEventListener('click', () => {
-      APP.snapshotUndo();
-      const board = APP.activeBoard();
-      if (board) {
-        board.background = { ...tpl.bg };
-        board.widgets = tpl.widgets.map((w, i) => ({ zIndex: i + 1, ...JSON.parse(JSON.stringify(w)), id:uid(), createdAt:new Date().toISOString() }));
-      }
-      APP.save();
-      renderAll();
+  const grid = overlay.querySelector('#start-grid');
+  const addCard = (thumb, name, desc, fn) => {
+    const b = el('button', 'tpl-card2');
+    const txt = el('span', 'tpl-txt');
+    const n = el('span', 'tpl-name2'); n.textContent = name;
+    const d = el('span', 'tpl-desc2'); d.textContent = desc;
+    txt.append(n, d);
+    b.append(thumb, txt);
+    b.addEventListener('click', fn);
+    grid.appendChild(b);
+  };
+  if (isNew) {
+    addCard(templateThumb({ bg: DEFAULT_BG, widgets: [] }), 'Leere Tafel', 'Ganz von vorn beginnen', () => {
       close();
-      toast('✅ Vorlage "' + tpl.name + '" geladen');
+      if (createBoard('Tafel ' + (APP.state.boards.length + 1))) {
+        if (!APP.state.editMode) toggleEditMode();
+        toast('✅ Neue Tafel erstellt');
+      }
     });
-    grid.appendChild(card);
-  });
+  }
+  BUILT_IN_TEMPLATES.forEach(tpl => addCard(templateThumb(tpl), tpl.name, tpl.desc, () => {
+    close();
+    applyTemplate(tpl, mode);
+  }));
+
+  if (isNew) {
+    const input = overlay.querySelector('#start-topic');
+    const go = () => {
+      const topic = input.value.trim();
+      if (!topic) { input.focus(); toast('Bitte kurz beschreiben, worum es in der Stunde geht'); return; }
+      close();
+      if (!AUTH.user) {
+        toast('Für die KI-Tafel bitte zuerst anmelden (kostenlos)', 4500);
+        openLoginModal();
+        return;
+      }
+      openAiBoardGenerator(topic);
+    };
+    overlay.querySelector('#start-ai-go').addEventListener('click', go);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); go(); } });
+  }
 }
+// alter Name, wird noch von Sprachbefehlen/Menüs verwendet
+function openTemplateModal() { openStartDialog('replace'); }
 
 function openBgModal() {
   const PRESETS = [
@@ -5941,7 +6265,7 @@ const VOICE = {
 // ══════════════════════════════════════════════════════════════
 // AUTO-BOARD GENERATOR
 // ══════════════════════════════════════════════════════════════
-function openAiBoardGenerator() {
+function openAiBoardGenerator(prefillTopic) {
   if (!AUTH.user) {
     toast('⚠️ Bitte zuerst anmelden um den KI-Board-Generator zu nutzen');
     return;
@@ -5990,6 +6314,7 @@ function openAiBoardGenerator() {
     </div>
   `);
 
+  if (typeof prefillTopic === 'string' && prefillTopic) overlay.querySelector('#abg-topic').value = prefillTopic;
   overlay.querySelector('#abg-topic').focus();
 
   overlay.querySelector('#abg-btn').addEventListener('click', async () => {
@@ -6037,7 +6362,7 @@ function openAiBoardGenerator() {
 
       // ── Smart layout: clock top-right, title top-center, rest in flow ──
       const widgets = (parsed.widgets || []).filter(d => REGISTRY[d.type]);
-      const margin = 12, gap = 12, startY = 72;
+      const margin = 24, gap = 20, startY = 24;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
 
@@ -6062,11 +6387,11 @@ function openAiBoardGenerator() {
       }
 
       // Clock: top-right
-      const clockW = 220, clockH = 100;
+      const clockW = 280, clockH = 150;
       if (clockDef) placeWidget(clockDef, vw - clockW - margin, startY, clockW, clockH);
 
       // Goal: top-center, prominent
-      const goalW = Math.min(560, vw - clockW - margin * 3), goalH = 90;
+      const goalW = Math.min(900, vw - clockW - margin * 3), goalH = 150;
       if (goalDef) placeWidget(goalDef, margin, startY, goalW, goalH);
 
       // Rest: flow layout below
@@ -6102,10 +6427,7 @@ function openAiBoardGenerator() {
 // ══════════════════════════════════════════════════════════════
 // TOOLBAR WIRING
 // ══════════════════════════════════════════════════════════════
-document.getElementById('add-board-btn').addEventListener('click', () => {
-  // Nur melden, wenn wirklich eine Tafel entstanden ist (Gratis-Limit!)
-  if (createBoard('Tafel ' + (APP.state.boards.length + 1))) toast('✅ Neue Tafel erstellt');
-});
+document.getElementById('add-board-btn').addEventListener('click', () => openStartDialog('new'));
 document.getElementById('edit-mode-btn').addEventListener('click', toggleEditMode);
 document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
 document.getElementById('btn-more').addEventListener('click', e => { e.stopPropagation(); openMoreMenu(); });
@@ -6206,8 +6528,7 @@ function initApp() {
   const isFirstVisit = !loaded && !localStorage.getItem('classpuls_visited');
 
   if (!loaded || APP.state.boards.length === 0) {
-    const tpl = BUILT_IN_TEMPLATES[0];
-    createBoard('Tafel 1', tpl.bg, tpl.widgets, true);
+    createBoard('Tafel 1', null, [], true);
   } else {
     if (!APP.state.activeBoardId) APP.state.activeBoardId = APP.state.boards[0].id;
     renderAll();
@@ -6228,28 +6549,8 @@ function setupDemo() {
   APP.state.boards = [];
   APP.state.activeBoardId = null;
 
-  // Die Demo-Tafeln sind für 1076×532 entworfen und werden an den Bildschirm angepasst:
-  // am Smartboard größer, auf dem Tablet etwas kleiner — die Schrift wächst mit.
-  const boardEl = document.getElementById('board');
-  const css = getComputedStyle(document.documentElement);
-  const availW = (boardEl ? boardEl.clientWidth : window.innerWidth);
-  const availH = (boardEl ? boardEl.clientHeight : window.innerHeight)
-    - (parseInt(css.getPropertyValue('--toolbar-h')) || 60) - (parseInt(css.getPropertyValue('--dock-h')) || 84) - 16;
-  const k = Math.max(0.75, Math.min(1.8, availW / 1076, availH / 532));
-  const fit = widgets => {
-    if (availW < 600) {
-      // Handy: volle Breite, untereinander
-      let y = 12;
-      return widgets.map(w => {
-        const h = Math.round(w.h * 0.85);
-        const r = { ...w, x: 12, y, w: availW - 24, h };
-        y += h + 12;
-        return r;
-      });
-    }
-    return widgets.map(w => ({ ...w,
-      x: Math.round(w.x * k), y: Math.round(w.y * k), w: Math.round(w.w * k), h: Math.round(w.h * k) }));
-  };
+  // Die Demo-Tafeln sind wie die Vorlagen für 1076×532 entworfen (siehe fitLayout)
+  const fit = fitLayout;
 
   // Tafel 1: Morgenstart
   createBoard('Morgenstart',
@@ -6277,31 +6578,19 @@ function setupDemo() {
   createBoard('Gruppenarbeit',
     { type:'color', value:'#262C33' },
     fit([
-      { type:'timer',   x:24,  y:24,  w:330, h:200, config:{ minutes:15 } },
-      { type:'groups',  x:378, y:24,  w:674, h:290, config:{ names:'Emma\nLeon\nMia\nNoah\nSophie\nBen\nHanna\nLuca\nLina\nFinn\nEmilia\nPaul', size:3 } },
-      { type:'phases',  x:24,  y:248, w:330, h:260, config:{ phases:[
+      { type:'timer',   x:24,  y:24,  w:500, h:250, config:{ minutes:15 } },
+      { type:'groups',  x:548, y:24,  w:504, h:290, config:{ names:'Emma\nLeon\nMia\nNoah\nSophie\nBen\nHanna\nLuca\nLina\nFinn\nEmilia\nPaul', size:3 } },
+      { type:'phases',  x:24,  y:298, w:500, h:210, config:{ phases:[
         {name:'Aufgabe lesen', color:'#0B7A74', minutes:3},
         {name:'Gruppenarbeit', color:'#22c55e', minutes:15},
         {name:'Ergebnisse vorstellen', color:'#f59e0b', minutes:10},
         {name:'Feedback', color:'#ec4899', minutes:5}
       ]}},
-      { type:'text', x:378, y:338, w:674, h:170, config:{ text:'Arbeitet leise zusammen und notiert eure Ergebnisse auf dem Plakat.' } },
+      { type:'text', x:548, y:338, w:504, h:170, config:{ text:'Arbeitet leise zusammen und notiert eure Ergebnisse auf dem Plakat.' } },
     ]), true);
 
-  // Tafel 3: Wochenplan
-  createBoard('Wochenplan',
-    { type:'color', value:'#182840' },
-    fit([
-      { type:'clock',     x:24,  y:24,  w:300, h:170, config:{} },
-      { type:'text',      x:24,  y:218, w:300, h:290, config:{ text:'Wochenplan\n\nArbeite die Aufgaben in deinem Tempo ab. Hake fertige Aufgaben ab.' } },
-      { type:'checklist', x:348, y:24,  w:704, h:484, config:{ items:[
-        {text:'Mathe-Arbeitsblatt S. 12', done:true},
-        {text:'Diktat üben (10 Wörter)', done:true},
-        {text:'Sachunterricht: Steckbrief Tier', done:false},
-        {text:'Lesetagebuch: 2 Seiten', done:false},
-        {text:'Kunst: Bild fertigmalen', done:false}
-      ]}},
-    ]), true);
+  // Bewusst nur zwei Demo-Tafeln: im Gratis-Tarif sind drei Tafeln erlaubt, so bleibt
+  // ein Platz frei, um sofort eine eigene Tafel (Vorlagen-Galerie) anzulegen.
 
   APP.state.activeBoardId = APP.state.boards[0].id;
   APP.save();

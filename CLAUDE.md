@@ -13,6 +13,7 @@ impressum.html / datenschutz.html   ← Rechtsseiten (Impressum hat noch Platzha
 netlify/functions/create-checkout.js ← Stripe Backend (Serverless Function)
 netlify/functions/ai-chat.js        ← KI-Chat (Gemini 2.5 Flash + Web-Suche)
 netlify/functions/ical.js           ← Stundenplan-Abruf (iCal/WebUntis), ersetzt fremden CORS-Proxy
+fonts/                              ← Atkinson Hyperlegible Next (lokal gehostet, OFL) — nie von Google-Servern laden
 supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq) — separat via Supabase deployen
 ```
 
@@ -35,6 +36,16 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
 - **Schriftgrößen in Widgets:** `cqw`/`cqh` (`.widget-body` ist Container) bzw. `fitFontSize()`; Listen setzen `--n` (Zeilenzahl)
 - **Tafelfarbe:** `DEFAULT_BG` (#1F3531). Der alte Indigo-Verlauf (`LEGACY_DEFAULT_BG`) wird beim Anzeigen wie „Standard" behandelt
 - **Einrasten:** `snapLines/snapAxis/showSnapGuide` in `initDrag`/`initResize` (8-px-Raster, Kanten anderer Widgets, Alt = frei)
+- **Textgrößen messen:** `textWidthEm()` / `countWrappedLines()` / `fitFontSize()` (Canvas-Messung mit der geladenen Schrift)
+- **Vorlagen + Demo:** `BUILT_IN_TEMPLATES` sind für die Fläche `LAYOUT_BASE` (1076×532) entworfen; `fitLayout()` rechnet
+  beim Anwenden auf den Bildschirm um (Handy: untereinander). Neue Vorlagen immer in diesem Raster anlegen
+- **Start-Dialog:** `openStartDialog('new' | 'replace')` — Vorlagen-Galerie mit automatischen Vorschaubildern + KI-Feld;
+  „+" in der oberen Leiste öffnet ihn. `applyTemplate(tpl, mode)`
+- **Timer:** Ring + direkte Bedienung (−/+, Voreinstellungen); Layout `wide`/`tall`/`compact` je nach Größe.
+  Laufzeit-Zustand weiter auf dem Widget-Objekt (`_timerRunning/_timerEndAt/_timerRemaining`)
+- **Ampel = „Arbeitsform":** Liste mit Wort + Symbol (ab ca. 230×170), sonst drei Lichter; `config.state` bleibt red/yellow/green
+- **Leere Elemente:** `emptyCta(icon, text, onClick)` statt Hinweistext „⚙ Einstellungen" — funktioniert auch in der Ansicht
+- **Demo:** bewusst nur 2 Tafeln (Gratis-Limit 3), damit „+" beim ersten Besuch nicht sofort die Bezahl-Meldung zeigt
 
 ## Stripe / Payments
 - **Publishable Key** (im Code erlaubt): `pk_test_51TibNc9fJyerANl5...`
@@ -89,7 +100,8 @@ Zusätzlich die Seite laden und die Konsole auf Fehler prüfen.
 - [ ] Stripe auf Live-Mode umschalten + Webhook, der nach Zahlung `app_metadata.plan` setzt
 - [ ] Preistabelle vs. tatsächliche Sperren abgleichen (Cloud-Sync, Datei-Widget, KI sind laut Landing Page Pro, technisch aber frei)
 - [ ] Text-Tool: weitere Verbesserungen (Schriftauswahl, Größe)
-- [ ] Redesign Etappe 2: Bedienung direkt im Element (Timer-Ziffern antippen usw.), Vorlagen-Galerie beim Start
+- [ ] Redesign Etappe 2 (Rest): direkte Bedienung für weitere Elemente (Zufallszahl-Bereich, Namen/Checkliste direkt
+      im Element bearbeiten, QR-Link eintippen); KI-Tafel-Generator nutzt noch ein einfaches Fließ-Layout
 - [ ] Redesign Etappe 3: fehlende Elemente (Arbeitssymbole, Punktetafel, visueller Timer, Countdown, Kalender, Webcam)
 - [ ] Rest aus Etappe 1: Zeichen-Leiste und Dialog-Überschriften nutzen noch Emojis; Dialoge sind noch dunkel;
-      Landing Page hat noch das alte Indigo-Branding; eigene Schrift (Atkinson Hyperlegible) nur lokal hosten (DSGVO)
+      Landing Page hat noch das alte Indigo-Branding und die Systemschrift
