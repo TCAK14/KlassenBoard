@@ -6,6 +6,7 @@
 <title>ClassPuls – Das digitale Klassenzimmer</title>
 <meta name="description" content="ClassPuls ist das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer. Widgets, KI-Assistent, Live-Umfragen, Sprachsteuerung und mehr.">
 <meta name="theme-color" content="#1F3531">
+<link rel="preload" href="fonts/atkinson-hyperlegible-next-latin.woff2" as="font" type="font/woff2" crossorigin>
 <meta property="og:title" content="ClassPuls">
 <meta property="og:description" content="Das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer">
 <meta property="og:type" content="website">
@@ -726,7 +727,21 @@ body.fullscreen #board { top:0; }
   --brand:#0B7A74; --brand-dark:#075E59;
   --toolbar-h:60px; --dock-h:84px; --radius:18px;
 }
-html, body { font-family:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif; }
+/* Schrift: Atkinson Hyperlegible Next (Braille Institute, SIL Open Font License — siehe fonts/OFL.txt).
+   Auf Lesbarkeit entwickelt: ähnliche Zeichen (I l 1, O 0, rn m) sind klar unterscheidbar.
+   Liegt lokal im Ordner fonts/ — es wird NICHTS von Google-Servern geladen (DSGVO). */
+@font-face {
+  font-family:'Atkinson Hyperlegible Next'; font-style:normal; font-weight:200 800; font-display:swap;
+  src:url('fonts/atkinson-hyperlegible-next-latin-ext.woff2') format('woff2');
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family:'Atkinson Hyperlegible Next'; font-style:normal; font-weight:200 800; font-display:swap;
+  src:url('fonts/atkinson-hyperlegible-next-latin.woff2') format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+html, body { font-family:"Atkinson Hyperlegible Next","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif; }
+button, input, select, textarea { font-family:inherit; }
 body { background:var(--board); color:var(--on-board); }
 .ic { flex:none; display:block; }
 
@@ -898,7 +913,7 @@ body[data-cards="dark"] .widget {
   --n:4; --row-fs:clamp(14px, min(4.8cqw, calc(((100cqh - 20px) / var(--n) - 24px) / 1.4)), 40px);
 }
 .agenda-item { border-bottom-color:var(--w-line); gap:12px; padding:calc(var(--row-fs) * 0.3) 4px; align-items:baseline; }
-.agenda-time { color:var(--w-muted); font-size:calc(var(--row-fs) * 0.78); font-weight:700; width:3.7em; padding-top:0; font-variant-numeric:tabular-nums; }
+.agenda-time { color:var(--w-muted); font-size:calc(var(--row-fs) * 0.78); font-weight:600; width:3.9em; padding-top:0; font-variant-numeric:tabular-nums; }
 .agenda-text { font-size:var(--row-fs); }
 .checklist-item { border-bottom-color:var(--w-line); gap:10px; padding:calc(var(--row-fs) * 0.3) 2px; }
 .checklist-item input[type=checkbox] { width:calc(var(--row-fs) * 1.05); height:calc(var(--row-fs) * 1.05); accent-color:var(--accent); }
@@ -2844,19 +2859,50 @@ function renderWidgetContent(w, body) {
   }
 }
 
-// Größte Schriftgröße, bei der der Text voraussichtlich noch ins Feld passt.
-// Geschätzt statt gemessen, weil das Element beim Aufbau noch nicht im Dokument hängt.
-function fitFontSize(text, boxW, boxH, opts) {
-  const o = Object.assign({ min: 14, max: 72, lineHeight: 1.6, charW: 0.55 }, opts || {});
-  const paras = String(text || '').split('\n');
-  for (let fs = o.max; fs > o.min; fs--) {
-    // 0.92: Wörter werden nicht mitten im Wort umbrochen, Zeilen sind also selten ganz voll
-    const perLine = Math.max(1, Math.floor(boxW / (fs * o.charW) * 0.92));
-    let lines = 0;
-    for (const p of paras) lines += Math.max(1, Math.ceil(p.length / perLine));
-    if (lines * fs * o.lineHeight <= boxH) return fs;
+// Textbreite in em (über ein unsichtbares Canvas gemessen — funktioniert auch, bevor das
+// Element im Dokument hängt, und passt sich automatisch an die geladene Schrift an)
+const _measureCtx = document.createElement('canvas').getContext('2d');
+const _measureCache = new Map();
+function textWidthEm(str, weight) {
+  const key = (weight || 400) + '|' + str;
+  let v = _measureCache.get(key);
+  if (v === undefined) {
+    _measureCtx.font = (weight || 400) + ' 100px ' + getComputedStyle(document.body).fontFamily;
+    v = _measureCtx.measureText(str).width / 100;
+    if (_measureCache.size > 4000) _measureCache.clear();
+    _measureCache.set(key, v);
   }
-  return o.min;
+  return v;
+}
+// Wie viele Zeilen braucht der Text bei Schriftgröße fs in einem Feld der Breite boxW?
+function countWrappedLines(text, boxW, fs, weight) {
+  const space = textWidthEm(' ', weight) * fs;
+  let lines = 0;
+  for (const para of String(text == null ? '' : text).split('\n')) {
+    let lineW = 0;
+    lines++;
+    for (const word of para.split(/\s+/)) {
+      if (!word) continue;
+      const ww = textWidthEm(word, weight) * fs;
+      if (lineW > 0 && lineW + space + ww <= boxW) { lineW += space + ww; continue; }
+      if (lineW > 0) lines++;
+      // überlange Wörter werden mitten im Wort umbrochen (word-break)
+      if (ww > boxW) { lines += Math.ceil(ww / boxW) - 1; lineW = ww % boxW; }
+      else lineW = ww;
+    }
+  }
+  return lines;
+}
+// Größte Schriftgröße, bei der der Text noch ins Feld passt
+function fitFontSize(text, boxW, boxH, opts) {
+  const o = Object.assign({ min: 14, max: 72, lineHeight: 1.6, weight: 400 }, opts || {});
+  const w = Math.max(20, boxW * 0.97);   // kleine Reserve für Rundungen
+  let lo = o.min, hi = o.max;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (countWrappedLines(text, w, mid, o.weight) * mid * o.lineHeight <= boxH) lo = mid; else hi = mid - 1;
+  }
+  return lo;
 }
 
 // ── Timer-Hilfen ──
@@ -3211,8 +3257,7 @@ const WIDGET_RENDERERS = {
       const rows = items.length ? items.map(String) : ['Doppelklick zum Bearbeiten'];
       const boxW = w.w - 26, boxH = w.h - 34 - 26;
       for (let fs = 44; fs > 14; fs--) {
-        const perLine = Math.max(1, Math.floor(boxW / (fs * 0.55) * 0.92));
-        const lines = rows.reduce((s, it) => s + Math.max(1, Math.ceil(it.length / perLine)), 0);
+        const lines = rows.reduce((s, it) => s + countWrappedLines(it, boxW * 0.97, fs), 0);
         const need = lines * fs * 1.35 + rows.length * (2 * Math.max(3, fs * 0.2) + 1) + Math.max(11, fs * 0.6) * 1.35 + 8;
         if (need <= boxH) { itemFs = fs; break; }
       }
@@ -7629,7 +7674,14 @@ if (_pollParam) {
   initChromeIcons();
   renderDock();
   applyChromePrefs();
+  const fontReadyAtStart = !document.fonts || document.fonts.check('16px "Atkinson Hyperlegible Next"');
   init();
+  if (!fontReadyAtStart) {
+    // Schriftgrößen wurden noch mit der Ersatzschrift berechnet → nach dem Laden einmal neu messen
+    document.fonts.load('400 16px "Atkinson Hyperlegible Next"')
+      .then(() => { _measureCache.clear(); renderWidgets(); })
+      .catch(() => {});
+  }
   if (new URLSearchParams(window.location.search).has('reset')) openResetDialog();
 }
 </script>
