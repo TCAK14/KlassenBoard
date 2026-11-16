@@ -1086,21 +1086,27 @@ body.draw-mode .w-full-btn { display:none; }
 #draw-ruler .dr-rot[data-end="1"] { right:8px; }
 
 /* ── PDF ── */
-.pdf-bar { flex:none; display:flex; align-items:center; gap:4px; padding:5px 8px; background:var(--w-bar); }
+.pdf-bar { flex:none; align-self:stretch; display:flex; align-items:center; gap:4px; padding:5px 8px; background:var(--w-bar); }
 .pdf-btn { flex:none; width:40px; height:36px; border:0; border-radius:9px; background:transparent; color:var(--w-ink); cursor:pointer; display:flex; align-items:center; justify-content:center; }
 .pdf-btn:hover { background:var(--w-fill-3); }
 .pdf-no { flex:none; min-width:58px; text-align:center; font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; }
 .pdf-name { flex:1 1 0; min-width:0; padding:0 8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; color:var(--w-muted); }
-.pdf-stage { flex:1 1 0; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; background:var(--w-fill-2); }
-.pdf-stage canvas { display:block; background:#fff; box-shadow:0 2px 12px rgba(0,0,0,0.25); }
+/* margin:auto statt Zentrieren per Flex: so wird beim Vergrößern links/oben nichts abgeschnitten */
+.pdf-stage { flex:1 1 0; align-self:stretch; width:100%; min-width:0; min-height:0; position:relative; display:flex; overflow:auto; background:var(--w-fill-2); }
+.pdf-stage canvas { display:block; flex:none; margin:auto; background:#fff; box-shadow:0 2px 12px rgba(0,0,0,0.25); }
+.pdf-stage.zoomed, .pdf-full-stage.zoomed { cursor:grab; touch-action:none; }
+.pdf-stage.zoomed:active, .pdf-full-stage.zoomed:active { cursor:grabbing; }
+.pdf-zoom { flex:none; min-width:48px; text-align:center; font-size:12.5px; font-weight:700; color:var(--w-muted); font-variant-numeric:tabular-nums; }
 .pdf-loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:16px; text-align:center; font-size:14px; color:var(--w-muted); }
 .pdf-empty { margin:auto; display:flex; flex-direction:column; align-items:center; gap:10px; padding:16px; text-align:center; }
 .pdf-empty-text { font-size:14px; color:var(--w-ink); max-width:300px; }
 .pdf-empty-hint { font-size:12.5px; color:var(--w-faint); }
 .widget-body.pdf-drop { outline:3px dashed var(--accent); outline-offset:-6px; }
 .modal-overlay.pdf-full { z-index:100002; background:rgba(10,14,13,0.96); backdrop-filter:none; flex-direction:column; align-items:stretch; justify-content:flex-start; }
-.pdf-full-stage { flex:1 1 0; min-height:0; display:flex; align-items:center; justify-content:center; cursor:pointer; touch-action:pan-y; }
-.pdf-full-stage canvas { background:#fff; box-shadow:0 8px 40px rgba(0,0,0,0.6); }
+.pdf-full-stage { flex:1 1 0; min-height:0; display:flex; overflow:auto; cursor:pointer; touch-action:none; }
+.pdf-full-stage canvas { flex:none; margin:auto; background:#fff; box-shadow:0 8px 40px rgba(0,0,0,0.6); }
+.pdf-full-zoom { min-width:64px; text-align:center; color:#fff; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; }
+.pdf-full-gap { width:14px; }
 .pdf-full-bar { flex:none; display:flex; align-items:center; justify-content:center; gap:10px; padding:10px; }
 .pdf-full-bar button { width:56px; height:48px; border:0; border-radius:12px; background:rgba(255,255,255,0.14); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 .pdf-full-bar button:hover { background:rgba(255,255,255,0.26); }
@@ -1464,6 +1470,8 @@ const ICONS = {
   files: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
   pdf: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
   chevronLeft: 'M15 6l-6 6 6 6',
+  zoomIn: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4M11 8v6M8 11h6',
+  zoomOut: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4M8 11h6',
   marker: 'M9 14l6-9 4 3-6 9zM9 14l-2 5 6-2M4 21h7',
   eraser: 'M4 15l8-10 8 6-6 9H8zM9 9l8 6M4 20h16',
   line: 'M5 19L19 5',
@@ -3368,13 +3376,76 @@ async function drawPdfPage(doc, pageNo, canvas, boxW, boxH) {
   const page = await doc.getPage(pageNo);
   const base = page.getViewport({ scale: 1 });
   const fit = Math.max(0.1, Math.min(boxW / base.width, boxH / base.height));
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // Speicher-Deckel: bei starkem Zoom lieber etwas weniger scharf als ein abstürzender Browser
+  const px = base.width * fit * dpr * base.height * fit * dpr;
+  if (px > 16e6) dpr *= Math.sqrt(16e6 / px);
   const vp = page.getViewport({ scale: fit * dpr });
   canvas.width = Math.floor(vp.width); canvas.height = Math.floor(vp.height);
   canvas.style.width = Math.floor(vp.width / dpr) + 'px';
   canvas.style.height = Math.floor(vp.height / dpr) + 'px';
   await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
 }
+// Zoomstufe je PDF-Element (1 = ganze Seite sichtbar); bewusst nicht gespeichert
+const _pdfZoom = new Map();
+// Zoom-Gesten für eine PDF-Fläche: Strg+Mausrad, zwei Finger, Ziehen zum Verschieben, optional Doppelklick.
+// st = { z(): aktuelle Stufe, set(z): neue Stufe }. Rückgabe: wasGesture() → war die letzte Berührung ein Ziehen/Zoomen?
+function attachPdfZoom(stage, st, opts) {
+  const pts = new Map();
+  let pan = null, pinch = null, moved = false;
+  stage.addEventListener('wheel', e => {
+    if (!e.ctrlKey) return;            // normales Mausrad scrollt die vergrößerte Seite
+    e.preventDefault(); e.stopPropagation();
+    st.set(st.z() * (e.deltaY < 0 ? 1.2 : 1 / 1.2));
+  }, { passive: false });
+  stage.addEventListener('pointerdown', e => {
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    moved = false;
+    if (pts.size === 2) {
+      const [a, b] = [...pts.values()];
+      pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: st.z() };
+      pan = null;
+    } else if (st.z() > 1) {
+      pan = { x: e.clientX, y: e.clientY, sl: stage.scrollLeft, st: stage.scrollTop };
+      try { stage.setPointerCapture(e.pointerId); } catch(_) {}
+    }
+  });
+  stage.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId)) return;
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && pts.size === 2) {
+      const [a, b] = [...pts.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinch.d > 10) st.set(pinch.z * d / pinch.d);
+      moved = true;
+    } else if (pan) {
+      const dx = e.clientX - pan.x, dy = e.clientY - pan.y;
+      if (Math.abs(dx) + Math.abs(dy) > 5) moved = true;
+      stage.scrollLeft = pan.sl - dx;
+      stage.scrollTop = pan.st - dy;
+    }
+  });
+  const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; if (!pts.size) pan = null; };
+  stage.addEventListener('pointerup', up);
+  stage.addEventListener('pointercancel', up);
+  if (opts && opts.dblclick) stage.addEventListener('dblclick', e => { e.stopPropagation(); st.set(st.z() > 1 ? 1 : 2); });
+  return { wasGesture: () => moved };
+}
+// Neue Zoomstufe setzen und dabei die Bildmitte an Ort und Stelle halten
+function applyPdfZoom(id, stage, label, z, redraw) {
+  z = Math.max(1, Math.min(5, Math.round(z * 100) / 100));
+  if (z === (_pdfZoom.get(id) || 1)) return;
+  const fx = (stage.scrollLeft + stage.clientWidth / 2) / Math.max(1, stage.scrollWidth);
+  const fy = (stage.scrollTop + stage.clientHeight / 2) / Math.max(1, stage.scrollHeight);
+  _pdfZoom.set(id, z);
+  stage.classList.toggle('zoomed', z > 1);
+  if (label) label.textContent = Math.round(z * 100) + ' %';
+  Promise.resolve(redraw()).then(() => {
+    stage.scrollLeft = fx * stage.scrollWidth - stage.clientWidth / 2;
+    stage.scrollTop = fy * stage.scrollHeight - stage.clientHeight / 2;
+  });
+}
+
 async function pickPdf(w, file, onDone) {
   if (!file) return;
   if (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name || '')) { toast('Bitte eine PDF-Datei auswählen'); return; }
@@ -3399,25 +3470,42 @@ function openPdfFullscreen(w, onClose) {
   ov.innerHTML = '<div class="pdf-full-stage"><canvas></canvas></div>'
     + '<div class="pdf-full-bar"><button data-a="prev" aria-label="Vorherige Seite">' + icon('chevronLeft', 26) + '</button>'
     + '<span class="pdf-full-no"></span><button data-a="next" aria-label="Nächste Seite">' + icon('chevronRight', 26) + '</button>'
+    + '<span class="pdf-full-gap"></span>'
+    + '<button data-a="zout" aria-label="Verkleinern" title="Verkleinern">' + icon('zoomOut', 24) + '</button>'
+    + '<span class="pdf-full-zoom">100 %</span>'
+    + '<button data-a="zin" aria-label="Vergrößern" title="Vergrößern">' + icon('zoomIn', 24) + '</button>'
+    + '<span class="pdf-full-gap"></span>'
     + '<button data-a="close" aria-label="Schließen">' + icon('x', 24) + '</button></div>';
   document.body.appendChild(ov);
   const stage = ov.querySelector('.pdf-full-stage'), canvas = ov.querySelector('canvas'), no = ov.querySelector('.pdf-full-no');
-  let doc = null, busy = false, queued = false;
-  const show = async () => {
-    if (!doc) return;
-    if (busy) { queued = true; return; }
-    busy = true;
+  let doc = null, chain = Promise.resolve(), waiting = false;
+  const zid = 'full_' + w.id, zlabel = ov.querySelector('.pdf-full-zoom');
+  _pdfZoom.delete(zid);
+  const setZoom = z => applyPdfZoom(zid, stage, zlabel, z, () => show());
+  const gesture = attachPdfZoom(stage, { z: () => _pdfZoom.get(zid) || 1, set: setZoom });
+  // Zeichnet nacheinander; mehrere Aufrufe während eines Zeichnens werden zu einem zusammengefasst.
+  // Das zurückgegebene Versprechen ist erst erfüllt, wenn der neue Stand wirklich gezeichnet ist.
+  const show = () => {
+    if (waiting) return chain;
+    waiting = true;
+    chain = chain.then(() => { waiting = false; return paint(); });
+    return chain;
+  };
+  const paint = async () => {
+    if (!doc || !ov.isConnected) return;
     const p = Math.max(1, Math.min(doc.numPages, w.config.page || 1));
     w.config.page = p;
     no.textContent = p + ' / ' + doc.numPages;
-    try { await drawPdfPage(doc, p, canvas, stage.clientWidth - 16, stage.clientHeight - 16); } catch(e) {}
-    busy = false;
-    if (queued) { queued = false; show(); }
+    const z = _pdfZoom.get(zid) || 1;
+    try { await drawPdfPage(doc, p, canvas, (ov.clientWidth - 16) * z, (ov.clientHeight - 84) * z); } catch(e) {}
   };
   const go = d => { if (!doc) return; const p = Math.max(1, Math.min(doc.numPages, (w.config.page || 1) + d)); if (p !== w.config.page) { w.config.page = p; no.textContent = p + ' / ' + doc.numPages; APP.save(); show(); } };
   const close = () => { document.removeEventListener('keydown', onKey, true); window.removeEventListener('resize', show); ov.remove(); onClose && onClose(); };
   const onKey = e => {
     if (e.key === 'Escape') { e.stopPropagation(); close(); }
+    else if (e.key === '+' || e.key === '=') { e.preventDefault(); setZoom((_pdfZoom.get(zid) || 1) * 1.25); }
+    else if (e.key === '-') { e.preventDefault(); setZoom((_pdfZoom.get(zid) || 1) / 1.25); }
+    else if (e.key === '0') { e.preventDefault(); setZoom(1); }
     else if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); e.stopPropagation(); go(1); }
     else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); go(-1); }
   };
@@ -3426,10 +3514,14 @@ function openPdfFullscreen(w, onClose) {
   ov.querySelector('[data-a=prev]').addEventListener('click', () => go(-1));
   ov.querySelector('[data-a=next]').addEventListener('click', () => go(1));
   ov.querySelector('[data-a=close]').addEventListener('click', close);
+  ov.querySelector('[data-a=zin]').addEventListener('click', () => setZoom((_pdfZoom.get(zid) || 1) * 1.25));
+  ov.querySelector('[data-a=zout]').addEventListener('click', () => setZoom((_pdfZoom.get(zid) || 1) / 1.25));
   let tx = null;
   stage.addEventListener('pointerdown', e => { tx = e.clientX; });
   stage.addEventListener('pointerup', e => {
     if (tx == null) return;
+    // vergrößert oder gerade gezoomt/verschoben: nicht versehentlich blättern
+    if ((_pdfZoom.get(zid) || 1) > 1 || gesture.wasGesture()) { tx = null; return; }
     const dx = e.clientX - tx; tx = null;
     if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
     else go(e.clientX > window.innerWidth / 2 ? 1 : -1);   // Tippen: rechte Hälfte = weiter
@@ -5024,17 +5116,21 @@ const WIDGET_RENDERERS = {
     const stage = el('div', 'pdf-stage');
     const canvas = document.createElement('canvas');
     stage.appendChild(canvas);
-    let doc = null, busy = false, queued = false;
-    const show = async () => {
+    let doc = null, chain = Promise.resolve(), waiting = false;
+    // (siehe Großansicht: nacheinander zeichnen, Aufrufe zusammenfassen)
+    const show = () => {
+      if (waiting) return chain;
+      waiting = true;
+      chain = chain.then(() => { waiting = false; return paint(); });
+      return chain;
+    };
+    const paint = async () => {
       if (!doc || !body.isConnected) return;
-      if (busy) { queued = true; return; }
-      busy = true;
       const p = Math.max(1, Math.min(doc.numPages, w.config.page || 1));
       w.config.page = p;
       no.textContent = p + ' / ' + doc.numPages;
-      try { await drawPdfPage(doc, p, canvas, stage.clientWidth - 12, stage.clientHeight - 12); } catch(e) {}
-      busy = false;
-      if (queued) { queued = false; show(); }
+      const z = _pdfZoom.get(w.id) || 1;
+      try { await drawPdfPage(doc, p, canvas, (body.clientWidth - 12) * z, (body.clientHeight - bar.offsetHeight - 12) * z); } catch(e) {}
     };
     const go = d => {
       if (!doc) return;
@@ -5042,9 +5138,16 @@ const WIDGET_RENDERERS = {
       if (p === w.config.page) return;
       w.config.page = p; no.textContent = p + ' / ' + doc.numPages; APP.save(); show();
     };
+    const zlabel = el('span', 'pdf-zoom');
+    zlabel.textContent = Math.round((_pdfZoom.get(w.id) || 1) * 100) + ' %';
+    stage.classList.toggle('zoomed', (_pdfZoom.get(w.id) || 1) > 1);
+    const setZoom = z => applyPdfZoom(w.id, stage, zlabel, z, () => show());
+    attachPdfZoom(stage, { z: () => _pdfZoom.get(w.id) || 1, set: setZoom }, { dblclick: true });
     bar.append(
       mk('chevronLeft', 'Vorherige Seite', () => go(-1)), no, mk('chevronRight', 'Nächste Seite', () => go(1)),
       name,
+      mk('zoomOut', 'Verkleinern', () => setZoom((_pdfZoom.get(w.id) || 1) / 1.25)), zlabel,
+      mk('zoomIn', 'Vergrößern (auch Doppelklick oder Strg + Mausrad)', () => setZoom((_pdfZoom.get(w.id) || 1) * 1.25)),
       mk('maximize', 'Groß anzeigen', () => openPdfFullscreen(w, show)),
       mk('files', 'Andere PDF öffnen', () => inp.click())
     );
