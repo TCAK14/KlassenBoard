@@ -190,10 +190,11 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
     Tafeln, Klassenlisten oder Kontodaten werden dabei nicht mitgesendet.
   </p>
   <ul>
-    <li><strong>KI-Assistent (Chat):</strong> Google Gemini API (Google Ireland Ltd. / Google LLC, USA), inklusive Web-Suche für aktuelle Fragen. Die Anfrage läuft über unseren Server, nicht direkt aus deinem Browser.</li>
+    <li><strong>KI-Assistent (Chat):</strong> Google Gemini API (Google Ireland Ltd. / Google LLC, USA). Die Anfrage läuft über unseren Server, nicht direkt aus deinem Browser. Nur bei Fragen zu aktuellen Themen oder wenn du „Im Web prüfen“ wählst, nutzt der Assistent zusätzlich die Google-Suche; solche Anfragen und Antworten speichert Google nach eigenen Angaben bis zu 30 Tage. Der Assistent ist ein Werkzeug für Lehrkräfte und nicht zur eigenständigen Nutzung durch Schülerinnen und Schüler gedacht.</li>
+    <li><strong>Bilder im KI-Assistenten („Zeige …“, „Male …“):</strong> Der Suchbegriff wird über unseren Server an Google Gemini (Übersetzung und Jugendschutz-Prüfung) und an die Bilddatenbank Pixabay bzw. Wikimedia Commons gesendet. Das Bild lädt unser Server; dein Browser ruft diese Dienste nicht direkt auf.</li>
     <li><strong>KI-Tafel-Generator, KI-Widgets und Sprachbefehle:</strong> Groq, Inc. (USA), angebunden über eine Server-Funktion bei Supabase.</li>
     <li><strong>Spracherkennung:</strong> übernimmt dein Browser. In Chrome und Edge wird die Sprachaufnahme dafür an den Browser-Hersteller (Google bzw. Microsoft) gesendet.</li>
-    <li><strong>KI-Bilder („Male …"):</strong> Pollinations.ai – der Bildwunsch wird als Teil der Bildadresse an den Dienst übertragen.</li>
+    <li><strong>KI-Bilder im Element „Frag die KI“:</strong> Pollinations.ai – der Bildwunsch wird als Teil der Bildadresse an den Dienst übertragen.</li>
   </ul>
   <p>
     Bitte gib in KI-Funktionen <strong>keine personenbezogenen Daten von Schülerinnen und Schülern</strong>
@@ -244,7 +245,8 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
       <tr><td>Stripe</td><td>Zahlungen</td><td>USA (DPF-zertifiziert)</td></tr>
       <tr><td>Google (Gemini API)</td><td>KI-Assistent – nur bei Nutzung</td><td>EU/USA (DPF-zertifiziert)</td></tr>
       <tr><td>Groq</td><td>KI-Tafel-Generator, Sprachbefehle – nur bei Nutzung</td><td>USA</td></tr>
-      <tr><td>Pollinations.ai</td><td>KI-Bilder – nur bei Nutzung</td><td>EU/USA</td></tr>
+      <tr><td>Pixabay, Wikimedia Commons</td><td>Bildersuche im KI-Assistenten – nur bei Nutzung, Abruf über unseren Server</td><td>EU/USA</td></tr>
+      <tr><td>Pollinations.ai</td><td>KI-Bilder im Element „Frag die KI“ – nur bei Nutzung</td><td>EU/USA</td></tr>
       <tr><td>Google (YouTube, Favicons)</td><td>Videos und Webseiten-Symbole – nur mit entsprechendem Element</td><td>EU/USA (DPF-zertifiziert)</td></tr>
       <tr><td>Cloudflare (cdnjs), jsDelivr</td><td>Auslieferung von Programmbibliotheken</td><td>Global CDN</td></tr>
     </tbody>

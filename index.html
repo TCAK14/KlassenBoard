@@ -1090,8 +1090,76 @@ body[data-cards="dark"] .tm-ring .prg { stroke:var(--accent-soft); }
 .class-dd-add-input button { background:var(--accent); font-size:14px; padding:9px 12px; border-radius:10px; }
 
 /* ── KI-Assistent sitzt jetzt in der unteren Leiste ── */
-#ki-fab { display:none !important; }
-#ki-panel { bottom:calc(var(--dock-h) + 30px); left:20px; }
+/* Fenster des Assistenten: hell wie die Karten, unten rechts über dem „KI“-Knopf */
+#ki-panel {
+  left:auto; right:20px; bottom:calc(var(--dock-h) + 30px);
+  width:440px; height:620px; min-width:300px; min-height:320px;
+  max-width:calc(100vw - 24px); max-height:calc(100vh - var(--toolbar-h) - var(--dock-h) - 44px);
+  background:var(--card); color:var(--ink); border:1px solid rgba(27,36,34,0.08); border-radius:20px;
+  box-shadow:0 20px 56px rgba(0,0,0,0.4); backdrop-filter:none; -webkit-backdrop-filter:none;
+  font-size:16px; transform-origin:bottom right;
+}
+/* Groß: mittig und mit großer Schrift, damit die Klasse mitlesen kann */
+#ki-panel.big {
+  right:max(12px, calc(50vw - 500px)); width:min(1000px, calc(100vw - 24px)) !important;
+  height:calc(100vh - var(--toolbar-h) - var(--dock-h) - 44px) !important; font-size:clamp(18px, 1.7vw, 26px);
+}
+#ki-panel .ki-resize { left:0; right:auto; width:22px; height:22px; cursor:nw-resize; }
+#ki-panel .ki-resize::after { left:6px; right:auto; top:6px; border-right:0; border-left:2px solid #B4BDB7; border-top:2px solid #B4BDB7; }
+#ki-panel.big .ki-resize { display:none; }
+#ki-panel-header { padding:12px 10px 12px 18px; background:transparent; border-bottom:1px solid var(--line); gap:6px; }
+#ki-panel-header .ki-logo { display:flex; color:var(--accent); font-size:0; }
+#ki-panel-header b { font-size:17px; flex:1; margin-left:4px; }
+.ki-hbtn { width:38px; height:38px; flex:none; border:0; border-radius:10px; background:transparent; color:var(--ink-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.ki-hbtn:hover { background:rgba(27,36,34,0.08); color:var(--ink); }
+#ki-history { padding:14px; gap:10px; scrollbar-color:#B4BDB7 transparent; }
+.ki-bubble { font-size:1em; line-height:1.5; padding:10px 14px; border-radius:16px; max-width:94%; }
+.ki-bubble.user { background:var(--accent); color:#fff; border-bottom-right-radius:6px; white-space:pre-wrap; }
+.ki-bubble.ai { background:#fff; color:var(--ink); border:1px solid var(--line); border-bottom-left-radius:6px; }
+.ki-bubble.thinking { color:var(--ink-muted); font-style:normal; display:flex; align-items:center; gap:8px; }
+.ki-bubble.error { background:#FEF3F2; border-color:#FECDCA; color:#912018; }
+.ki-dots { display:inline-flex; gap:4px; }
+.ki-dots i { width:6px; height:6px; border-radius:50%; background:var(--accent); opacity:.3; animation:kiDot 1.2s infinite; }
+.ki-dots i:nth-child(2) { animation-delay:.2s; }
+.ki-dots i:nth-child(3) { animation-delay:.4s; }
+@keyframes kiDot { 0%, 80%, 100% { opacity:.25; transform:translateY(0); } 40% { opacity:1; transform:translateY(-3px); } }
+.ki-md p { margin:0 0 .6em; }
+.ki-md > :last-child { margin-bottom:0; }
+.ki-md ol, .ki-md ul { margin:0 0 .6em; padding-left:1.5em; }
+.ki-md li { margin:.2em 0; }
+.ki-md h4 { margin:.3em 0 .4em; font-size:1.05em; }
+.ki-md code { background:rgba(27,36,34,0.08); padding:.1em .35em; border-radius:5px; font-size:.92em; }
+.ki-tag { display:inline-block; margin-bottom:6px; padding:2px 8px; border-radius:999px; background:var(--accent-tint); color:var(--accent-ink); font-size:.75em; font-weight:700; }
+.ki-note { margin-top:8px; font-size:.82em; color:var(--ink-muted); }
+.ki-sources { margin-top:10px; font-size:.82em; color:var(--ink-muted); line-height:1.5; }
+.ki-sources a { color:var(--accent-ink); }
+.ki-sugg-frame { display:block; width:100%; height:60px; border:0; margin-top:8px; border-radius:10px; background:#fff; }
+.ki-img { display:block; width:100%; max-height:46vh; object-fit:contain; border-radius:10px; background:#F1F3EF; }
+.ki-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.ki-act {
+  display:inline-flex; align-items:center; gap:6px; min-height:38px; padding:0 12px; border-radius:10px; cursor:pointer;
+  border:1.5px solid var(--line); background:#fff; color:var(--ink); font:inherit; font-size:14px; font-weight:700;
+}
+.ki-act:hover { border-color:var(--accent); background:var(--accent-tint); color:var(--accent-ink); }
+.ki-act.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+.ki-act.primary:hover { background:var(--accent-dark); border-color:var(--accent-dark); color:#fff; }
+.ki-empty { margin:auto 0; padding:6px 4px; display:flex; flex-direction:column; gap:8px; }
+.ki-empty-title { font-size:1.25em; font-weight:700; }
+.ki-empty-sub { color:var(--ink-muted); font-size:.95em; line-height:1.45; }
+.ki-chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.ki-chip { min-height:40px; padding:6px 14px; border-radius:999px; border:1.5px solid var(--line); background:#fff; color:var(--ink); font:inherit; font-size:.9em; font-weight:600; cursor:pointer; text-align:left; }
+.ki-chip:hover { border-color:var(--accent); background:var(--accent-tint); color:var(--accent-ink); }
+#ki-input-row { padding:10px 12px 6px; gap:8px; border-top:1px solid var(--line); align-items:flex-end; }
+#ki-textarea {
+  background:#fff; border:1.5px solid #B4BDB7; border-radius:12px; color:var(--ink);
+  font-size:16px; line-height:1.4; padding:11px 12px; height:46px; min-height:46px; max-height:140px;
+}
+#ki-textarea::placeholder { color:#6F7A76; }
+#ki-textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(11,122,116,0.18); }
+#ki-send { width:46px; height:46px; border-radius:12px; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:0; }
+#ki-send:hover { background:var(--accent-dark); }
+#ki-send:disabled { opacity:.45; cursor:default; }
+#ki-foot { padding:0 14px 10px; font-size:12px; line-height:1.35; color:var(--ink-muted); text-align:center; }
 #toast { bottom:calc(var(--dock-h) + 30px); }
 /* Schüler-Abstimmungsseite (?poll=…): nur die Abstimmung, keine Lehrer-Leisten */
 body.voting #toolbar, body.voting #dock, body.voting #board { display:none !important; }
@@ -1143,7 +1211,11 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
   .upgrade-modal { max-width:calc(100vw - 24px) !important; }
   .template-grid { grid-template-columns:1fr; }
 
-  #ki-panel { width:calc(100vw - 16px); height:52vh; left:8px; bottom:calc(var(--dock-h) + 18px); border-radius:14px; }
+  #ki-panel, #ki-panel.big {
+    left:8px; right:8px; width:auto !important; height:min(72vh, 620px) !important; max-width:none;
+    bottom:calc(var(--dock-h) + 18px); border-radius:16px; font-size:16px;
+  }
+  #ki-panel .ki-resize, #ki-big { display:none; }
 
   #draw-toolbar { padding:6px 10px; gap:4px; bottom:16px; max-width:calc(100vw - 12px); overflow-x:auto; }
   .draw-tool-btn { width:32px; height:32px; font-size:14px; }
@@ -1159,7 +1231,7 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
   /* Zeichnen und Bearbeiten wandern auf dem Handy ins Menü ⋯ */
   #btn-draw, #edit-mode-btn { display:none !important; }
   #class-btn { max-width:96px; }
-  #ki-panel { height:58vh; }
+  #ki-panel, #ki-panel.big { height:min(76vh, 640px) !important; }
 }
 
 /* iOS Safari zoomt beim Fokussieren von Feldern mit Schrift < 16px unerwünscht hinein */
@@ -1272,37 +1344,22 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
   <button class="draw-tool-btn" id="dt-exit" title="Zeichnen beenden" style="background:rgba(239,68,68,0.2);color:#f87171">✕</button>
 </div>
 
-<!-- Floating KI-Chat -->
-<button id="ki-fab" title="KI-Assistent">
-  <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="11" cy="11" r="10" fill="url(#kg)" opacity="0.9"/>
-    <path d="M7 9.5C7 8.1 8.1 7 9.5 7h3C13.9 7 15 8.1 15 9.5v3c0 1.4-1.1 2.5-2.5 2.5H11l-2 2v-2H9.5C8.1 15 7 13.9 7 12.5v-3z" fill="white" opacity="0.95"/>
-    <circle cx="9.5" cy="11" r="1" fill="url(#kg2)"/>
-    <circle cx="12.5" cy="11" r="1" fill="url(#kg2)"/>
-    <defs>
-      <linearGradient id="kg" x1="0" y1="0" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-        <stop stop-color="#0E9F97"/>
-        <stop offset="1" stop-color="#0B7A74"/>
-      </linearGradient>
-      <linearGradient id="kg2" x1="0" y1="0" x2="1" y2="1" gradientUnits="userSpaceOnUse">
-        <stop stop-color="#0E9F97"/>
-        <stop offset="1" stop-color="#06b6d4"/>
-      </linearGradient>
-    </defs>
-  </svg>
-</button>
-<div id="ki-panel">
-  <div class="ki-resize" id="ki-resize"></div>
+<!-- KI-Assistent (öffnet über den Knopf „KI“ in der unteren Leiste) -->
+<div id="ki-panel" role="dialog" aria-label="KI-Assistent">
+  <div class="ki-resize" id="ki-resize" title="Größe ändern"></div>
   <div id="ki-panel-header">
-    <span>🤖</span>
+    <span class="ki-logo" aria-hidden="true"></span>
     <b>KI-Assistent</b>
-    <small>Zeige ein Bild oder stelle eine Frage</small>
+    <button class="ki-hbtn" id="ki-new" title="Neues Gespräch" aria-label="Neues Gespräch"></button>
+    <button class="ki-hbtn" id="ki-big" title="Groß anzeigen – für die ganze Klasse lesbar" aria-label="Groß anzeigen"></button>
+    <button class="ki-hbtn" id="ki-close" title="Schließen" aria-label="Schließen"></button>
   </div>
-  <div id="ki-history"></div>
+  <div id="ki-history" aria-live="polite"></div>
   <div id="ki-input-row">
-    <textarea id="ki-textarea" placeholder='z.B. "Zeige einen Apfel"…' rows="1"></textarea>
-    <button id="ki-send">➤</button>
+    <textarea id="ki-textarea" rows="1" maxlength="1500" placeholder="Frage oder „Zeige einen Vulkan“"></textarea>
+    <button id="ki-send" title="Senden" aria-label="Senden"></button>
   </div>
+  <div id="ki-foot"></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -1346,6 +1403,7 @@ const ICONS = {
   // Bedienung
   plus: 'M12 5v14M5 12h14',
   minus: 'M5 12h14',
+  copy: 'M9 9h10v11H9zM5 15V4h10',
   play: 'M7 4.5l12 7.5-12 7.5z',
   pause: 'M8 5v14M16 5v14',
   volOff: 'M4 9.5h3l4-3.5v12l-4-3.5H4zM15.5 9.5l5 5M20.5 9.5l-5 5',
@@ -1824,6 +1882,7 @@ function openUpgradeModal(reason) {
   const msgs = {
     boards: 'Im Kostenlos-Plan kannst du maximal ' + FREE_LIMITS.maxBoards + ' Tafeln erstellen.',
     classes: 'Im Kostenlos-Plan kannst du maximal ' + FREE_LIMITS.maxClasses + ' Klasse erstellen.',
+    ki: 'Die kostenlosen Fragen an den KI-Assistenten sind aufgebraucht.',
   };
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -2475,19 +2534,20 @@ function findFreeSpot(board, w, h) {
   return { x: sx + Math.max(12, Math.min(40 + n * 28, viewW - w - 12)), y: sy + 40 + n * 28 };
 }
 
-function addWidget(type, extraConfig={}) {
+function addWidget(type, extraConfig={}, size) {
   const board = APP.activeBoard();
   if (!board) return;
   APP.snapshotUndo();
   const def = REGISTRY[type];
   // auf dem Handy nicht breiter als der Bildschirm
   const maxNewW = Math.max(200, ((document.getElementById('board') || {}).clientWidth || window.innerWidth) - 24);
+  const newW = (size && size.w) || def.w, newH = (size && size.h) || def.h;
   const widget = {
     id: uid(),
     type,
-    ...findFreeSpot(board, Math.min(def.w, maxNewW), def.h),
-    w: Math.min(def.w, maxNewW),
-    h: def.h,
+    ...findFreeSpot(board, Math.min(newW, maxNewW), newH),
+    w: Math.min(newW, maxNewW),
+    h: newH,
     zIndex: nextZ(board),
     locked: false,
     config: { ...getDefaultConfig(type), ...extraConfig },
@@ -3550,10 +3610,9 @@ const WIDGET_RENDERERS = {
   goal(w, body) {
     const div = el('div','w-goal-text');
     const text = w.config.text || '';
-    const charCount = Math.max(text.length, 1);
-    const baseFontSize = Math.min(w.w * 0.085, w.h * 0.38);
-    const scaledFs = baseFontSize * Math.min(1, Math.pow(30 / charCount, 0.4));
-    div.style.fontSize = Math.max(14, Math.min(scaledFs, 64)) + 'px';
+    // so groß wie möglich, ohne überzulaufen (gemessen mit der echten Schrift, fett, Zeilenhöhe 1.4)
+    div.style.fontSize = fitFontSize(text || 'Doppelklick: Lernziel eintragen', w.w - 30, w.h - 34 - 30,
+      { max: 72, lineHeight: 1.4, weight: 700 }) + 'px';
     const isEmpty = !text;
     div.style.color = isEmpty ? 'var(--w-faint)' : 'var(--w-ink)';
     div.textContent = text || 'Doppelklick: Lernziel eintragen';
@@ -7439,22 +7498,67 @@ const DRAW = {
 
 
 // ══════════════════════════════════════════════════════════════
-// FLOATING KI-CHAT (Groq via Netlify Function)
+// KI-ASSISTENT (Gemini über die Netlify-Funktion ai-chat, Bilder über image-search)
 // ══════════════════════════════════════════════════════════════
 (function() {
-  const fab = document.getElementById('ki-fab');
   const panel = document.getElementById('ki-panel');
   const historyEl = document.getElementById('ki-history');
   const textarea = document.getElementById('ki-textarea');
   const sendBtn = document.getElementById('ki-send');
-  if (!fab) return;
+  const foot = document.getElementById('ki-foot');
+  if (!panel) return;
 
   const TEXT_AI_KEY = 'kb_text_ai_count';
   const MAX_FREE_TEXT = 50;
+  const SUGGESTIONS = [
+    '5 Kopfrechen-Aufgaben für Klasse 3',
+    'Erkläre Photosynthese für Klasse 5',
+    'Zeige einen Vulkan',
+    '3 Ideen für eine Bewegungspause',
+    'Quizfrage zu Europa mit 4 Antworten',
+    'Schreibanlass für Klasse 4',
+  ];
   let sending = false;
-  const chatHistory = [];
+  let chatHistory = [];
 
-  // Resize
+  panel.querySelector('.ki-logo').innerHTML = icon('ai', 22);
+  document.getElementById('ki-new').innerHTML = icon('reset', 18);
+  document.getElementById('ki-big').innerHTML = icon('maximize', 18);
+  document.getElementById('ki-close').innerHTML = icon('x', 20);
+  sendBtn.innerHTML = icon('play', 20);
+
+  // ── Öffnen / Schließen ──
+  const isOpen = () => panel.classList.contains('open');
+  function setOpen(open) {
+    panel.classList.toggle('open', open);
+    if (!open) return;
+    if (!historyEl.childElementCount) renderEmpty();
+    updateFoot();
+    // auf Touch-Geräten nicht automatisch ins Feld springen (Bildschirmtastatur verdeckt alles)
+    if (window.matchMedia && window.matchMedia('(pointer:fine)').matches) textarea.focus();
+  }
+  window.toggleKiPanel = () => setOpen(!isOpen());
+  document.getElementById('ki-close').addEventListener('click', () => setOpen(false));
+  // Das Fenster wird auch von außen geschlossen (ESC) — Knopf in der Leiste nachziehen
+  new MutationObserver(() => {
+    document.getElementById('dock-ki')?.classList.toggle('on', isOpen());
+  }).observe(panel, { attributes: true, attributeFilter: ['class'] });
+
+  // Groß anzeigen: Antworten für die ganze Klasse lesbar
+  document.getElementById('ki-big').addEventListener('click', () => {
+    const big = panel.classList.toggle('big');
+    const b = document.getElementById('ki-big');
+    b.innerHTML = icon(big ? 'minimize' : 'maximize', 18);
+    b.title = big ? 'Wieder klein anzeigen' : 'Groß anzeigen – für die ganze Klasse lesbar';
+    historyEl.scrollTop = historyEl.scrollHeight;
+  });
+  document.getElementById('ki-new').addEventListener('click', () => {
+    if (sending) return;
+    chatHistory = [];
+    renderEmpty();
+  });
+
+  // Größe ändern (Griff oben links, das Fenster ist unten rechts verankert)
   const rh = document.getElementById('ki-resize');
   if (rh) {
     let dragging = false, sx, sy, sw, sh;
@@ -7466,171 +7570,378 @@ const DRAW = {
     });
     rh.addEventListener('pointermove', e => {
       if (!dragging) return;
-      panel.style.width = Math.max(280, Math.min(sw + (e.clientX - sx), window.innerWidth * 0.9)) + 'px';
-      panel.style.height = Math.max(280, Math.min(sh + (sy - e.clientY), window.innerHeight * 0.85)) + 'px';
+      panel.style.width = Math.max(300, Math.min(sw - (e.clientX - sx), window.innerWidth - 24)) + 'px';
+      panel.style.height = Math.max(320, Math.min(sh - (e.clientY - sy), window.innerHeight - 120)) + 'px';
     });
     rh.addEventListener('pointerup', () => dragging = false);
     rh.addEventListener('lostpointercapture', () => dragging = false);
   }
 
-  const fabIcon = fab.innerHTML;
-  const syncFab = () => {
-    const open = panel.classList.contains('open');
-    if (open) fab.textContent = '✕'; else fab.innerHTML = fabIcon;
-    document.getElementById('dock-ki')?.classList.toggle('on', open);
-  };
-  window.toggleKiPanel = () => fab.click();
-  fab.addEventListener('click', () => {
-    const open = panel.classList.toggle('open');
-    syncFab();
-    if (open) textarea.focus();
-  });
-  // Das Panel wird auch von außen geschlossen (ESC) — Button-Symbol dann nachziehen
-  new MutationObserver(syncFab).observe(panel, { attributes: true, attributeFilter: ['class'] });
+  function updateFoot() {
+    const hint = 'Bitte keine Namen oder Daten von Kindern eingeben.';
+    if (isPro()) { foot.textContent = hint; return; }
+    const left = Math.max(0, MAX_FREE_TEXT - (parseInt(localStorage.getItem(TEXT_AI_KEY) || '0', 10) || 0));
+    foot.textContent = 'Noch ' + left + ' von ' + MAX_FREE_TEXT + ' kostenlosen Fragen · ' + hint;
+  }
 
-  function isImageRequest(q) {
-    const t = q.trim().toLowerCase();
-    return /^(zeig|zeige|mal|male|zeichne|generiere|erstell|bild von|bild:|foto von|zeig mir|zeige mir|show|draw)\b/.test(t) ||
-           /(als bild|als foto|als zeichnung|als illustration)\b/.test(t);
+  function scrollDown() { historyEl.scrollTop = historyEl.scrollHeight; }
+
+  // ── Leerer Zustand: Beispiele zum Antippen ──
+  function renderEmpty() {
+    historyEl.innerHTML = '';
+    const box = document.createElement('div');
+    box.className = 'ki-empty';
+    const h = document.createElement('div'); h.className = 'ki-empty-title';
+    h.textContent = 'Wobei kann ich helfen?';
+    const p = document.createElement('div'); p.className = 'ki-empty-sub';
+    p.textContent = 'Aufgaben, Erklärungen, Ideen oder ein Bild – die Antwort kannst du direkt auf die Tafel legen.';
+    const chips = document.createElement('div'); chips.className = 'ki-chips';
+    SUGGESTIONS.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'ki-chip';
+      b.textContent = s;
+      b.addEventListener('click', () => ask(s));
+      chips.appendChild(b);
+    });
+    box.append(h, p, chips);
+    historyEl.appendChild(box);
   }
-  function isDrawRequest(q) {
-    return /^(mal|male|zeichne|draw)\b/i.test(q.trim()) || /(als zeichnung|als illustration)\b/i.test(q);
+
+  // ── Antwort-Text sicher formatieren (Markdown → DOM, ohne innerHTML) ──
+  function inlineMd(parent, s) {
+    const re = /\*\*([^*\n]+)\*\*|__([^_\n]+)__|\*([^\s*][^*\n]*[^\s*]|[^\s*])\*|`([^`\n]+)`/g;
+    let last = 0, m;
+    while ((m = re.exec(s))) {
+      if (m.index > last) parent.appendChild(document.createTextNode(s.slice(last, m.index)));
+      let node;
+      if (m[1] != null || m[2] != null) { node = document.createElement('strong'); node.textContent = m[1] != null ? m[1] : m[2]; }
+      else if (m[3] != null) { node = document.createElement('em'); node.textContent = m[3]; }
+      else { node = document.createElement('code'); node.textContent = m[4]; }
+      parent.appendChild(node);
+      last = re.lastIndex;
+    }
+    if (last < s.length) parent.appendChild(document.createTextNode(s.slice(last)));
   }
-  function extractSubject(q) {
-    return q.replace(/^(zeig(e)?(\s*(mir|uns|einen|eine|ein|das|die|den|ne))?|mal(e)?(\s*(mir|uns))?|zeichne|generiere|erstell(e)?|bild von|bild:|foto von|show(\s*me)?|draw)\s*/i, '').trim() || q;
+  function renderMarkdown(text) {
+    const root = document.createElement('div');
+    root.className = 'ki-md';
+    let list = null, listType = null, para = null;
+    String(text).replace(/\r/g, '').split('\n').forEach(raw => {
+      const line = raw.replace(/\s+$/, '');
+      if (!line.trim()) { list = null; listType = null; para = null; return; }
+      let m;
+      if ((m = line.match(/^\s{0,3}#{1,6}\s+(.*)$/))) {
+        const h = document.createElement('h4');
+        inlineMd(h, m[1].replace(/\s*#+\s*$/, ''));
+        root.appendChild(h);
+        list = null; listType = null; para = null;
+        return;
+      }
+      if ((m = line.match(/^\s*[-*•]\s+(.*)$/))) {
+        if (listType !== 'ul') { list = document.createElement('ul'); root.appendChild(list); listType = 'ul'; para = null; }
+        const li = document.createElement('li'); inlineMd(li, m[1]); list.appendChild(li);
+        return;
+      }
+      if ((m = line.match(/^\s*(\d{1,3})[.)]\s+(.*)$/))) {
+        if (listType !== 'ol') {
+          list = document.createElement('ol'); list.start = Number(m[1]);
+          root.appendChild(list); listType = 'ol'; para = null;
+        }
+        const li = document.createElement('li'); inlineMd(li, m[2]); list.appendChild(li);
+        return;
+      }
+      // eingerückte Folgezeile gehört zum Listenpunkt davor
+      if (list && list.lastElementChild && /^\s{2,}\S/.test(raw)) {
+        list.lastElementChild.appendChild(document.createElement('br'));
+        inlineMd(list.lastElementChild, line.trim());
+        return;
+      }
+      if (!para || list) { para = document.createElement('p'); root.appendChild(para); list = null; listType = null; }
+      else para.appendChild(document.createElement('br'));
+      inlineMd(para, line.trim());
+    });
+    return root;
+  }
+  // Für die Tafel: derselbe Text ohne Markdown-Zeichen
+  function mdToPlain(text) {
+    return String(text).replace(/\r/g, '')
+      .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+      .replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/__([^_\n]+)__/g, '$1')
+      .replace(/\*([^\s*][^*\n]*[^\s*]|[^\s*])\*/g, '$1').replace(/`([^`\n]+)`/g, '$1')
+      .replace(/^(\s*)[-*]\s+/gm, '$1• ')
+      .replace(/\n{3,}/g, '\n\n').trim();
+  }
+  // Aufgaben ohne den Lösungsteil (der Assistent setzt die Lösungen unter eine Zeile „Lösungen:“)
+  function withoutSolutions(text) {
+    const m = String(text).match(/^[ \t]*(?:#{1,6}[ \t]*)?\**[ \t]*L(?:ö|oe)sung(?:en)?[ \t]*:?[ \t]*\**[ \t]*:?[ \t]*$/im);
+    if (!m) return null;
+    const head = text.slice(0, m.index).trim();
+    return head.length > 20 ? head : null;
+  }
+
+  // ── Auf die Tafel legen ──
+  function textToBoard(text) {
+    const plain = mdToPlain(text);
+    if (!plain) return;
+    if (!APP.state.editMode) toggleEditMode();
+    const len = plain.length;
+    const size = len > 520 ? { w: 760, h: 520 } : len > 220 ? { w: 620, h: 420 } : { w: 500, h: 300 };
+    if (addWidget('text', { text: plain }, size)) {
+      toast('✅ Auf die Tafel gelegt');
+      if (window.innerWidth < 900) setOpen(false);
+    }
+  }
+  function imageToBoard(dataUrl, subject, ratio) {
+    if (!APP.state.editMode) toggleEditMode();
+    const w = 480, h = Math.round(Math.max(200, Math.min(640, w / (ratio || 1.5))));
+    if (addWidget('image', { src: dataUrl, alt: subject }, { w, h })) {
+      toast('✅ Bild auf die Tafel gelegt');
+      if (window.innerWidth < 900) setOpen(false);
+    }
+  }
+
+  function actBtn(iconName, label, fn, primary) {
+    const b = document.createElement('button');
+    b.className = 'ki-act' + (primary ? ' primary' : '');
+    b.innerHTML = icon(iconName, 16) + '<span>' + safeText(label) + '</span>';
+    b.addEventListener('click', fn);
+    return b;
   }
 
   function addBubble(cls, text) {
     const b = document.createElement('div');
     b.className = 'ki-bubble ' + cls;
-    if (cls === 'ai') { b.style.whiteSpace = 'pre-wrap'; b.style.lineHeight = '1.5'; }
-    b.textContent = text;
+    if (text != null) b.textContent = text;
     historyEl.appendChild(b);
-    historyEl.scrollTop = historyEl.scrollHeight;
+    scrollDown();
+    return b;
+  }
+  function addThinking(label) {
+    const b = addBubble('ai thinking');
+    b.innerHTML = '<span>' + safeText(label) + '</span><span class="ki-dots"><i></i><i></i><i></i></span>';
     return b;
   }
 
-  function addImageBubble(subject, isDraw) {
-    const b = document.createElement('div');
-    b.className = 'ki-bubble ai';
-    b.style.padding = '8px 10px';
+  // ── Antwort anzeigen ──
+  function addAnswer(data, question) {
+    const b = addBubble('ai');
+    if (data.viaWeb) {
+      const tag = document.createElement('div'); tag.className = 'ki-tag';
+      tag.textContent = 'Mit Web-Suche geprüft';
+      b.appendChild(tag);
+    }
+    b.appendChild(renderMarkdown(data.text || ''));
+    if (data.truncated) {
+      const cut = document.createElement('div'); cut.className = 'ki-note';
+      cut.textContent = 'Die Antwort wurde gekürzt. Schreib „weiter“, um den Rest zu bekommen.';
+      b.appendChild(cut);
+    }
+    if (data.blocked || data.empty) return b;
 
-    if (isDraw) {
-      const lbl = document.createElement('div');
-      lbl.style.cssText = 'font-size:10px;opacity:0.5;margin-bottom:4px';
-      lbl.textContent = '🎨 ' + subject;
-      const img = document.createElement('img');
-      img.alt = subject;
-      img.src = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(subject + ', illustration, colorful, educational') + '?width=600&height=400&nologo=true&seed=' + Math.floor(Math.random()*2e9);
-      img.style.cssText = 'max-width:100%;border-radius:7px;display:block';
-      img.onerror = function() { this.style.display='none'; };
-      b.append(lbl, img);
-    } else {
-      const googleUrl = 'https://www.google.com/search?q=' + encodeURIComponent(subject) + '&tbm=isch';
-      const text = document.createElement('div');
-      text.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.85);margin-bottom:10px;line-height:1.5';
-      text.textContent = '🖼 Bilder zu: "' + subject + '"';
-      const link = document.createElement('a');
-      link.href = googleUrl;
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;background:rgba(11,122,116,0.15);border:1px solid rgba(11,122,116,0.3);color:#7FE3DA;font-size:13px;font-weight:600;text-decoration:none;transition:all .15s';
-      link.textContent = '🔍 Google Bilder öffnen';
-      link.addEventListener('mouseenter', function() { this.style.background='rgba(11,122,116,0.25)'; });
-      link.addEventListener('mouseleave', function() { this.style.background='rgba(11,122,116,0.15)'; });
-      b.append(text, link);
+    if (data.grounded) {
+      // Antwort aus der Web-Suche: Quellen und Googles Suchvorschläge gehören dazu
+      if (Array.isArray(data.sources) && data.sources.length) {
+        const src = document.createElement('div'); src.className = 'ki-sources';
+        const lbl = document.createElement('span'); lbl.textContent = 'Quellen: ';
+        src.appendChild(lbl);
+        data.sources.forEach((s, i) => {
+          if (!/^https:\/\//.test(String(s.url))) return;
+          if (i) src.appendChild(document.createTextNode(' · '));
+          const a = document.createElement('a');
+          a.href = s.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+          a.textContent = s.title || 'Quelle';
+          src.appendChild(a);
+        });
+        b.appendChild(src);
+      }
+      if (data.searchHtml) {
+        // Fremdes HTML von Google: in einem abgeschotteten Rahmen ohne Skripte anzeigen
+        const f = document.createElement('iframe');
+        f.className = 'ki-sugg-frame';
+        f.title = 'Google-Suchvorschläge';
+        f.setAttribute('sandbox', 'allow-popups allow-popups-to-escape-sandbox');
+        f.setAttribute('referrerpolicy', 'no-referrer');
+        f.srcdoc = '<base target="_blank">' + data.searchHtml;
+        b.appendChild(f);
+      }
     }
 
-    historyEl.appendChild(b);
-    historyEl.scrollTop = historyEl.scrollHeight;
+    const acts = document.createElement('div'); acts.className = 'ki-actions';
+    if (!data.grounded) {
+      // (Antworten aus der Web-Suche dürfen laut Google nur zusammen mit den Suchvorschlägen
+      //  gezeigt werden — deshalb kein „Auf die Tafel“ für sie.)
+      acts.appendChild(actBtn('plus', 'Auf die Tafel', () => textToBoard(data.text), true));
+      const tasksOnly = withoutSolutions(data.text);
+      if (tasksOnly) acts.appendChild(actBtn('plus', 'Ohne Lösungen', () => textToBoard(tasksOnly)));
+    }
+    acts.appendChild(actBtn('copy', 'Kopieren', async () => {
+      try { await navigator.clipboard.writeText(mdToPlain(data.text)); toast('Kopiert'); }
+      catch (e) { toast('Kopieren nicht möglich'); }
+    }));
+    if (!data.grounded && question) {
+      acts.appendChild(actBtn('browser', 'Im Web prüfen', () => ask(question, { web: true, quiet: true })));
+    }
+    b.appendChild(acts);
+    scrollDown();
     return b;
   }
 
-  async function send() {
-    if (sending) return;
-    const q = textarea.value.trim();
-    if (!q) return;
-    textarea.value = '';
-    textarea.style.height = '38px';
-    addBubble('user', q);
+  // ── Bilder ──
+  function isImageRequest(q) {
+    const t = q.trim().toLowerCase();
+    return /^(zeig|zeige|mal|male|zeichne|bild von|bild:|foto von|zeig mir|zeige mir|show|draw)\b/.test(t) ||
+           /\b(als bild|als foto|als zeichnung|als illustration)\b/.test(t);
+  }
+  function isDrawRequest(q) {
+    return /^(mal|male|zeichne|draw)\b/i.test(q.trim()) || /\b(als zeichnung|als illustration)\b/i.test(q);
+  }
+  function extractSubject(q) {
+    return q.replace(/^(zeig(e)?(\s+(mir|uns))?|mal(e)?(\s+(mir|uns))?|zeichne(\s+(mir|uns))?|bild von|bild:|foto von|show(\s+me)?|draw)\s*/i, '')
+      .replace(/^(bitte\s+)?(ein(e[nmrs]?)?|das|die|den|der|ne|nen)\s+/i, '')
+      .replace(/\b(als bild|als foto|als zeichnung|als illustration)\b/i, '')
+      .replace(/[.!?]+$/, '').trim() || q;
+  }
+  async function fetchImage(subject, type, index) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 25000);
+    try {
+      const res = await fetch('/.netlify/functions/image-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: subject, type, index, inline: true }),
+        signal: controller.signal,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || String(res.status));
+      return data;
+    } finally { clearTimeout(timer); }
+  }
+  async function showImage(subject, type) {
+    sending = true; sendBtn.disabled = true;
+    const b = addThinking('Suche ein Bild');
+    let index = 0;
+    const fill = data => {
+      b.className = 'ki-bubble ai';
+      b.innerHTML = '';
+      if (data.blocked) { b.textContent = 'Dazu zeige ich kein Bild. Versuch es mit einem anderen Begriff.'; return; }
+      const src = data.dataUrl || '';
+      if (!src) { b.textContent = 'Dazu habe ich kein passendes Bild gefunden. Versuch es mit einem einfacheren Begriff, zum Beispiel „Vulkan“ statt „Vulkanausbruch bei Nacht“.'; return; }
+      const img = document.createElement('img');
+      img.className = 'ki-img';
+      img.alt = subject;
+      img.src = src;
+      const cap = document.createElement('div'); cap.className = 'ki-note';
+      cap.textContent = subject + (data.credit ? ' · Bild: ' + data.credit : '');
+      const acts = document.createElement('div'); acts.className = 'ki-actions';
+      acts.appendChild(actBtn('plus', 'Auf die Tafel', () => imageToBoard(src, subject, img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 1.5), true));
+      if (data.more) acts.appendChild(actBtn('reset', 'Anderes Bild', async () => {
+        if (sending) return;
+        sending = true; sendBtn.disabled = true;
+        acts.style.opacity = '0.5';
+        try { index++; fill(await fetchImage(subject, type, index)); }
+        catch (e) { acts.style.opacity = ''; toast('Kein weiteres Bild gefunden'); }
+        finally { sending = false; sendBtn.disabled = false; }
+      }));
+      img.addEventListener('load', scrollDown);
+      b.append(img, cap, acts);
+      scrollDown();
+    };
+    try { fill(await fetchImage(subject, type, index)); }
+    catch (e) {
+      console.warn('Bildsuche:', e);
+      b.className = 'ki-bubble ai';
+      b.textContent = !navigator.onLine ? 'Keine Internetverbindung.'
+        : (/rate/.test(e.message) ? 'Zu viele Anfragen in kurzer Zeit – bitte einen Moment warten.'
+        : 'Die Bildsuche ist gerade nicht erreichbar. Bitte später nochmal versuchen.');
+    } finally { sending = false; sendBtn.disabled = false; }
+  }
 
-    if (isImageRequest(q)) {
-      addImageBubble(extractSubject(q), isDrawRequest(q));
+  // ── Frage senden ──
+  async function ask(q, opts) {
+    opts = opts || {};
+    q = String(q || '').trim();
+    if (sending || !q) return;
+    historyEl.querySelector('.ki-empty')?.remove();
+    if (!opts.quiet) addBubble('user', q);
+
+    if (!opts.web && isImageRequest(q)) {
+      await showImage(extractSubject(q), isDrawRequest(q) ? 'illustration' : 'photo');
       return;
     }
 
-    const count = parseInt(localStorage.getItem(TEXT_AI_KEY) || '0');
+    const count = parseInt(localStorage.getItem(TEXT_AI_KEY) || '0', 10) || 0;
     if (!isPro() && count >= MAX_FREE_TEXT) {
-      addBubble('ai', '🔒 ' + MAX_FREE_TEXT + ' kostenlose Anfragen verbraucht.\nUpgrade auf Pro für unbegrenzte KI-Nutzung.');
+      const b = addBubble('ai', 'Die ' + MAX_FREE_TEXT + ' kostenlosen Fragen sind aufgebraucht. Mit ClassPuls Pro kannst du unbegrenzt weiterfragen.');
+      const acts = document.createElement('div'); acts.className = 'ki-actions';
+      acts.appendChild(actBtn('ai', 'Pro ansehen', () => openUpgradeModal('ki'), true));
+      b.appendChild(acts);
       return;
     }
 
     sending = true;
     sendBtn.disabled = true;
-    sendBtn.style.opacity = '0.4';
-    const thinking = addBubble('thinking', '⏳ Denke nach…');
+    const thinking = addThinking(opts.web ? 'Suche im Web' : 'Denke nach');
 
     try {
-      let answer;
       const controller = new AbortController();
-      const timeout = setTimeout(function() { controller.abort(); }, 30000);
+      const timer = setTimeout(() => controller.abort(), 30000);
       let res;
       try {
         res = await fetch('/.netlify/functions/ai-chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: q, history: chatHistory.slice(-6) }),
-          signal: controller.signal
+          body: JSON.stringify({ question: q, history: chatHistory.slice(-6), web: !!opts.web }),
+          signal: controller.signal,
         });
-      } finally {
-        clearTimeout(timeout);
-      }
-      if (!res.ok) {
-        const err = await res.json().catch(function() { return {}; });
-        throw new Error(err.error || 'Serverfehler (' + res.status + ')');
-      }
-      const data = await res.json();
-      answer = data.text;
+      } finally { clearTimeout(timer); }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'http-' + res.status);
+
       if (!isPro()) localStorage.setItem(TEXT_AI_KEY, String(count + 1));
-
-      chatHistory.push({ role: 'user', content: q });
-      chatHistory.push({ role: 'assistant', content: answer });
-
-      thinking.remove();
-      const bubble = addBubble('ai', answer || '(Keine Antwort)');
-
-      if (!isPro()) {
-        const left = MAX_FREE_TEXT - count - 1;
-        const c = document.createElement('div');
-        c.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.2);margin-top:4px';
-        c.textContent = left + '/' + MAX_FREE_TEXT + ' Anfragen übrig';
-        bubble.appendChild(c);
+      if (!data.blocked && !data.empty) {
+        chatHistory.push({ role: 'user', content: q });
+        chatHistory.push({ role: 'assistant', content: data.text });
       }
+      thinking.remove();
+      if (opts.web) data.viaWeb = true;
+      addAnswer(data, q);
+      updateFoot();
     } catch (e) {
       thinking.remove();
       // Technische Details nur in die Konsole — der Lehrkraft eine verständliche Meldung zeigen
-      console.warn('KI-Chat-Fehler:', e);
+      console.warn('KI-Assistent:', e);
       let msg;
-      if (e.name === 'AbortError') msg = 'Zeitüberschreitung — bitte nochmal versuchen.';
+      if (e.name === 'AbortError' || /timeout/.test(e.message)) msg = 'Das hat zu lange gedauert. Bitte nochmal versuchen oder die Frage kürzer stellen.';
       else if (!navigator.onLine) msg = 'Keine Internetverbindung.';
-      else if (/quota|rate|429|überlastet|resource.?exhausted/i.test(e.message)) msg = 'Der KI-Dienst ist gerade ausgelastet — bitte in einer Minute nochmal versuchen.';
+      else if (/rate/.test(e.message)) msg = 'Zu viele Fragen in kurzer Zeit – bitte einen Moment warten.';
+      else if (/busy|429/.test(e.message)) msg = 'Der KI-Dienst ist gerade ausgelastet. Bitte in einer Minute nochmal versuchen.';
       else msg = 'Der KI-Assistent ist gerade nicht erreichbar. Bitte später nochmal versuchen.';
-      addBubble('ai', '❌ ' + msg);
+      const b = addBubble('ai error', msg);
+      const acts = document.createElement('div'); acts.className = 'ki-actions';
+      acts.appendChild(actBtn('reset', 'Nochmal versuchen', () => { b.remove(); ask(q, { web: opts.web, quiet: true }); }));
+      b.appendChild(acts);
     } finally {
       sending = false;
       sendBtn.disabled = false;
-      sendBtn.style.opacity = '';
     }
   }
 
-  sendBtn.addEventListener('click', send);
+  function sendFromInput() {
+    if (sending) return;
+    const q = textarea.value.trim();
+    if (!q) return;
+    textarea.value = '';
+    textarea.style.height = '';
+    ask(q);
+  }
+  sendBtn.addEventListener('click', sendFromInput);
   textarea.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-    e.stopPropagation();
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendFromInput(); }
+    if (e.key !== 'Escape') e.stopPropagation();   // Tafel-Tastenkürzel nicht auslösen
   });
   textarea.addEventListener('input', function() {
-    textarea.style.height = '38px';
-    textarea.style.height = Math.min(textarea.scrollHeight, 90) + 'px';
+    textarea.style.height = '';
+    textarea.style.height = Math.min(textarea.scrollHeight, 140) + 'px';
   });
 })();
 
