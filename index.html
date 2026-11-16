@@ -1160,26 +1160,51 @@ body.draw-mode .w-full-btn { display:none; }
 #draw-toolbar::-webkit-scrollbar { display:none; }
 .draw-tool-btn { width:42px; height:42px; border-radius:12px; font-size:0; }
 .draw-tool-btn.active { border-color:var(--accent-soft); background:rgba(127,227,218,0.25); color:var(--accent-soft); }
-#draw-ruler {
-  position:fixed; left:0; top:0; z-index:1790; width:620px; height:66px; transform-origin:50% 50%;
-  background:rgba(251,250,246,0.88); border:1.5px solid rgba(27,36,34,0.45); border-radius:6px;
-  box-shadow:0 6px 20px rgba(0,0,0,0.35); cursor:grab; touch-action:none; user-select:none;
+.draw-tool-btn.has-menu { position:relative; }
+.draw-tool-btn.has-menu::after { content:''; position:absolute; right:5px; bottom:5px; width:0; height:0; border-left:5px solid transparent; border-bottom:5px solid currentColor; opacity:.7; }
+.draw-pop {
+  position:fixed; z-index:1810; min-width:240px; padding:8px; border-radius:16px;
+  background:var(--card); color:var(--ink); border:1px solid rgba(27,36,34,0.08); box-shadow:0 18px 50px rgba(0,0,0,0.45);
 }
-#draw-ruler:active { cursor:grabbing; }
-#draw-ruler .dr-scale {
-  position:absolute; left:10px; right:10px; top:0; height:16px; pointer-events:none;
-  background:
-    repeating-linear-gradient(90deg, rgba(27,36,34,0.85) 0 1.5px, transparent 1.5px 50px),
-    repeating-linear-gradient(90deg, rgba(27,36,34,0.5) 0 1px, transparent 1px 10px) 0 0/100% 9px no-repeat;
+.draw-pop-title { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-muted); padding:6px 10px 4px; }
+.draw-pop-item {
+  display:flex; align-items:center; gap:12px; width:100%; min-height:44px; padding:6px 10px; border:0; border-radius:10px;
+  background:transparent; color:var(--ink); font:inherit; font-size:14.5px; font-weight:600; text-align:left; cursor:pointer;
 }
-#draw-ruler .dr-nums span { position:absolute; top:18px; transform:translateX(-50%); font-size:12px; font-weight:700; color:#1B2422; pointer-events:none; }
-#draw-ruler .dr-ang { position:absolute; left:50%; bottom:6px; transform:translateX(-50%); font-size:14px; font-weight:700; color:#0A5F5A; pointer-events:none; }
-#draw-ruler .dr-rot {
-  position:absolute; bottom:8px; width:30px; height:30px; border-radius:50%; cursor:alias;
-  background:var(--accent); border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,0.3);
+.draw-pop-item:hover { background:rgba(27,36,34,0.07); }
+.draw-pop-item.on { background:var(--accent-tint); color:var(--accent-ink); }
+.draw-pop-item.toggle::after { content:'aus'; margin-left:auto; font-size:12.5px; color:var(--ink-muted); }
+.draw-pop-item.toggle.on::after { content:'an'; color:var(--accent-ink); }
+.draw-pop-sep { height:1px; background:var(--line); margin:6px 8px; }
+.draw-pop-hint { font-size:12.5px; line-height:1.4; color:var(--ink-muted); padding:6px 10px 4px; max-width:250px; }
+
+/* Messwerkzeuge */
+.draw-instr { position:fixed; left:0; top:0; z-index:1790; pointer-events:none; touch-action:none; user-select:none; filter:drop-shadow(0 6px 16px rgba(0,0,0,0.35)); }
+.draw-instr svg { display:block; overflow:visible; pointer-events:none; }
+.draw-instr .ins-body { fill:rgba(251,250,246,0.86); stroke:rgba(27,36,34,0.55); stroke-width:1.5; pointer-events:all; cursor:grab; }
+.draw-instr.dragging .ins-body { cursor:grabbing; }
+.draw-instr .ins-tick { stroke:#1B2422; stroke-width:1; }
+.draw-instr text { fill:#1B2422; font-family:"Atkinson Hyperlegible Next", system-ui, sans-serif; font-size:12px; font-weight:700; text-anchor:middle; }
+.draw-instr text.ins-small { font-size:10px; }
+.draw-instr text.ins-inner { font-size:9.5px; fill:#6F7A76; }
+.draw-instr text.ins-read { fill:#0A5F5A; font-size:15px; }
+.draw-instr .ins-hub { fill:#1B2422; }
+.draw-instr .ins-rot { fill:#0B7A74; stroke:#fff; stroke-width:2; pointer-events:all; cursor:alias; }
+.draw-instr .ins-arm { stroke:#D9480F; stroke-width:2; }
+.draw-instr .ins-arm-h { fill:#D9480F; stroke:#fff; stroke-width:2; pointer-events:all; cursor:pointer; }
+
+/* Laserpointer und Auswahl */
+#draw-laser { position:fixed; left:0; top:0; z-index:1795; pointer-events:none; }
+.draw-selbox { position:fixed; z-index:1792; border:2px dashed #7FE3DA; background:rgba(127,227,218,0.08); pointer-events:none; }
+.draw-float { position:fixed; z-index:1792; outline:2px dashed #7FE3DA; outline-offset:2px; pointer-events:none; }
+.draw-float-img { display:block; width:100%; height:100%; }
+.draw-float-bar {
+  position:absolute; right:-2px; top:-52px; display:flex; gap:4px; padding:4px; border-radius:12px;
+  background:var(--card); box-shadow:0 6px 18px rgba(0,0,0,0.3); pointer-events:auto;
 }
-#draw-ruler .dr-rot[data-end="-1"] { left:8px; }
-#draw-ruler .dr-rot[data-end="1"] { right:8px; }
+.draw-float.bar-below .draw-float-bar { top:auto; bottom:-52px; }
+.draw-float-bar button { width:40px; height:40px; border:0; border-radius:9px; background:transparent; color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.draw-float-bar button:hover { background:rgba(27,36,34,0.08); }
 
 /* ── PDF ── */
 .pdf-bar { flex:none; align-self:stretch; display:flex; align-items:center; gap:4px; padding:5px 8px; background:var(--w-bar); }
@@ -1482,14 +1507,13 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
 <div id="draw-toolbar">
   <button class="draw-tool-btn active" data-tool="pen" title="Stift"></button>
   <button class="draw-tool-btn" data-tool="marker" title="Textmarker"></button>
+  <button class="draw-tool-btn" data-tool="laser" title="Laserpointer – Spur verblasst von selbst"></button>
   <button class="draw-tool-btn" data-tool="eraser" title="Radiergummi"></button>
+  <button class="draw-tool-btn" data-tool="select" title="Auswählen und verschieben"></button>
   <div class="draw-sep"></div>
-  <button class="draw-tool-btn" data-tool="line" title="Gerade Linie"></button>
-  <button class="draw-tool-btn" data-tool="arrow" title="Pfeil"></button>
-  <button class="draw-tool-btn" data-tool="rect" title="Rechteck"></button>
-  <button class="draw-tool-btn" data-tool="ellipse" title="Kreis / Ellipse"></button>
+  <button class="draw-tool-btn has-menu" id="dt-shapes" title="Formen: Linie, Pfeil, Rechteck, Kreis, Zirkel, Koordinatensystem"></button>
   <button class="draw-tool-btn" data-tool="text" title="Text schreiben"></button>
-  <button class="draw-tool-btn" id="dt-ruler" title="Lineal ein-/ausblenden"></button>
+  <button class="draw-tool-btn has-menu" id="dt-measure" title="Lineal, Geodreieck, Winkelmesser"></button>
   <div class="draw-sep"></div>
   <button class="draw-color-btn" style="background:#ffffff" data-color="#ffffff" title="Weiß"></button>
   <button class="draw-color-btn active" style="background:#facc15" data-color="#facc15" title="Gelb"></button>
@@ -1585,6 +1609,15 @@ const ICONS = {
   rect: 'M4 6h16v12H4z',
   ellipse: 'M12 19c4.4 0 8-3.1 8-7s-3.6-7-8-7-8 3.1-8 7 3.6 7 8 7z',
   ruler: 'M3 15L15 3l6 6L9 21zM7 11l2 2M10 8l2 2M13 5l2 2',
+  laser: 'M4 20l9-9M15 9a2 2 0 1 0 0-.01M15 2v3M22 9h-3M20 4l-2 2',
+  select: 'M4 4h3M10 4h4M17 4h3v3M20 10v4M20 17v3h-3M14 20h-4M7 20H4v-3M4 14v-4M4 7V4',
+  compass: 'M12 7.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM12 3v1.5M11 7.5L6.5 21M13 7.5L17.5 21M8.5 15.5h7',
+  axes: 'M5 3v16h16M5 3L2.5 6M5 3l2.5 3M21 19l-3-2.5M21 19l-3 2.5M8 15l3-4 3 2 4-6',
+  setsquare: 'M3 7h18L12 16zM9 7a3 3 0 0 0 6 0',
+  protractor: 'M3 18a9 9 0 0 1 18 0zM12 18l5-6M12 9v2M7.5 11.5l1 1M16.5 11.5l-1 1',
+  fill: 'M5 5h14v14H5zM5 12l7-7M5 19L19 5M12 19l7-7',
+  dash: 'M3 12h4M10 12h4M17 12h4',
+  check: 'M5 12l5 5L20 7',
   undo: 'M8 5L3 10l5 5M3 10h11a5.5 5.5 0 0 1 0 11h-3',
   redo: 'M16 5l5 5-5 5M21 10H10a5.5 5.5 0 0 0 0 11h3',
   trash: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6',
@@ -8470,6 +8503,77 @@ const CLASSES = {
 // ══════════════════════════════════════════════════════════════
 // ZEICHNEN / SMARTBOARD MODUS
 // ══════════════════════════════════════════════════════════════
+// ── Zeichnen: Formen und Messwerkzeuge ──
+const DRAW_UNIT = 50;   // Pixel je Einheit auf Lineal, Geodreieck und Koordinatensystem
+const DRAW_SHAPE_LIST = [
+  ['line', 'Gerade Linie'], ['arrow', 'Pfeil'], ['rect', 'Rechteck'], ['ellipse', 'Kreis / Ellipse'],
+  ['compass', 'Zirkel (Kreis um Mittelpunkt)'], ['axes', 'Koordinatensystem'],
+];
+const DRAW_SHAPES = DRAW_SHAPE_LIST.map(s => s[0]);
+const _f = n => (Math.round(n * 10) / 10).toString();
+const DRAW_INSTR = {
+  ruler: {
+    label: 'Lineal', w: 620, h: 66, px: 310, py: 33,
+    edges: [[-310, -33, 310, -33], [-310, 33, 310, 33]],
+    svg() {
+      let s = '<rect class="ins-body" x="0.75" y="0.75" width="618.5" height="64.5" rx="6"/>';
+      for (let i = 0; i <= 120; i++) {
+        const x = 10 + i * 5, len = i % 10 === 0 ? 16 : (i % 5 === 0 ? 11 : 6);
+        s += '<line class="ins-tick" x1="' + x + '" y1="1" x2="' + x + '" y2="' + len + '"/>';
+        if (i % 10 === 0) s += '<text x="' + x + '" y="31">' + (i / 10) + '</text>';
+      }
+      return s + '<text class="ins-read" x="310" y="56">0°</text>'
+        + '<circle class="ins-rot" cx="26" cy="46" r="12"/><circle class="ins-rot" cx="594" cy="46" r="12"/>';
+    },
+  },
+  setsquare: {
+    label: 'Geodreieck', w: 560, h: 282, px: 280, py: 1,
+    edges: [[-279, 0, 279, 0], [-279, 0, 0, 279], [279, 0, 0, 279]],
+    svg() {
+      let s = '<polygon class="ins-body" points="1,1 559,1 280,280"/>';
+      // Skala auf der langen Kante, 0 in der Mitte
+      for (let i = -54; i <= 54; i++) {
+        const x = 280 + i * 5, depth = Math.min(x, 560 - x);
+        let len = i % 10 === 0 ? 14 : (i % 5 === 0 ? 10 : 5);
+        len = Math.min(len, depth - 3);
+        if (len <= 0) continue;
+        s += '<line class="ins-tick" x1="' + x + '" y1="1" x2="' + x + '" y2="' + (1 + len) + '"/>';
+        if (i % 10 === 0 && depth > 34) s += '<text x="' + x + '" y="28">' + Math.abs(i / 10) + '</text>';
+      }
+      // Winkelskala um den Mittelpunkt der langen Kante
+      for (let d = 0; d <= 180; d++) {
+        const a = d * Math.PI / 180, r1 = 172, len = d % 10 === 0 ? 14 : (d % 5 === 0 ? 9 : 4);
+        s += '<line class="ins-tick" x1="' + _f(280 + r1 * Math.cos(a)) + '" y1="' + _f(1 + r1 * Math.sin(a))
+          + '" x2="' + _f(280 + (r1 - len) * Math.cos(a)) + '" y2="' + _f(1 + (r1 - len) * Math.sin(a)) + '"/>';
+        if (d % 10 === 0 && d > 0 && d < 180) s += '<text class="ins-small" x="' + _f(280 + 148 * Math.cos(a)) + '" y="' + _f(5 + 148 * Math.sin(a)) + '">' + d + '</text>';
+      }
+      return s + '<line class="ins-tick" x1="280" y1="1" x2="280" y2="40"/><circle class="ins-hub" cx="280" cy="1" r="3"/>'
+        + '<text class="ins-read" x="280" y="236">0°</text>'
+        + '<circle class="ins-rot" cx="46" cy="19" r="11"/><circle class="ins-rot" cx="514" cy="19" r="11"/>';
+    },
+  },
+  protractor: {
+    label: 'Winkelmesser', w: 500, h: 252, px: 250, py: 250,
+    edges: [[-250, 0, 250, 0]],
+    svg() {
+      let s = '<path class="ins-body" d="M1,250 A249,249 0 0 1 499,250 Z"/>';
+      for (let d = 0; d <= 180; d++) {
+        const a = d * Math.PI / 180, r1 = 248, len = d % 10 === 0 ? 13 : (d % 5 === 0 ? 8 : 4);
+        s += '<line class="ins-tick" x1="' + _f(250 + r1 * Math.cos(a)) + '" y1="' + _f(250 - r1 * Math.sin(a))
+          + '" x2="' + _f(250 + (r1 - len) * Math.cos(a)) + '" y2="' + _f(250 - (r1 - len) * Math.sin(a)) + '"/>';
+        if (d % 10 === 0) {
+          s += '<text x="' + _f(250 + 226 * Math.cos(a)) + '" y="' + _f(254 - 226 * Math.sin(a)) + '">' + d + '</text>';
+          s += '<text class="ins-inner" x="' + _f(250 + 202 * Math.cos(a)) + '" y="' + _f(254 - 202 * Math.sin(a)) + '">' + (180 - d) + '</text>';
+        }
+      }
+      return s + '<line class="ins-arm" x1="250" y1="250" x2="250" y2="14"/><circle class="ins-hub" cx="250" cy="250" r="4"/>'
+        + '<circle class="ins-arm-h" cx="250" cy="78" r="12"/>'
+        + '<text class="ins-read" x="330" y="240">0°</text>'
+        + '<circle class="ins-rot" cx="40" cy="236" r="11"/><circle class="ins-rot" cx="460" cy="236" r="11"/>';
+    },
+  },
+};
+
 const DRAW = {
   canvas: null, ctx: null,
   active: false,
@@ -8514,13 +8618,25 @@ const DRAW = {
     // Werkzeuge (Symbole statt Emojis, damit sie auf jedem Gerät gleich aussehen)
     document.querySelectorAll('#draw-toolbar [data-tool]').forEach(b => {
       b.innerHTML = icon(b.dataset.tool, 20);
-      b.addEventListener('click', () => this._setTool(b.dataset.tool));
+      b.addEventListener('click', () => { this._closePop(); this._setTool(b.dataset.tool); });
     });
     const setIcon = (id, name) => { const b = btn(id); if (b) b.innerHTML = icon(name, 20); };
-    setIcon('dt-ruler', 'ruler'); setIcon('dt-undo', 'undo'); setIcon('dt-redo', 'redo');
+    setIcon('dt-undo', 'undo'); setIcon('dt-redo', 'redo');
     setIcon('dt-clear', 'trash'); setIcon('dt-exit', 'x');
-    btn('dt-ruler')?.addEventListener('click', () => this._toggleRuler());
+    setIcon('dt-measure', 'ruler');
+    this._updateShapeBtn();
+    btn('dt-shapes')?.addEventListener('click', e => { e.stopPropagation(); this._openShapeMenu(); });
+    btn('dt-measure')?.addEventListener('click', e => { e.stopPropagation(); this._openMeasureMenu(); });
     btn('dt-redo')?.addEventListener('click', () => this._redo());
+    this._initLaser();
+    // Auswahl mit Entf löschen
+    document.addEventListener('keydown', e => {
+      if (!this.active || !this._sel) return;
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+      if (e.target && e.target.closest && e.target.closest('input, textarea, [contenteditable="true"]')) return;
+      e.preventDefault();
+      this._deleteSel();
+    });
 
     // Colors
     document.querySelectorAll('.draw-color-btn').forEach(b => {
@@ -8611,110 +8727,479 @@ const DRAW = {
       // Turning ON — restore drawing for this board
       this.loadBoard(APP.state.activeBoardId);
     } else {
-      this._toggleRuler(false);
+      this._hideInstruments();
+      this._closePop();
+      this._laserStrokes = [];
     }
     this._updateKeepVisible();
   },
 
   _setTool(tool) {
+    if (tool !== 'select') this._commitSel();
     this.tool = tool;
+    if (DRAW_SHAPES.includes(tool)) this.shapeKind = tool;
     document.querySelectorAll('#draw-toolbar [data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === tool));
-    this.canvas.style.cursor = tool === 'eraser' ? 'cell' : tool === 'text' ? 'text' : 'crosshair';
+    this._updateShapeBtn();
+    this.canvas.style.cursor = tool === 'eraser' ? 'cell' : tool === 'text' ? 'text'
+      : tool === 'select' ? 'default' : tool === 'laser' ? 'pointer' : 'crosshair';
   },
 
-  // ── Lineal: verschiebbar, drehbar; Striche direkt an der Kante werden gerade ──
-  _ruler: null,   // { el, cx, cy, ang } in Bildschirm-Koordinaten
-  RULER_LEN: 620, RULER_H: 66,
-  _toggleRuler(force) {
-    const on = force != null ? force : !this._ruler;
-    document.getElementById('dt-ruler')?.classList.toggle('active', on);
-    if (!on) { if (this._ruler) { this._ruler.el.remove(); this._ruler = null; } return; }
-    if (this._ruler) return;
-    const r = document.createElement('div');
-    r.id = 'draw-ruler';
-    r.setAttribute('data-kb-keep', '');
-    let ticks = '';
-    for (let i = 0; i <= 12; i++) ticks += '<span style="left:' + (10 + i * 50) + 'px">' + i + '</span>';
-    r.innerHTML = '<div class="dr-scale"></div><div class="dr-nums">' + ticks + '</div><div class="dr-ang"></div>'
-      + '<div class="dr-rot" data-end="-1"></div><div class="dr-rot" data-end="1"></div>';
-    document.body.appendChild(r);
-    this._ruler = { el: r, cx: window.innerWidth / 2, cy: window.innerHeight / 2, ang: 0 };
-    this._placeRuler();
-    let mode = null, sx, sy, scx, scy;
-    r.addEventListener('pointerdown', e => {
+  // ── Formen-Menü und Messwerkzeug-Menü (hängen an <body>, die Leiste schneidet sonst ab) ──
+  shapeKind: 'line', fill: false, dash: false, _pop: null,
+  _updateShapeBtn() {
+    const b = document.getElementById('dt-shapes');
+    if (!b) return;
+    b.innerHTML = icon(this.shapeKind, 20);
+    b.classList.toggle('active', DRAW_SHAPES.includes(this.tool));
+  },
+  _closePop() { if (this._pop) { this._pop.remove(); this._pop = null; } },
+  _openPop(anchor, kind, build) {
+    if (this._pop && this._pop.dataset.kind === kind) { this._closePop(); return; }
+    this._closePop();
+    const pop = document.createElement('div');
+    pop.className = 'draw-pop';
+    pop.dataset.kind = kind;
+    pop.setAttribute('data-kb-keep', '');
+    build(pop);
+    document.body.appendChild(pop);
+    const r = anchor.getBoundingClientRect(), tb = document.getElementById('draw-toolbar').getBoundingClientRect();
+    pop.style.left = Math.max(8, Math.min(window.innerWidth - pop.offsetWidth - 8, r.left + r.width / 2 - pop.offsetWidth / 2)) + 'px';
+    pop.style.bottom = (window.innerHeight - tb.top + 10) + 'px';
+    this._pop = pop;
+    setTimeout(() => {
+      const close = ev => {
+        if (!pop.isConnected) { document.removeEventListener('pointerdown', close, true); return; }
+        if (!pop.contains(ev.target) && !anchor.contains(ev.target)) { this._closePop(); document.removeEventListener('pointerdown', close, true); }
+      };
+      document.addEventListener('pointerdown', close, true);
+    }, 0);
+  },
+  _popItem(pop, iconName, label, on, fn) {
+    const b = document.createElement('button');
+    b.className = 'draw-pop-item' + (on ? ' on' : '');
+    b.innerHTML = icon(iconName, 20) + '<span>' + label + '</span>';
+    b.addEventListener('click', fn);
+    pop.appendChild(b);
+    return b;
+  },
+  _popTitle(pop, text) { const t = document.createElement('div'); t.className = 'draw-pop-title'; t.textContent = text; pop.appendChild(t); },
+  _openShapeMenu() {
+    this._openPop(document.getElementById('dt-shapes'), 'shapes', pop => {
+      this._popTitle(pop, 'Formen');
+      DRAW_SHAPE_LIST.forEach(([k, label]) => this._popItem(pop, k, label, this.tool === k, () => { this._setTool(k); this._closePop(); }));
+      const sep = document.createElement('div'); sep.className = 'draw-pop-sep'; pop.appendChild(sep);
+      [['fill', 'Gefüllt', 'fill'], ['dash', 'Gestrichelt', 'dash']].forEach(([ic, label, key]) => {
+        const b = this._popItem(pop, ic, label, this[key], () => {
+          this[key] = !this[key];
+          b.classList.toggle('on', this[key]);
+          b.setAttribute('aria-pressed', String(this[key]));
+          if (!DRAW_SHAPES.includes(this.tool)) this._setTool(this.shapeKind);
+        });
+        b.classList.add('toggle');
+        b.setAttribute('aria-pressed', String(this[key]));
+      });
+    });
+  },
+  _openMeasureMenu() {
+    this._openPop(document.getElementById('dt-measure'), 'measure', pop => {
+      this._popTitle(pop, 'Messwerkzeuge');
+      Object.keys(DRAW_INSTR).forEach(k => {
+        const b = this._popItem(pop, k, DRAW_INSTR[k].label, !!this._instr[k], () => {
+          this._toggleInstrument(k);
+          b.classList.toggle('on', !!this._instr[k]);
+        });
+        b.classList.add('toggle');
+      });
+      const hint = document.createElement('div');
+      hint.className = 'draw-pop-hint';
+      hint.textContent = 'Ziehen verschiebt, die grünen Punkte drehen. Striche entlang einer Kante werden gerade.';
+      pop.appendChild(hint);
+    });
+  },
+
+  // ── Messwerkzeuge (Lineal, Geodreieck, Winkelmesser): verschieben, drehen, an Kanten entlang zeichnen ──
+  _instr: {},
+  _toggleInstrument(kind, force) {
+    const on = force != null ? force : !this._instr[kind];
+    if (!on) {
+      const ins = this._instr[kind];
+      if (ins) { ins.el.remove(); delete this._instr[kind]; }
+      this._updateMeasureBtn();
+      return;
+    }
+    if (this._instr[kind]) return;
+    const def = DRAW_INSTR[kind];
+    const el = document.createElement('div');
+    el.className = 'draw-instr';
+    el.dataset.kind = kind;
+    el.setAttribute('data-kb-keep', '');
+    el.style.width = def.w + 'px';
+    el.style.height = def.h + 'px';
+    el.style.transformOrigin = def.px + 'px ' + def.py + 'px';
+    el.innerHTML = '<svg width="' + def.w + '" height="' + def.h + '" viewBox="0 0 ' + def.w + ' ' + def.h + '" aria-hidden="true">' + def.svg() + '</svg>';
+    document.body.appendChild(el);
+    const n = Object.keys(this._instr).length;
+    // auf kleinen Bildschirmen verkleinert, damit das Werkzeug ganz zu sehen ist
+    const ins = { kind, el, ang: 0, arm: 60, scale: Math.min(1, (window.innerWidth - 24) / def.w),
+      cx: Math.round(window.innerWidth / 2 + n * 30),
+      cy: Math.round(kind === 'setsquare' ? window.innerHeight * 0.32 : kind === 'protractor' ? window.innerHeight * 0.62 : window.innerHeight / 2) + n * 20 };
+    this._instr[kind] = ins;
+    this._placeInstr(ins);
+    let mode = null, start = null;
+    el.addEventListener('pointerdown', e => {
+      const t = e.target;
+      if (!t.closest || !t.closest('.ins-body, .ins-rot, .ins-arm-h')) return;
       e.preventDefault(); e.stopPropagation();
-      mode = e.target.classList.contains('dr-rot') ? 'rot' : 'move';
-      sx = e.clientX; sy = e.clientY; scx = this._ruler.cx; scy = this._ruler.cy;
-      this._rotEnd = Number(e.target.dataset.end) || 1;
-      r.setPointerCapture(e.pointerId);
+      mode = t.classList.contains('ins-rot') ? 'rot' : t.classList.contains('ins-arm-h') ? 'arm' : 'move';
+      start = { x: e.clientX, y: e.clientY, cx: ins.cx, cy: ins.cy, ang: ins.ang, pa: Math.atan2(e.clientY - ins.cy, e.clientX - ins.cx) };
+      try { el.setPointerCapture(e.pointerId); } catch(_) {}
+      el.classList.add('dragging');
     });
-    r.addEventListener('pointermove', e => {
-      if (!mode || !this._ruler) return;
-      if (mode === 'move') { this._ruler.cx = scx + e.clientX - sx; this._ruler.cy = scy + e.clientY - sy; }
-      else {
-        let a = Math.atan2(e.clientY - this._ruler.cy, e.clientX - this._ruler.cx);
-        if (this._rotEnd < 0) a += Math.PI;
-        let deg = a * 180 / Math.PI;
-        // an runden Winkeln einrasten (0°, 15°, 30°, 45° …)
+    el.addEventListener('pointermove', e => {
+      if (!mode) return;
+      if (mode === 'move') {
+        ins.cx = start.cx + e.clientX - start.x;
+        ins.cy = start.cy + e.clientY - start.y;
+      } else if (mode === 'rot') {
+        let deg = (start.ang + Math.atan2(e.clientY - ins.cy, e.clientX - ins.cx) - start.pa) * 180 / Math.PI;
         const near = Math.round(deg / 15) * 15;
-        if (Math.abs(deg - near) < 2.5) deg = near;
-        this._ruler.ang = deg * Math.PI / 180;
+        if (Math.abs(deg - near) < 2.5) deg = near;   // an 0°, 15°, 30°, 45° … einrasten
+        ins.ang = deg * Math.PI / 180;
+      } else {
+        // Messarm des Winkelmessers: Winkel in den Koordinaten des Winkelmessers
+        const dx = e.clientX - ins.cx, dy = e.clientY - ins.cy, co = Math.cos(-ins.ang), si = Math.sin(-ins.ang);
+        const lx = dx * co - dy * si, ly = dx * si + dy * co;
+        ins.arm = ly > 0 ? (lx < 0 ? 180 : 0) : Math.max(0, Math.min(180, Math.round(Math.atan2(-ly, lx) * 180 / Math.PI)));
       }
-      this._placeRuler();
+      this._placeInstr(ins);
     });
-    const stop = () => { mode = null; };
-    r.addEventListener('pointerup', stop);
-    r.addEventListener('pointercancel', stop);
+    const stop = () => { mode = null; el.classList.remove('dragging'); };
+    el.addEventListener('pointerup', stop);
+    el.addEventListener('pointercancel', stop);
+    el.addEventListener('lostpointercapture', stop);
+    this._updateMeasureBtn();
   },
-  _placeRuler() {
-    const R = this._ruler; if (!R) return;
-    R.el.style.transform = 'translate(' + (R.cx - this.RULER_LEN / 2) + 'px,' + (R.cy - this.RULER_H / 2) + 'px) rotate(' + R.ang + 'rad)';
-    let deg = Math.round(-R.ang * 180 / Math.PI) % 180;
-    if (deg < 0) deg += 180;
-    if (deg > 90) deg = 180 - deg;   // Neigung gegen die Waagerechte: 0–90°
-    R.el.querySelector('.dr-ang').textContent = deg + '°';
+  _placeInstr(ins) {
+    const def = DRAW_INSTR[ins.kind];
+    ins.el.style.transform = 'translate(' + (ins.cx - def.px) + 'px,' + (ins.cy - def.py) + 'px) rotate(' + ins.ang + 'rad) scale(' + (ins.scale || 1) + ')';
+    const read = ins.el.querySelector('.ins-read');
+    if (ins.kind === 'protractor') {
+      const a = ins.arm * Math.PI / 180;
+      const arm = ins.el.querySelector('.ins-arm'), h = ins.el.querySelector('.ins-arm-h');
+      arm.setAttribute('x2', _f(def.px + 236 * Math.cos(a))); arm.setAttribute('y2', _f(def.py - 236 * Math.sin(a)));
+      h.setAttribute('cx', _f(def.px + 172 * Math.cos(a))); h.setAttribute('cy', _f(def.py - 172 * Math.sin(a)));
+      if (read) read.textContent = ins.arm + '°';
+    } else if (read) {
+      let deg = Math.round(-ins.ang * 180 / Math.PI) % 180;
+      if (deg < 0) deg += 180;
+      if (deg > 90) deg = 180 - deg;   // Neigung gegen die Waagerechte: 0–90°
+      read.textContent = deg + '°';
+    }
   },
-  // Beginnt ein Strich dicht an einer Lineal-Kante? Dann die Kante als Führungslinie zurückgeben.
-  _rulerSnap(p) {
-    const R = this._ruler; if (!R) return null;
+  _hideInstruments() { Object.keys(this._instr).forEach(k => this._toggleInstrument(k, false)); },
+  _updateMeasureBtn() { document.getElementById('dt-measure')?.classList.toggle('active', Object.keys(this._instr).length > 0); },
+  // Beginnt ein Strich dicht an einer Kante eines Messwerkzeugs? Dann diese Kante als Führungslinie zurückgeben.
+  _instrSnap(p) {
     const off = this._scrollOffset();
-    const cx = R.cx + off.x, cy = R.cy + off.y;
-    const ux = Math.cos(R.ang), uy = Math.sin(R.ang), nx = -uy, ny = ux;
-    const dx = p.x - cx, dy = p.y - cy;
-    const t = dx * ux + dy * uy, d = dx * nx + dy * ny;
-    if (Math.abs(t) > this.RULER_LEN / 2 + 30) return null;
-    if (Math.abs(Math.abs(d) - this.RULER_H / 2) > 30) return null;
-    const s = d < 0 ? -1 : 1;
-    return { ax: cx + nx * s * this.RULER_H / 2, ay: cy + ny * s * this.RULER_H / 2, ux, uy };
+    let best = null;
+    Object.values(this._instr).forEach(ins => {
+      const k = ins.scale || 1, co = Math.cos(ins.ang) * k, si = Math.sin(ins.ang) * k;
+      const W = (lx, ly) => ({ x: ins.cx + off.x + lx * co - ly * si, y: ins.cy + off.y + lx * si + ly * co });
+      DRAW_INSTR[ins.kind].edges.forEach(([x1, y1, x2, y2]) => {
+        const A = W(x1, y1), B = W(x2, y2);
+        const L = Math.hypot(B.x - A.x, B.y - A.y), ux = (B.x - A.x) / L, uy = (B.y - A.y) / L;
+        const t = (p.x - A.x) * ux + (p.y - A.y) * uy;
+        if (t < -30 || t > L + 30) return;
+        const d = Math.abs((p.x - A.x) * uy - (p.y - A.y) * ux);
+        if (d <= 28 && (!best || d < best.d)) best = { d, ax: A.x, ay: A.y, ux, uy };
+      });
+    });
+    return best;
   },
-  _project(p) {
-    const L = this._rulerLine;
+  _projectOn(L, p) {
     const t = (p.x - L.ax) * L.ux + (p.y - L.ay) * L.uy;
     return { x: L.ax + L.ux * t, y: L.ay + L.uy * t };
   },
+  _project(p) { return this._projectOn(this._rulerLine, p); },
 
-  // ── Formen (Linie, Pfeil, Rechteck, Ellipse): Vorschau beim Ziehen ──
-  _previewShape() {
+  // ── Laserpointer: Spur auf einer eigenen Ebene, verblasst nach gut einer Sekunde ──
+  _laserStrokes: [], _laserStroke: null, _laserRaf: null, _laserCv: null,
+  _initLaser() {
+    const cv = document.createElement('canvas');
+    cv.id = 'draw-laser';
+    cv.setAttribute('data-kb-keep', '');
+    document.body.appendChild(cv);
+    this._laserCv = cv;
+    const size = () => { cv.width = window.innerWidth; cv.height = window.innerHeight; };
+    size();
+    window.addEventListener('resize', size);
+  },
+  _laserLoop() {
+    if (this._laserRaf || !this._laserCv) return;
+    const LIFE = 1100;
+    const step = () => {
+      const cv = this._laserCv, ctx = cv.getContext('2d'), now = performance.now();
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      this._laserStrokes = this._laserStrokes.filter(s => s === this._laserStroke || s.some(pt => now - pt.t < LIFE));
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      this._laserStrokes.forEach(s => {
+        while (s.length > 2 && now - s[1].t > LIFE) s.shift();
+        for (let i = 1; i < s.length; i++) {
+          const al = 1 - (now - s[i].t) / LIFE;
+          if (al <= 0) continue;
+          ctx.strokeStyle = 'rgba(255,59,48,' + al.toFixed(3) + ')';
+          ctx.shadowColor = 'rgba(255,59,48,' + al.toFixed(3) + ')';
+          ctx.shadowBlur = 14; ctx.lineWidth = 6;
+          ctx.beginPath(); ctx.moveTo(s[i - 1].x, s[i - 1].y); ctx.lineTo(s[i].x, s[i].y); ctx.stroke();
+        }
+        if (s === this._laserStroke && s.length) {
+          const last = s[s.length - 1];
+          ctx.fillStyle = '#ff3b30'; ctx.shadowBlur = 18; ctx.shadowColor = '#ff3b30';
+          ctx.beginPath(); ctx.arc(last.x, last.y, 7, 0, Math.PI * 2); ctx.fill();
+        }
+      });
+      if (this._laserStrokes.length) this._laserRaf = requestAnimationFrame(step);
+      else { this._laserRaf = null; ctx.clearRect(0, 0, cv.width, cv.height); }
+    };
+    this._laserRaf = requestAnimationFrame(step);
+  },
+
+  // ── Auswählen und verschieben: Rahmen aufziehen, Inhalt schwebt, antippen außerhalb legt ihn ab ──
+  _sel: null, _selBox: null, _selBoxEl: null, _selDrag: null,
+  _selStart(e) {
+    this.drawing = true;
+    const p = this._getPos(e), s = this._sel;
+    if (s && p.x >= s.x && p.x <= s.x + s.w && p.y >= s.y && p.y <= s.y + s.h) {
+      this._selDrag = { sx: e.clientX, sy: e.clientY, ox: s.x, oy: s.y };
+      return;
+    }
+    this._commitSel();
+    this._selBox = { x0: p.x, y0: p.y, x1: p.x, y1: p.y };
+    const d = document.createElement('div');
+    d.className = 'draw-selbox';
+    d.setAttribute('data-kb-keep', '');
+    document.body.appendChild(d);
+    this._selBoxEl = d;
+    this._placeSelBox();
+  },
+  _placeSelBox() {
+    const b = this._selBox, el = this._selBoxEl;
+    if (!b || !el) return;
+    const off = this._scrollOffset();
+    el.style.left = (Math.min(b.x0, b.x1) - off.x) + 'px';
+    el.style.top = (Math.min(b.y0, b.y1) - off.y) + 'px';
+    el.style.width = Math.abs(b.x1 - b.x0) + 'px';
+    el.style.height = Math.abs(b.y1 - b.y0) + 'px';
+  },
+  _selMove(e) {
+    if (this._selDrag && this._sel) {
+      this._sel.x = Math.round(this._selDrag.ox + e.clientX - this._selDrag.sx);
+      this._sel.y = Math.round(this._selDrag.oy + e.clientY - this._selDrag.sy);
+      this._placeSel();
+      return;
+    }
+    if (this._selBox) {
+      const p = this._getPos(e);
+      this._selBox.x1 = p.x; this._selBox.y1 = p.y;
+      this._placeSelBox();
+    }
+  },
+  _selEnd() {
+    if (this._selDrag) { this._selDrag = null; return; }
+    const b = this._selBox;
+    this._selBox = null;
+    if (this._selBoxEl) { this._selBoxEl.remove(); this._selBoxEl = null; }
+    if (!b) return;
+    const x = Math.max(0, Math.round(Math.min(b.x0, b.x1))), y = Math.max(0, Math.round(Math.min(b.y0, b.y1)));
+    const w = Math.min(Math.round(Math.abs(b.x1 - b.x0)), this.canvas.width - x);
+    const h = Math.min(Math.round(Math.abs(b.y1 - b.y0)), this.canvas.height - y);
+    if (w < 6 || h < 6) return;
+    let img;
+    try { img = this.ctx.getImageData(x, y, w, h); } catch(e) { return; }
+    let any = false;
+    for (let i = 3; i < img.data.length; i += 16) { if (img.data[i]) { any = true; break; } }
+    if (!any) { toast('In diesem Bereich ist nichts gezeichnet'); return; }
+    this._pushHistory();
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    cv.className = 'draw-float-img';
+    cv.getContext('2d').putImageData(img, 0, 0);
+    this.ctx.clearRect(x, y, w, h);
+    this._markInk('unknown');
+    const wrap = document.createElement('div');
+    wrap.className = 'draw-float';
+    wrap.setAttribute('data-kb-keep', '');
+    wrap.appendChild(cv);
+    const bar = document.createElement('div');
+    bar.className = 'draw-float-bar';
+    const mk = (ic, title, fn) => {
+      const bt = document.createElement('button');
+      bt.innerHTML = icon(ic, 18); bt.title = title; bt.setAttribute('aria-label', title);
+      bt.addEventListener('pointerdown', ev => ev.stopPropagation());
+      bt.addEventListener('click', ev => { ev.stopPropagation(); fn(); });
+      bar.appendChild(bt);
+    };
+    mk('copy', 'Kopie erstellen', () => this._dupSel());
+    mk('trash', 'Auswahl löschen (Entf)', () => this._deleteSel());
+    mk('check', 'Ablegen', () => this._commitSel());
+    wrap.appendChild(bar);
+    document.body.appendChild(wrap);
+    this._sel = { canvas: cv, x, y, w, h, el: wrap };
+    this._placeSel();
+  },
+  _placeSel() {
+    const s = this._sel;
+    if (!s) return;
+    const off = this._scrollOffset();
+    s.el.style.left = (s.x - off.x) + 'px';
+    s.el.style.top = (s.y - off.y) + 'px';
+    s.el.style.width = s.w + 'px';
+    s.el.style.height = s.h + 'px';
+    s.el.classList.toggle('bar-below', s.y - off.y < 120);
+  },
+  _commitSel(noSave) {
+    const s = this._sel;
+    if (!s) return;
+    this._sel = null;
+    s.el.remove();
+    this.ctx.globalCompositeOperation = 'source-over';
+    this.ctx.drawImage(s.canvas, s.x, s.y);
+    this._markInk('ink');
+    if (!noSave) this._scheduleSave(800);
+  },
+  _deleteSel() {
+    const s = this._sel;
+    if (!s) return;
+    this._sel = null;
+    s.el.remove();
+    this._markInk('unknown');
+    this._scheduleSave(800);
+  },
+  _dupSel() {
+    const s = this._sel;
+    if (!s) return;
+    this.ctx.globalCompositeOperation = 'source-over';
+    this.ctx.drawImage(s.canvas, s.x, s.y);
+    this._markInk('ink');
+    s.x += 24; s.y += 24;
+    this._placeSel();
+  },
+  // Speichern mit Verzögerung — aber nicht, solange eine Auswahl schwebt (sie fehlt sonst in der Zeichnung)
+  _scheduleSave(ms) {
+    clearTimeout(this._saveTimer);
+    this._saveTimer = setTimeout(() => {
+      if (this._sel) { this._scheduleSave(ms); return; }
+      this.saveBoard(APP.state.activeBoardId);
+    }, ms || 800);
+  },
+
+  // ── Formen: Vorschau beim Ziehen, final beim Loslassen ──
+  _rgba(hex, a) {
+    const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(hex || '').trim());
+    if (!m) return 'rgba(250,204,21,' + a + ')';
+    let h = m[1];
+    if (h.length === 3) h = h.split('').map(ch => ch + ch).join('');
+    const n = parseInt(h, 16);
+    return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + a + ')';
+  },
+  _label(text, x, y) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.setLineDash([]); ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    ctx.font = '700 15px ' + getComputedStyle(document.body).fontFamily;
+    const w = ctx.measureText(text).width + 14;
+    ctx.fillStyle = 'rgba(15,20,19,0.78)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x - w / 2, y - 13, w, 26, 8); else ctx.rect(x - w / 2, y - 13, w, 26);
+    ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y + 1);
+    ctx.restore();
+  },
+  _drawAxes(x0, y0, x1, y1) {
+    const ctx = this.ctx;
+    const L = Math.min(x0, x1), T = Math.min(y0, y1), W = Math.abs(x1 - x0), H = Math.abs(y1 - y0);
+    if (W < 40 || H < 40) return;
+    const u = Math.min(W, H) >= 240 ? DRAW_UNIT : DRAW_UNIT / 2;
+    const ox = L + Math.round(W / 2 / u) * u, oy = T + Math.round(H / 2 / u) * u;
+    ctx.save();
+    ctx.setLineDash([]); ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
+    // Gitter
+    ctx.strokeStyle = this._rgba(this.color, 0.22); ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = ox - Math.floor((ox - L) / u) * u; x <= L + W + 0.5; x += u) { ctx.moveTo(x, T); ctx.lineTo(x, T + H); }
+    for (let y = oy - Math.floor((oy - T) / u) * u; y <= T + H + 0.5; y += u) { ctx.moveTo(L, y); ctx.lineTo(L + W, y); }
+    ctx.stroke();
+    // Achsen mit Pfeilspitzen
+    const ah = 11;
+    ctx.strokeStyle = this.color; ctx.fillStyle = this.color;
+    ctx.lineWidth = Math.max(2, Math.min(this.size, 4)); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(L, oy); ctx.lineTo(L + W - ah, oy); ctx.moveTo(ox, T + H); ctx.lineTo(ox, T + ah); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(L + W, oy); ctx.lineTo(L + W - ah, oy - ah * 0.6); ctx.lineTo(L + W - ah, oy + ah * 0.6); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(ox, T); ctx.lineTo(ox - ah * 0.6, T + ah); ctx.lineTo(ox + ah * 0.6, T + ah); ctx.closePath(); ctx.fill();
+    // Striche und Zahlen
+    const fs = Math.max(11, Math.round(u * 0.3));
+    ctx.font = '600 ' + fs + 'px ' + getComputedStyle(document.body).fontFamily;
+    ctx.lineWidth = 1.5;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.beginPath();
+    for (let x = ox + u, n = 1; x < L + W - ah - 2; x += u, n++) { ctx.moveTo(x, oy - 5); ctx.lineTo(x, oy + 5); ctx.fillText(n, x, oy + 8); }
+    for (let x = ox - u, n = -1; x > L + 2; x -= u, n--) { ctx.moveTo(x, oy - 5); ctx.lineTo(x, oy + 5); ctx.fillText(n, x, oy + 8); }
+    ctx.stroke();
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.beginPath();
+    for (let y = oy - u, n = 1; y > T + ah + 2; y -= u, n++) { ctx.moveTo(ox - 5, y); ctx.lineTo(ox + 5, y); ctx.fillText(n, ox - 9, y); }
+    for (let y = oy + u, n = -1; y < T + H - 2; y += u, n--) { ctx.moveTo(ox - 5, y); ctx.lineTo(ox + 5, y); ctx.fillText(n, ox - 9, y); }
+    ctx.stroke();
+    ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.fillText('0', ox - 6, oy + 6);
+    ctx.font = 'italic 700 ' + Math.round(fs * 1.25) + 'px ' + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.fillText('x', L + W - 2, oy - 8);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText('y', ox + 10, T + 2);
+    ctx.restore();
+  },
+  _previewShape(final) {
     const s = this._shape;
     if (!s || s.x1 == null) return;
     const ctx = this.ctx;
     if (s.snap) ctx.putImageData(s.snap, 0, 0);
     this._applyStyle();
     ctx.shadowBlur = 0;
-    const { x0, y0, x1, y1 } = s;
-    ctx.beginPath();
-    if (this.tool === 'rect') ctx.rect(Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0));
-    else if (this.tool === 'ellipse') ctx.ellipse((x0 + x1) / 2, (y0 + y1) / 2, Math.abs(x1 - x0) / 2, Math.abs(y1 - y0) / 2, 0, 0, Math.PI * 2);
-    else {
-      ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
-      if (this.tool === 'arrow') {
+    const { x0, y0, x1, y1 } = s, k = this.tool, lw = ctx.lineWidth;
+    if (this.dash && k !== 'axes') ctx.setLineDash([Math.max(8, lw * 3), Math.max(6, lw * 2.2)]);
+    if (k === 'axes') {
+      this._drawAxes(x0, y0, x1, y1);
+    } else if (k === 'rect' || k === 'ellipse' || k === 'compass') {
+      const r = Math.hypot(x1 - x0, y1 - y0);
+      ctx.beginPath();
+      if (k === 'rect') ctx.rect(Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0));
+      else if (k === 'ellipse') ctx.ellipse((x0 + x1) / 2, (y0 + y1) / 2, Math.abs(x1 - x0) / 2, Math.abs(y1 - y0) / 2, 0, 0, Math.PI * 2);
+      else ctx.arc(x0, y0, r, 0, Math.PI * 2);
+      if (this.fill) { ctx.fillStyle = this._rgba(this.color, 0.28); ctx.fill(); }
+      ctx.stroke();
+      if (k === 'compass') {
+        ctx.setLineDash([]);
+        ctx.fillStyle = this.color;
+        ctx.beginPath(); ctx.arc(x0, y0, Math.max(2.5, lw * 0.8), 0, Math.PI * 2); ctx.fill();   // Einstichpunkt
+        if (!final) {
+          ctx.save(); ctx.setLineDash([6, 6]); ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); ctx.restore();
+          this._label('r = ' + (r / DRAW_UNIT).toFixed(1).replace('.', ','), (x0 + x1) / 2, (y0 + y1) / 2 - 18);
+        }
+      }
+    } else {
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+      if (k === 'arrow') {
+        ctx.setLineDash([]);
         const a = Math.atan2(y1 - y0, x1 - x0), h = Math.max(14, this.size * 4);
+        ctx.beginPath();
         ctx.moveTo(x1 - h * Math.cos(a - 0.45), y1 - h * Math.sin(a - 0.45));
         ctx.lineTo(x1, y1);
         ctx.lineTo(x1 - h * Math.cos(a + 0.45), y1 - h * Math.sin(a + 0.45));
+        ctx.stroke();
       }
+      if (!final) this._label('l = ' + (Math.hypot(x1 - x0, y1 - y0) / DRAW_UNIT).toFixed(1).replace('.', ','), (x0 + x1) / 2, (y0 + y1) / 2 - 18);
     }
-    ctx.stroke();
+    ctx.setLineDash([]);
   },
 
   _showTextInput(x, y) {
@@ -8772,7 +9257,7 @@ const DRAW = {
       self.ctx.shadowBlur = 0;
       self.ctx.fillText(txt, px, py);
       clearTimeout(self._saveTimer);
-      self._saveTimer = setTimeout(() => self.saveBoard(APP.state.activeBoardId), 400);
+      self._scheduleSave(400);
     };
 
     inp.addEventListener('keydown', ev => {
@@ -8817,6 +9302,7 @@ const DRAW = {
     if (!this.canvas) return;
     const o = this._scrollOffset();
     this.canvas.style.transform = (o.x || o.y) ? 'translate(' + (-o.x) + 'px,' + (-o.y) + 'px)' : '';
+    if (this._sel) this._placeSel();
   },
   // Bildschirm- → Zeichenebenen-Koordinaten
   _getPos(e) {
@@ -8848,10 +9334,21 @@ const DRAW = {
     // Capture pointer so drawing works even outside window
     try { this.canvas.setPointerCapture(e.pointerId); } catch(_) {}
 
+    // Laserpointer: nur eine verblassende Spur, verändert die Zeichnung nicht
+    if (this.tool === 'laser') {
+      this.drawing = true;
+      this._laserStroke = [{ x: e.clientX, y: e.clientY, t: performance.now() }];
+      this._laserStrokes.push(this._laserStroke);
+      this._laserLoop();
+      return;
+    }
+
     // Wird in einem gescrollten Bereich gezeichnet, muss die Zeichenebene bis dorthin reichen
     const off = this._scrollOffset();
     if (off.x || off.y) this._resize(window.innerWidth + off.x, window.innerHeight + off.y);
     this._syncScroll();
+
+    if (this.tool === 'select') { this._selStart(e); return; }
 
     this._pushHistory();   // Undo snapshot
     this._markInk(this.tool === 'eraser' ? 'unknown' : 'ink');
@@ -8860,9 +9357,15 @@ const DRAW = {
     this.drawing = true;
     this._rafPending = false;
     // Formen: Startpunkt merken; die Vorschau wird über dem Undo-Schnappschuss gezeichnet
-    this._shape = ['line', 'arrow', 'rect', 'ellipse'].includes(this.tool)
+    this._shape = DRAW_SHAPES.includes(this.tool)
       ? { x0: p.x, y0: p.y, snap: this.history[this.history.length - 1] || null } : null;
-    this._rulerLine = (!this._shape && this.tool !== 'eraser') ? this._rulerSnap(p) : null;
+    // Striche und gerade Linien, die an einer Kante von Lineal/Geodreieck beginnen, laufen exakt an der Kante
+    const guide = this.tool !== 'eraser' && (!this._shape || this.tool === 'line' || this.tool === 'arrow') ? this._instrSnap(p) : null;
+    if (this._shape) {
+      this._shape.guide = guide;
+      if (guide) { const q = this._projectOn(guide, p); this._shape.x0 = q.x; this._shape.y0 = q.y; }
+    }
+    this._rulerLine = this._shape ? null : guide;
     if (this._rulerLine) p = this._project(p);
     this._pts = [p];
     if (this._shape) return;
@@ -8886,9 +9389,20 @@ const DRAW = {
     const coalesced = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
     const events = coalesced && coalesced.length ? coalesced : [e];
     const off = this._scrollOffset();
+    if (this.tool === 'laser') {
+      const now = performance.now();
+      if (this._laserStroke) events.forEach(ev => this._laserStroke.push({ x: ev.clientX, y: ev.clientY, t: now }));
+      this._laserLoop();
+      return;
+    }
+    if (this.tool === 'select') { this._selMove(e); return; }
     if (this._shape) {
       const ev = events[events.length - 1];
       this._shape.x1 = ev.clientX + off.x; this._shape.y1 = ev.clientY + off.y;
+      if (this._shape.guide) {
+        const q = this._projectOn(this._shape.guide, { x: this._shape.x1, y: this._shape.y1 });
+        this._shape.x1 = q.x; this._shape.y1 = q.y;
+      }
       if (!this._rafPending) {
         this._rafPending = true;
         requestAnimationFrame(() => { this._rafPending = false; this._previewShape(); });
@@ -8936,18 +9450,21 @@ const DRAW = {
   _end(e) {
     if (!this.drawing) return;
     this.drawing = false;
-    if (this._shape) { this._previewShape(); this._shape = null; }
+    if (this.tool === 'laser') { this._laserStroke = null; try { this.canvas.releasePointerCapture(e.pointerId); } catch(_) {} return; }
+    if (this.tool === 'select') { this._selEnd(); try { this.canvas.releasePointerCapture(e.pointerId); } catch(_) {} return; }
+    if (this._shape) { this._previewShape(true); this._shape = null; }
     // Flush remaining points
     else if (this._pts && this._pts.length > 1) this._flushPoints();
     this._rulerLine = null;
     try { this.canvas.releasePointerCapture(e.pointerId); } catch(_) {}
     // Debounced save — don't call toDataURL on every stroke end
     clearTimeout(this._saveTimer);
-    this._saveTimer = setTimeout(() => this.saveBoard(APP.state.activeBoardId), 800);
+    this._scheduleSave(800);
   },
 
   _applyStyle() {
     const ctx = this.ctx;
+    ctx.setLineDash([]);
     ctx.lineCap  = 'round';
     ctx.lineJoin = 'round';
     ctx.globalCompositeOperation = 'source-over';
@@ -8991,6 +9508,7 @@ const DRAW = {
   },
 
   _undo() {
+    if (this._sel) { this._sel.el.remove(); this._sel = null; }
     if (this.history.length === 0) return;
     const snap = this.history.pop();
     try { this.redo.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height)); } catch(e) { this.redo = []; }
@@ -8999,7 +9517,7 @@ const DRAW = {
     this.ctx.putImageData(snap, 0, 0);
     this._markInk('unknown');
     clearTimeout(this._saveTimer);
-    this._saveTimer = setTimeout(() => this.saveBoard(APP.state.activeBoardId), 800);
+    this._scheduleSave(800);
   },
   _redo() {
     if (!this.redo.length) return;
@@ -9009,7 +9527,7 @@ const DRAW = {
     this.ctx.putImageData(snap, 0, 0);
     this._markInk('unknown');
     clearTimeout(this._saveTimer);
-    this._saveTimer = setTimeout(() => this.saveBoard(APP.state.activeBoardId), 800);
+    this._scheduleSave(800);
   },
 
   // Merkt, ob die Zeichenebene Inhalt hat und ob er seit dem letzten Sichern verändert wurde.
@@ -9025,6 +9543,8 @@ const DRAW = {
   // Save drawing of current board before switching
   saveBoard(boardId) {
     if (!this.canvas || !boardId) return;
+    // Direkter Aufruf (Tafelwechsel, Zeichnen beenden): schwebende Auswahl erst ablegen
+    if (this._sel) this._commitSel(true);
     if (!this._hasInk()) {
       if (this.boardDrawings[boardId]) { delete this.boardDrawings[boardId]; this._persistDrawings(); }
     } else if (this._inkDirty || !this.boardDrawings[boardId]) {

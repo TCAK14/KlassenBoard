@@ -52,9 +52,14 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
 - `toggleWidgetFull(id)` / `exitWidgetFull()`: Element füllt den Bildschirm (Kopf-Knopf im Bearbeiten-Modus, Eck-Knopf
   `.w-full-btn` in der Ansicht). Renderer bekommen über `widgetFullProxy()` die Bildschirmgröße als `w.w`/`w.h` —
   die gespeicherte Größe wird NICHT verändert. `youtube`/`browser` werden dabei nicht neu aufgebaut
-- Zeichnen (`DRAW`): Werkzeuge über `data-tool` in `#draw-toolbar` (pen, marker, eraser, line, arrow, rect, ellipse, text).
-  Formen zeichnen ihre Vorschau über dem Undo-Schnappschuss (`_previewShape`). Lineal `#draw-ruler` (`_toggleRuler`):
-  Striche, die dicht an einer Kante beginnen, werden auf die Kante projiziert (`_rulerSnap`/`_project`). Undo + Redo
+- Zeichnen (`DRAW`): Werkzeuge über `data-tool` (pen, marker, laser, eraser, select, text); Formen über das Menü
+  `#dt-shapes` (`DRAW_SHAPE_LIST`: line, arrow, rect, ellipse, compass, axes; Schalter `fill`/`dash`). Formen zeichnen ihre
+  Vorschau über dem Undo-Schnappschuss (`_previewShape(final)`, Länge/Radius als Beschriftung nur in der Vorschau)
+- Messwerkzeuge `DRAW_INSTR` (ruler, setsquare, protractor) über `#dt-measure`: SVG an `<body>`, Kanten in `edges`
+  (lokal zum Drehpunkt). `_instrSnap` projiziert Striche, die dicht an einer Kante beginnen, auf die Kante.
+  1 Einheit = `DRAW_UNIT` (50 px), keine echten Zentimeter. Auf schmalen Bildschirmen `ins.scale` < 1
+- Laserpointer auf eigener Ebene `#draw-laser` (kein Undo, nichts gespeichert). Auswahl: ausgeschnittener Bereich
+  schwebt als `.draw-float`; gespeichert wird erst nach dem Ablegen (`_scheduleSave` wartet, `saveBoard` legt ab)
 
 ## Elemente seit „alles von Classroomscreen und besser" (Nov 2026)
 - Neu: `worksymbols`, `scoreboard`, `visualtimer` (läuft über denselben Timer-Wächter wie `timer`), `countdown`,
