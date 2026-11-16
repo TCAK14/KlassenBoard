@@ -1053,6 +1053,41 @@ body[data-cards="dark"] .tm-ring .prg { stroke:var(--accent-soft); }
 .dc-sum { flex:1 1 0; min-width:0; white-space:nowrap; overflow:hidden; text-align:right; font-size:clamp(15px, 6cqw, 26px); font-weight:700; color:var(--accent-ink); font-variant-numeric:tabular-nums; }
 body[data-cards="dark"] .dc-sum { color:var(--accent-soft); }
 
+/* ── Uhr mit Zeigern ── */
+.ck { width:100%; height:100%; box-sizing:border-box; padding:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; }
+.ck-face { flex:none; }
+.ck-face svg { display:block; width:100%; height:100%; }
+.ck-dial { fill:#fff; stroke:#1B2422; stroke-width:1.6; }
+.ck-tick { stroke:#6F7A76; stroke-width:.6; stroke-linecap:round; }
+.ck-tick.h { stroke:#1B2422; stroke-width:1.6; }
+.ck-num { fill:#1B2422; font-size:8.5px; font-weight:700; text-anchor:middle; dominant-baseline:central; font-family:"Atkinson Hyperlegible Next", system-ui, sans-serif; }
+.ck-hand { stroke:#1B2422; stroke-linecap:round; }
+.ck-hand.hr { stroke-width:3.4; }
+.ck-hand.mn { stroke-width:2.2; }
+.ck-hand.sc { stroke:#D92D20; stroke-width:.9; }
+.ck-hub { fill:#1B2422; }
+.ck-digital { font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums; }
+.ck-answer { flex:none; text-align:center; line-height:1.3; }
+.ck-answer b { display:block; }
+.ck-answer span { color:var(--w-muted); font-weight:700; }
+.ck-ctrl { flex:none; display:flex; gap:6px; width:100%; max-width:380px; }
+
+/* ── Start-Dialog: Suche und Kategorien ── */
+.start-modal h3 { display:flex; align-items:center; gap:8px; }
+.start-count { font-size:12px; padding:2px 9px; border-radius:999px; background:var(--accent-tint); color:var(--accent-ink); letter-spacing:0; }
+.start-filter { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+.start-search { display:flex; align-items:center; gap:8px; min-height:46px; padding:0 12px; border-radius:12px; border:1.5px solid #C9D0CA; background:#fff; color:var(--ink-muted); }
+.start-search:focus-within { border-color:var(--accent); box-shadow:0 0 0 3px rgba(11,122,116,0.18); }
+.start-search input { flex:1; min-width:0; border:0; outline:none; background:transparent; color:var(--ink); font:inherit; font-size:16px; padding:0; }
+.start-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.start-chip { min-height:36px; padding:0 14px; border-radius:999px; border:1.5px solid #DADFD9; background:#fff; color:var(--ink); font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+.start-chip:hover { border-color:var(--accent); }
+.start-chip.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+.start-none { padding:24px 8px; text-align:center; color:var(--ink-muted); font-size:15px; }
+.tpl-card2[hidden] { display:none; }
+.tpl-thumb span { display:flex; align-items:center; justify-content:center; overflow:hidden; color:#6F7A76; }
+.tpl-thumb span .ic { width:auto; height:52%; max-height:18px; max-width:80%; }
+
 /* ── Arbeitssymbole ── */
 .ws-grid { width:100%; height:100%; box-sizing:border-box; padding:8px; display:grid; gap:8px; grid-auto-rows:1fr; }
 .ws-tile {
@@ -2148,6 +2183,9 @@ const TPL_BG = {
   green: { type:'color', value:'#1F3531' },
   slate: { type:'color', value:'#262C33' },
   night: { type:'color', value:'#182840' },
+  ocean: { type:'color', value:'#123B4A' },
+  plum:  { type:'color', value:'#2E2440' },
+  berry: { type:'color', value:'#3A1F2B' },
 };
 const BUILT_IN_TEMPLATES = [
   { id:'tpl-morgen', name:'Morgenstart', desc:'Uhr, Stundenziel, Tagesplan, Hausaufgaben', bg:TPL_BG.green, widgets:[
@@ -2269,7 +2307,156 @@ const BUILT_IN_TEMPLATES = [
     { type:'goal',        x:432, y:348, w:440, h:160, config:{ text:'' } },
     { type:'sticker',     x:896, y:348, w:156, h:160, config:{ emoji:'⭐' } },
   ]},
+
+  // ── Ankommen ──
+  { id:'tpl-stimmung', cat:'start', name:'Stimmungscheck', desc:'Wie geht es euch heute? Daumen-Abfrage mit Zählung', bg:TPL_BG.plum, widgets:[
+    { type:'text',       x:24,  y:24,  w:620, h:250, config:{ text:'Wie geht es dir heute?\nZeig es mit dem Daumen: 👍 gut · 👉 geht so · 👎 nicht so gut' } },
+    { type:'clock',      x:668, y:24,  w:384, h:250, config:{ style:'analog' } },
+    { type:'scoreboard', x:24,  y:298, w:620, h:210, config:{ teams:[{name:'👍 gut',score:0},{name:'👉 geht so',score:0},{name:'👎 nicht gut',score:0}] } },
+    { type:'names',      x:668, y:298, w:384, h:210, config:{ names:'' } },
+  ]},
+  { id:'tpl-frage', cat:'start', name:'Frage des Tages', desc:'Gesprächsimpuls, Namensrad, Timer', bg:TPL_BG.ocean, widgets:[
+    { type:'text',  x:24,  y:24,  w:1028, h:250, config:{ text:'Frage des Tages:\nWenn du einen Tag lang ein Tier sein könntest – welches wärst du und warum?' } },
+    { type:'names', x:24,  y:298, w:600,  h:210, config:{ names:'' } },
+    { type:'timer', x:648, y:298, w:404,  h:210, config:{ minutes:5 } },
+  ]},
+  { id:'tpl-morgenkreis', cat:'start', name:'Morgenkreis', desc:'Datum, Uhr, Wetter, Ablauf, Tagesdienst', bg:TPL_BG.green, widgets:[
+    { type:'calendar', x:24,  y:24,  w:328, h:300, config:{} },
+    { type:'clock',    x:374, y:24,  w:328, h:300, config:{ style:'analog' } },
+    { type:'text',     x:724, y:24,  w:328, h:300, config:{ text:'Wie ist das Wetter heute?\n☀️ 🌤 ☁️ 🌧 ❄️' } },
+    { type:'agenda',   x:24,  y:348, w:678, h:160, config:{ items:[{time:'1.',text:'Begrüßung'},{time:'2.',text:'Datum und Wetter'},{time:'3.',text:'Tagesplan'}] } },
+    { type:'names',    x:724, y:348, w:328, h:160, config:{ names:'' } },
+  ]},
+  { id:'tpl-geburtstag', cat:'start', name:'Geburtstag', desc:'Glückwunsch-Tafel mit Stickern', bg:TPL_BG.berry, widgets:[
+    { type:'text',    x:24,  y:24,  w:1028, h:300, config:{ text:'Herzlichen Glückwunsch zum Geburtstag!\nAlles Gute, …!' } },
+    { type:'sticker', x:24,  y:348, w:160, h:160, config:{ emoji:'🎉' } },
+    { type:'sticker', x:208, y:348, w:160, h:160, config:{ emoji:'🎈' } },
+    { type:'sticker', x:392, y:348, w:160, h:160, config:{ emoji:'🎂' } },
+    { type:'sticker', x:576, y:348, w:160, h:160, config:{ emoji:'🎁' } },
+    { type:'text',    x:760, y:348, w:292, h:160, config:{ text:'Wir singen für dich!' } },
+  ]},
+
+  // ── Bewegung & Pause ──
+  { id:'tpl-ampelspiel', cat:'move', name:'Ampel-Spiel', desc:'Bewegungsspiel: hüpfen, trippeln, einfrieren', bg:TPL_BG.slate, widgets:[
+    { type:'traffic',   x:24,  y:24,  w:500, h:484, config:{ state:'green', labels:{ green:{label:'Hüpfen',sub:'Auf der Stelle hüpfen'}, yellow:{label:'Trippeln',sub:'Ganz kleine Schritte'}, red:{label:'Einfrieren',sub:'Stehen wie eine Statue'} } } },
+    { type:'text',      x:548, y:24,  w:504, h:300, config:{ text:'So geht’s:\nDie Lehrkraft schaltet die Ampel um. Wer sich falsch bewegt oder beim Einfrieren wackelt, setzt sich hin.' } },
+    { type:'stopwatch', x:548, y:348, w:504, h:160, config:{} },
+  ]},
+  { id:'tpl-wuerfelfit', cat:'move', name:'Würfel-Fitness', desc:'Würfeln und die passende Übung machen', bg:TPL_BG.green, widgets:[
+    { type:'dice',   x:24,  y:24,  w:400, h:300, config:{ count:1 } },
+    { type:'agenda', x:448, y:24,  w:604, h:484, config:{ items:[{time:'1',text:'10 Hampelmänner'},{time:'2',text:'5 Kniebeugen'},{time:'3',text:'10 Sekunden auf einem Bein'},{time:'4',text:'5 Strecksprünge'},{time:'5',text:'Arme kreisen'},{time:'6',text:'Joker: Du darfst wählen!'}] } },
+    { type:'timer',  x:24,  y:348, w:400, h:160, config:{ minutes:3 } },
+  ]},
+  { id:'tpl-tanzpause', cat:'move', name:'Stopptanz', desc:'Musikvideo, Timer, Spielregel', bg:TPL_BG.plum, widgets:[
+    { type:'youtube', x:24,  y:24,  w:660, h:484, config:{} },
+    { type:'text',    x:708, y:24,  w:344, h:260, config:{ text:'Stopptanz!\nWenn die Musik stoppt: einfrieren!' } },
+    { type:'timer',   x:708, y:308, w:344, h:200, config:{ minutes:3 } },
+  ]},
+  { id:'tpl-atempause', cat:'move', name:'Atempause', desc:'Zur Ruhe kommen mit Zeitkreis und Atemregel', bg:TPL_BG.ocean, widgets:[
+    { type:'visualtimer', x:24,  y:24,  w:440, h:484, config:{ minutes:2 } },
+    { type:'text',        x:488, y:24,  w:564, h:300, config:{ text:'4 Sekunden einatmen.\n4 Sekunden halten.\n4 Sekunden ausatmen.\nWiederholen, bis der Kreis leer ist.' } },
+    { type:'worksymbols', x:488, y:348, w:564, h:160, config:{ shown:['quiet','listen'], active:['quiet'] } },
+  ]},
+
+  // ── Spiele & Quiz ──
+  { id:'tpl-stadtland', cat:'game', name:'Stadt-Land-Fluss', desc:'Buchstabenrad, Timer, Punkte für zwei Teams', bg:TPL_BG.night, widgets:[
+    { type:'names',      x:24,  y:24,  w:328, h:484, config:{ names:'A\nB\nD\nE\nF\nG\nH\nK\nL\nM\nN\nP\nR\nS\nT\nW' } },
+    { type:'text',       x:376, y:24,  w:676, h:160, config:{ text:'Stadt · Land · Fluss · Tier · Name · Beruf' } },
+    { type:'timer',      x:376, y:208, w:330, h:300, config:{ minutes:2 } },
+    { type:'scoreboard', x:730, y:208, w:322, h:300, config:{ teams:[{name:'Team 1',score:0},{name:'Team 2',score:0}] } },
+  ]},
+  { id:'tpl-eher', cat:'game', name:'Würdest du eher …?', desc:'Zwei Möglichkeiten, die Klasse stimmt ab', bg:TPL_BG.berry, widgets:[
+    { type:'text',       x:24, y:24,  w:1028, h:150, config:{ text:'Würdest du eher …' } },
+    { type:'scoreboard', x:24, y:198, w:1028, h:310, config:{ teams:[{name:'fliegen können',score:0},{name:'unsichtbar sein',score:0}] } },
+  ]},
+  { id:'tpl-begriffe', cat:'game', name:'Begriffe erklären', desc:'Erklären ohne das Wort zu sagen, mit Punkten', bg:TPL_BG.slate, widgets:[
+    { type:'text',       x:24,  y:24,  w:620, h:250, config:{ text:'Ein Kind steht vorn und sieht den Begriff nicht.\nDie Klasse erklärt – ohne das Wort zu sagen!' } },
+    { type:'timer',      x:668, y:24,  w:384, h:250, config:{ minutes:1 } },
+    { type:'scoreboard', x:24,  y:298, w:620, h:210, config:{ teams:[{name:'Team A',score:0},{name:'Team B',score:0}] } },
+    { type:'names',      x:668, y:298, w:384, h:210, config:{ names:'' } },
+  ]},
+  { id:'tpl-koffer', cat:'game', name:'Ich packe meinen Koffer', desc:'Merkspiel mit Namensrad und Stoppuhr', bg:TPL_BG.green, widgets:[
+    { type:'text',      x:24,  y:24,  w:620, h:300, config:{ text:'Ich packe meinen Koffer und nehme mit …\nJedes Kind wiederholt alles und fügt etwas hinzu.' } },
+    { type:'names',     x:668, y:24,  w:384, h:484, config:{ names:'' } },
+    { type:'stopwatch', x:24,  y:348, w:620, h:160, config:{} },
+  ]},
+  { id:'tpl-zielzahl', cat:'game', name:'Zielzahl', desc:'Mit vier Würfeln die Zielzahl erreichen', bg:TPL_BG.night, widgets:[
+    { type:'dice',      x:24,  y:24,  w:620, h:300, config:{ count:4 } },
+    { type:'randomnum', x:668, y:24,  w:384, h:300, config:{ min:10, max:50 } },
+    { type:'text',      x:24,  y:348, w:620, h:160, config:{ text:'Erreiche die Zielzahl mit allen vier Würfelzahlen und + − × ÷.' } },
+    { type:'timer',     x:668, y:348, w:384, h:160, config:{ minutes:3 } },
+  ]},
+
+  // ── Soziales Lernen & Reflexion ──
+  { id:'tpl-exit', cat:'social', name:'Exit-Ticket', desc:'Drei Fragen zum Stundenende, Zeitkreis', bg:TPL_BG.slate, widgets:[
+    { type:'text',        x:24,  y:24,  w:660, h:484, config:{ text:'Exit-Ticket\n1. Das habe ich heute gelernt …\n2. Das ist mir noch unklar …\n3. Diese Frage habe ich noch …' } },
+    { type:'visualtimer', x:708, y:24,  w:344, h:484, config:{ minutes:5 } },
+  ]},
+  { id:'tpl-blitzlicht', cat:'social', name:'Blitzlicht', desc:'Wie gut ist das Thema angekommen? Mit Zählung', bg:TPL_BG.ocean, widgets:[
+    { type:'text',       x:24, y:24,  w:1028, h:150, config:{ text:'Wie gut hast du das Thema verstanden?' } },
+    { type:'scoreboard', x:24, y:198, w:1028, h:310, config:{ teams:[{name:'👍 gut',score:0},{name:'👉 teilweise',score:0},{name:'👎 noch nicht',score:0}] } },
+  ]},
+  { id:'tpl-klassenrat', cat:'social', name:'Klassenrat', desc:'Ablauf, Gesprächsleitung, Redezeit', bg:TPL_BG.green, widgets:[
+    { type:'agenda',      x:24,  y:24,  w:500, h:484, config:{ items:[{time:'1.',text:'Begrüßung'},{time:'2.',text:'Protokoll vom letzten Mal'},{time:'3.',text:'Lob und Dank'},{time:'4.',text:'Anliegen besprechen'},{time:'5.',text:'Beschlüsse festhalten'}] } },
+    { type:'names',       x:548, y:24,  w:504, h:250, config:{ names:'' } },
+    { type:'worksymbols', x:548, y:298, w:240, h:210, config:{ shown:['hand','listen'] } },
+    { type:'timer',       x:812, y:298, w:240, h:210, config:{ minutes:20 } },
+  ]},
+  { id:'tpl-kompliment', cat:'social', name:'Kompliment-Runde', desc:'Namensrad und Impuls für ein ehrliches Lob', bg:TPL_BG.berry, widgets:[
+    { type:'text',    x:24,  y:24,  w:620, h:300, config:{ text:'Kompliment-Runde\nSag der Person, die das Rad auswählt, etwas Nettes, das wirklich stimmt.' } },
+    { type:'names',   x:668, y:24,  w:384, h:484, config:{ names:'' } },
+    { type:'sticker', x:24,  y:348, w:160, h:160, config:{ emoji:'❤️' } },
+    { type:'timer',   x:208, y:348, w:436, h:160, config:{ minutes:5 } },
+  ]},
+
+  // ── Fachbezogen ──
+  { id:'tpl-einmaleins', cat:'fach', name:'Einmaleins-Blitz', desc:'Zwei Zufallszahlen, Stoppuhr, Punkte', bg:TPL_BG.night, widgets:[
+    { type:'randomnum',  x:24,  y:24,  w:440, h:276, config:{ min:1, max:10 } },
+    { type:'text',       x:488, y:24,  w:100, h:276, config:{ text:'×' } },
+    { type:'randomnum',  x:612, y:24,  w:440, h:276, config:{ min:1, max:10 } },
+    { type:'scoreboard', x:24,  y:324, w:620, h:184, config:{ teams:[{name:'Team A',score:0},{name:'Team B',score:0}] } },
+    { type:'stopwatch',  x:668, y:324, w:384, h:184, config:{} },
+  ]},
+  { id:'tpl-uhrzeit', cat:'fach', name:'Uhrzeit lesen', desc:'Übungsuhr mit Lösung zum Aufdecken', bg:TPL_BG.green, widgets:[
+    { type:'clock', x:24,  y:24,  w:500, h:484, config:{ style:'practice' } },
+    { type:'text',  x:548, y:24,  w:504, h:250, config:{ text:'Wie spät ist es?\nSag die Uhrzeit auf zwei Arten.' } },
+    { type:'names', x:548, y:298, w:504, h:210, config:{ names:'' } },
+  ]},
+  { id:'tpl-wortarten', cat:'fach', name:'Wortarten sortieren', desc:'Nomen, Verben, Adjektive in drei Spalten', bg:TPL_BG.slate, widgets:[
+    { type:'text', x:24,  y:24,  w:1028, h:120, config:{ text:'Hund · laufen · schön · Haus · lachen · groß · Baum · singen · leise' } },
+    { type:'text', x:24,  y:168, w:328, h:340, config:{ text:'Nomen\n' } },
+    { type:'text', x:374, y:168, w:328, h:340, config:{ text:'Verben\n' } },
+    { type:'text', x:724, y:168, w:328, h:340, config:{ text:'Adjektive\n' } },
+  ]},
+  { id:'tpl-experiment', cat:'fach', name:'Experiment', desc:'Forschungsfrage, Ablauf, Material, Timer', bg:TPL_BG.ocean, widgets:[
+    { type:'text',      x:24,  y:24,  w:620, h:150, config:{ text:'Forschungsfrage: …' } },
+    { type:'phases',    x:24,  y:198, w:620, h:310, config:{ phases:[{name:'Vermutung aufschreiben',color:'#0B7A74',minutes:5},{name:'Versuch durchführen',color:'#22c55e',minutes:15},{name:'Beobachten und notieren',color:'#f59e0b',minutes:10},{name:'Ergebnis vorstellen',color:'#ec4899',minutes:10}] } },
+    { type:'checklist', x:668, y:24,  w:384, h:250, config:{ items:[{text:'Schutzbrille',done:false},{text:'Material',done:false},{text:'Arbeitsblatt',done:false}] } },
+    { type:'timer',     x:668, y:298, w:384, h:210, config:{ minutes:15 } },
+  ]},
+  { id:'tpl-vokabeln', cat:'fach', name:'Vokabel-Duell', desc:'Wörter-Rad, Übersetzen, Punkte', bg:TPL_BG.plum, widgets:[
+    { type:'names',      x:24,  y:24,  w:440, h:484, config:{ names:'apple\nhouse\ndog\nschool\nfriend\nweather\nbook\ngarden' } },
+    { type:'text',       x:488, y:24,  w:564, h:150, config:{ text:'Übersetze das Wort!' } },
+    { type:'scoreboard', x:488, y:198, w:564, h:310, config:{ teams:[{name:'Team A',score:0},{name:'Team B',score:0}] } },
+  ]},
 ];
+
+// Kategorien für den Start-Dialog
+const TPL_CATS = [
+  ['start', 'Ankommen'], ['phase', 'Unterrichtsphasen'], ['move', 'Bewegung & Pause'], ['game', 'Spiele & Quiz'],
+  ['social', 'Soziales Lernen'], ['fach', 'Fachbezogen'], ['orga', 'Organisation'],
+];
+(function() {
+  const CAT_OF = {
+    'tpl-morgen':'start', 'tpl-wochenstart':'start', 'tpl-grundschule':'start',
+    'tpl-still':'phase', 'tpl-gruppe':'phase', 'tpl-klausur':'phase', 'tpl-vertretung':'phase', 'tpl-lesezeit':'phase',
+    'tpl-stationen':'phase', 'tpl-praesentation':'phase', 'tpl-leise':'phase', 'tpl-arbeitsphase':'phase', 'tpl-film':'phase', 'tpl-dokukamera':'phase',
+    'tpl-quiz':'game', 'tpl-wettbewerb':'game',
+    'tpl-reflexion':'social', 'tpl-umfrage':'social',
+    'tpl-tagesplan':'orga', 'tpl-hausaufgaben':'orga', 'tpl-wochenplan':'orga', 'tpl-aufraeumen':'orga', 'tpl-ferien':'orga',
+  };
+  BUILT_IN_TEMPLATES.forEach(t => { if (!t.cat) t.cat = CAT_OF[t.id] || 'phase'; });
+})();
 
 // Entwurfsfläche (1076×532) → tatsächlicher Bildschirm
 function fitLayout(widgets) {
@@ -3170,7 +3357,7 @@ function exitWidgetFull(skipRender) {
 // Elemente mit Einstellungs-Dialog (muss zu openWidgetSettings passen)
 const WIDGET_HAS_SETTINGS = new Set(['timer','text','qr','names','homework','goal','timetable','image','youtube',
   'noise','poll','randomnum','groups','agenda','checklist','phases',
-  'visualtimer','worksymbols','countdown','sticker','scoreboard']);
+  'visualtimer','worksymbols','countdown','sticker','scoreboard','clock','traffic']);
 
 function buildWidgetEl(w) {
   const shell = el('div','widget' + (w.id === APP.selectedId ? ' selected' : ''));
@@ -3221,7 +3408,11 @@ function buildWidgetEl(w) {
   if (APP.state.editMode) {
     const hasOwnEdit = new Set(['text','goal','homework','agenda','checklist']);
     if (!hasOwnEdit.has(w.type) && WIDGET_HAS_SETTINGS.has(w.type)) {
-      body.addEventListener('dblclick', e => { e.stopPropagation(); openWidgetSettings(w.id); });
+      body.addEventListener('dblclick', e => {
+        // schnelles Tippen auf Knöpfe (−/+, Punkte, Ampel) ist kein Wunsch nach Einstellungen
+        if (e.target.closest('button, input, select, textarea, a')) return;
+        e.stopPropagation(); openWidgetSettings(w.id);
+      });
     }
     let lastTap = 0, lastTapX = 0, lastTapY = 0;
     body.addEventListener('touchend', e => {
@@ -4016,6 +4207,83 @@ async function checkSharedBoard() {
   });
 }
 
+// Uhrzeit so, wie man sie sagt: „Viertel nach drei“, „fünf vor halb neun“
+function sayTime(h, m) {
+  const N = ['zwölf','eins','zwei','drei','vier','fünf','sechs','sieben','acht','neun','zehn','elf'];
+  const H = x => N[x % 12];
+  if (m % 5 !== 0) return '';
+  if (m === 0) return (h % 12 === 1 ? 'ein' : H(h)) + ' Uhr';
+  if (m === 15) return 'Viertel nach ' + H(h);
+  if (m === 30) return 'halb ' + H(h + 1);
+  if (m === 45) return 'Viertel vor ' + H(h + 1);
+  if (m < 25) return ({ 5:'fünf', 10:'zehn', 20:'zwanzig' })[m] + ' nach ' + H(h);
+  if (m === 25) return 'fünf vor halb ' + H(h + 1);
+  if (m === 35) return 'fünf nach halb ' + H(h + 1);
+  return ({ 40:'zwanzig', 50:'zehn', 55:'fünf' })[m] + ' vor ' + H(h + 1);
+}
+
+function openClockSettings(w) {
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>Uhr</h2>
+      <div class="form-group"><label>Darstellung</label>
+        <select id="ck-style">
+          <option value="digital">Digital</option>
+          <option value="analog">Analog (mit Zeigern)</option>
+          <option value="both">Analog und digital</option>
+          <option value="practice">Übungsuhr – Uhrzeit lesen lernen</option>
+        </select></div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#fff;margin-bottom:14px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500">
+        <input type="checkbox" id="ck-sec" ${w.config.seconds !== false ? 'checked' : ''} style="width:18px;height:18px"> Sekunden anzeigen
+      </label>
+      <button class="btn-primary" id="ck-save">Speichern</button>
+    </div>
+  `);
+  overlay.querySelector('#ck-style').value = ['analog', 'both', 'practice'].includes(w.config.style) ? w.config.style : 'digital';
+  overlay.querySelector('#ck-save').addEventListener('click', () => {
+    w.config.style = overlay.querySelector('#ck-style').value;
+    w.config.seconds = overlay.querySelector('#ck-sec').checked;
+    APP.save();
+    const shell = document.querySelector('[data-wid="' + w.id + '"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+  });
+}
+
+function openTrafficSettings(w) {
+  const DEF = { green:['Sprechen', 'Normale Lautstärke'], yellow:['Flüstern', 'Leise mit dem Nachbarn'], red:['Ruhe', 'Niemand spricht'] };
+  const L = w.config.labels && typeof w.config.labels === 'object' ? w.config.labels : {};
+  const row = (k, name) => {
+    const o = L[k] || {};
+    return `<div class="form-group"><label>${name}</label><div style="display:flex;gap:8px">
+      <input type="text" data-k="${k}" data-f="label" maxlength="30" style="flex:1" value="${safeText(o.label || DEF[k][0])}">
+      <input type="text" data-k="${k}" data-f="sub" maxlength="60" style="flex:1.6" value="${safeText(o.sub != null ? o.sub : DEF[k][1])}">
+    </div></div>`;
+  };
+  const { overlay, close } = openModal(`
+    <div class="modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2>Ampel beschriften</h2>
+      <p style="font-size:13.5px;color:rgba(255,255,255,0.6);margin:-6px 0 14px;line-height:1.5">Lege fest, was jede Farbe bedeutet – links das Wort, rechts die Erklärung. Praktisch für Bewegungsspiele.</p>
+      ${row('green', 'Grün')}${row('yellow', 'Gelb')}${row('red', 'Rot')}
+      <div class="btn-row"><button class="btn-secondary" id="tl-def" type="button">Standard</button><button class="btn-primary" id="tl-save">Speichern</button></div>
+    </div>
+  `);
+  const rerender = () => { const shell = document.querySelector('[data-wid="' + w.id + '"]'); if (shell) renderWidgetContent(w, shell.querySelector('.widget-body')); };
+  overlay.querySelector('#tl-def').addEventListener('click', () => { delete w.config.labels; APP.save(); rerender(); close(); });
+  overlay.querySelector('#tl-save').addEventListener('click', () => {
+    const labels = {};
+    ['green', 'yellow', 'red'].forEach(k => {
+      const label = overlay.querySelector(`input[data-k="${k}"][data-f="label"]`).value.trim() || DEF[k][0];
+      const sub = overlay.querySelector(`input[data-k="${k}"][data-f="sub"]`).value.trim();
+      if (label !== DEF[k][0] || sub !== DEF[k][1]) labels[k] = { label, sub };
+    });
+    if (Object.keys(labels).length) w.config.labels = labels; else delete w.config.labels;
+    APP.save(); rerender(); close();
+  });
+}
+
 // Leeres Element: ein deutlicher Knopf statt eines Hinweises auf das Zahnrad
 function emptyCta(iconName, text, onClick) {
   const b = el('button', 'w-empty-cta');
@@ -4026,25 +4294,104 @@ function emptyCta(iconName, text, onClick) {
 
 const WIDGET_RENDERERS = {
 
-  // ── Clock ──
+  // ── Clock ── digital, analog (mit Zeigern), beides oder Übungsuhr zum Uhrzeit-Lernen
   clock(w, body) {
+    const style = ['analog', 'both', 'practice'].includes(w.config.style) ? w.config.style : 'digital';
+    const showSec = w.config.seconds !== false;
+    const fmtTime = d => d.toLocaleTimeString('de-DE', showSec ? undefined : { hour: '2-digit', minute: '2-digit' });
     body.style.flexDirection = 'column';
-    const time = el('div','w-clock');
-    const date = el('div','w-date');
-    // HH:MM:SS = 8 chars, each ~0.62em wide with tabular-nums
-    const maxByWidth = (w.w - 16) / 4.96;
-    const maxByHeight = w.h * 0.42;
-    const clockFs = Math.max(18, Math.min(maxByWidth, maxByHeight));
-    time.style.fontSize = clockFs + 'px';
-    time.style.whiteSpace = 'nowrap';
-    time.style.letterSpacing = '-0.02em';
-    date.style.fontSize = Math.max(11, clockFs * 0.28) + 'px';
-    body.append(time, date);
-    function update() {
-      const now = new Date();
-      time.textContent = now.toLocaleTimeString('de-DE');
-      date.textContent = now.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+    if (style === 'digital') {
+      const time = el('div','w-clock');
+      const date = el('div','w-date');
+      // HH:MM:SS = 8 Zeichen, HH:MM = 5 Zeichen
+      const clockFs = Math.max(18, Math.min((w.w - 16) / (showSec ? 4.96 : 3.1), w.h * 0.42));
+      time.style.fontSize = clockFs + 'px';
+      time.style.whiteSpace = 'nowrap';
+      time.style.letterSpacing = '-0.02em';
+      date.style.fontSize = Math.max(11, clockFs * 0.28) + 'px';
+      body.append(time, date);
+      const update = () => {
+        const now = new Date();
+        time.textContent = fmtTime(now);
+        date.textContent = now.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' });
+      };
+      update();
+      startInterval(w.id, update, 1000);
+      return;
     }
+    const practice = style === 'practice';
+    const bodyH = w.h - (APP.state.editMode ? 34 : 0);
+    const digFs = style === 'both' ? Math.max(14, Math.min(w.w / 5.4, bodyH * 0.13)) : 0;
+    const ansFs = practice ? Math.max(13, Math.min(w.w / 13, bodyH * 0.06, 30)) : 0;
+    const reserve = (style === 'both' ? digFs * 1.2 + 6 : 0) + (practice ? 44 + 6 + ansFs * 2.6 + 6 : 0);
+    const size = Math.round(Math.max(60, Math.min(w.w - 20, bodyH - 16 - reserve, 1100)));
+    const wrap = el('div', 'ck');
+    const face = el('div', 'ck-face');
+    face.style.width = face.style.height = size + 'px';
+    let s = '<svg viewBox="0 0 100 100" role="img" aria-label="Uhr mit Zeigern"><circle class="ck-dial" cx="50" cy="50" r="48"/>';
+    for (let i = 0; i < 60; i++) {
+      const a = i * 6 * Math.PI / 180, big = i % 5 === 0, r1 = big ? 41 : 44;
+      s += '<line class="ck-tick' + (big ? ' h' : '') + '" x1="' + _f(50 + r1 * Math.sin(a)) + '" y1="' + _f(50 - r1 * Math.cos(a))
+        + '" x2="' + _f(50 + 46 * Math.sin(a)) + '" y2="' + _f(50 - 46 * Math.cos(a)) + '"/>';
+    }
+    for (let n = 1; n <= 12; n++) {
+      const a = n * 30 * Math.PI / 180;
+      s += '<text class="ck-num" x="' + _f(50 + 34 * Math.sin(a)) + '" y="' + _f(50 - 34 * Math.cos(a)) + '">' + n + '</text>';
+    }
+    s += '<line class="ck-hand hr" x1="50" y1="55" x2="50" y2="27"/><line class="ck-hand mn" x1="50" y1="56" x2="50" y2="13"/>';
+    if (showSec && !practice) s += '<line class="ck-hand sc" x1="50" y1="58" x2="50" y2="9"/>';
+    s += '<circle class="ck-hub" cx="50" cy="50" r="2.6"/></svg>';
+    face.innerHTML = s;
+    wrap.appendChild(face);
+    const hr = face.querySelector('.hr'), mn = face.querySelector('.mn'), sc = face.querySelector('.sc');
+    const setHands = (h, m, sec) => {
+      hr.setAttribute('transform', 'rotate(' + _f((h % 12) * 30 + m * 0.5) + ' 50 50)');
+      mn.setAttribute('transform', 'rotate(' + _f(m * 6 + sec * 0.1) + ' 50 50)');
+      if (sc) sc.setAttribute('transform', 'rotate(' + (sec * 6) + ' 50 50)');
+    };
+    if (practice) {
+      // Übungsuhr: zufällige Uhrzeit in 5-Minuten-Schritten, Lösung zum Aufdecken
+      let [h, m] = String(w.config.time || '').split(':').map(Number);
+      const roll = () => {
+        h = 1 + Math.floor(Math.random() * 12);
+        m = Math.floor(Math.random() * 12) * 5;
+        w.config.time = h + ':' + String(m).padStart(2, '0');
+        APP.save();
+      };
+      if (!(h >= 0 && h <= 23 && m >= 0 && m < 60)) roll();
+      let shown = false;
+      const ans = el('div', 'ck-answer');
+      ans.style.fontSize = ansFs + 'px';
+      ans.style.minHeight = (ansFs * 2.6) + 'px';
+      const ctrl = el('div', 'ck-ctrl');
+      const mk = (ic, label, fn) => {
+        const b = el('button', 'tm-btn');
+        b.innerHTML = icon(ic, 18) + '<span>' + label + '</span>';
+        b.addEventListener('click', e => { e.stopPropagation(); fn(); });
+        return b;
+      };
+      const showBtn = mk('eye', 'Lösung', () => { shown = !shown; paint(); });
+      ctrl.append(mk('reset', 'Neue Uhrzeit', () => { roll(); shown = false; paint(); }), showBtn);
+      const paint = () => {
+        setHands(h, m, 0);
+        const hh = h % 12 || 12;
+        ans.innerHTML = '<b>' + hh + ':' + String(m).padStart(2, '0') + ' Uhr  ·  ' + (hh + 12 === 24 ? 0 : hh + 12) + ':' + String(m).padStart(2, '0') + ' Uhr</b><span>' + safeText(sayTime(hh, m)) + '</span>';
+        ans.style.visibility = shown ? 'visible' : 'hidden';
+        showBtn.querySelector('span').textContent = shown ? 'Verbergen' : 'Lösung';
+      };
+      wrap.append(ans, ctrl);
+      body.appendChild(wrap);
+      paint();
+      return;
+    }
+    const dig = style === 'both' ? el('div', 'ck-digital') : null;
+    if (dig) { dig.style.fontSize = digFs + 'px'; wrap.appendChild(dig); }
+    body.appendChild(wrap);
+    const update = () => {
+      const d = new Date();
+      setHands(d.getHours(), d.getMinutes(), d.getSeconds());
+      if (dig) dig.textContent = fmtTime(d);
+    };
     update();
     startInterval(w.id, update, 1000);
   },
@@ -4321,6 +4668,14 @@ const WIDGET_RENDERERS = {
       { state:'yellow', cls:'y', label:'Flüstern', sub:'Leise mit dem Nachbarn', icon:'volLow' },
       { state:'green',  cls:'g', label:'Sprechen', sub:'Normale Lautstärke',     icon:'volHigh' },
     ];
+    // Eigene Beschriftung (z. B. für Bewegungsspiele): config.labels = { red:{label, sub}, … }
+    const LBL = w.config.labels && typeof w.config.labels === 'object' ? w.config.labels : {};
+    MODES.forEach(m => {
+      const o = LBL[m.state];
+      if (!o || typeof o !== 'object') return;
+      if (o.label) m.label = String(o.label).slice(0, 30);
+      if (o.sub != null) m.sub = String(o.sub).slice(0, 60);
+    });
     const bodyH = w.h - (APP.state.editMode ? 34 : 0);
     const pick = state => {
       // nochmal antippen = keine Stufe aktiv
@@ -4339,7 +4694,7 @@ const WIDGET_RENDERERS = {
       const rows = MODES.map(m => {
         const b = el('button', 'tl-row ' + m.cls);
         b.innerHTML = '<span class="tl-dot">' + icon(m.icon, 18) + '</span><span class="tl-txt"><span class="tl-label">'
-          + m.label + '</span>' + (rowH >= 58 ? '<span class="tl-sub">' + m.sub + '</span>' : '') + '</span>';
+          + safeText(m.label) + '</span>' + (rowH >= 58 && m.sub ? '<span class="tl-sub">' + safeText(m.sub) + '</span>' : '') + '</span>';
         const svg = b.querySelector('svg'); svg.style.width = svg.style.height = '0.9em';
         b.addEventListener('click', e => { e.stopPropagation(); pick(m.state); });
         wrap.appendChild(b);
@@ -5719,7 +6074,9 @@ const WIDGET_RENDERERS = {
     const COLORS = ['#0B7A74', '#D9480F', '#5F3DC4', '#1971C2', '#C2255C', '#2B8A3E', '#E67700', '#495057'];
     const bodyH = w.h - (APP.state.editMode ? 34 : 0);
     const colW = (w.w - 16) / teams.length;
-    const numFs = Math.max(24, Math.min(colW * 0.44, (bodyH - 104) * 0.86, 420));
+    // Höhe: Ränder + Teamname + Zahl + Knopfzeile müssen übereinander passen
+    const nameFs = Math.max(13, Math.min(colW * 0.11, 30));
+    const numFs = Math.max(20, Math.min(colW * 0.44, (bodyH - 32 - (nameFs * 1.25 + 10) - 44 - 12) * 0.92, 420));
     const wrap = el('div', 'sb');
     const cols = teams.map((t, i) => {
       const col = el('div', 'sb-col');
@@ -5728,7 +6085,7 @@ const WIDGET_RENDERERS = {
       name.value = t.name || ('Team ' + (i + 1));
       name.maxLength = 24;
       name.setAttribute('aria-label', 'Teamname');
-      name.style.fontSize = Math.max(13, Math.min(colW * 0.11, 30)) + 'px';
+      name.style.fontSize = nameFs + 'px';
       name.addEventListener('change', () => { t.name = name.value.trim() || ('Team ' + (i + 1)); name.value = t.name; APP.save(); });
       name.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') name.blur(); });
       const num = el('div', 'sb-num');
@@ -6596,6 +6953,8 @@ function openWidgetSettings(wid) {
     checklist:openChecklistEdit,
     phases:  openPhasesEdit,
     visualtimer: openTimerSettings,
+    clock: openClockSettings,
+    traffic: openTrafficSettings,
     worksymbols: openWorkSymbolsSettings,
     countdown: openCountdownSettings,
     sticker: openStickerPicker,
@@ -7237,7 +7596,14 @@ function openWidgetMenu() {
 // Vorlage anwenden: als neue Tafel ('new') oder in die aktuelle Tafel ('replace')
 function applyTemplate(tpl, mode) {
   const widgets = fitLayout(tpl.widgets).map(w => ({ ...w, locked: false,
-    config: { ...getDefaultConfig(w.type), ...JSON.parse(JSON.stringify(w.config || {})) } }));
+    config: (() => {
+      const cfg = { ...getDefaultConfig(w.type), ...JSON.parse(JSON.stringify(w.config || {})) };
+      if ((w.type === 'names' || w.type === 'groups') && !String(cfg.names || '').trim()) {
+        const roster = getRoster();
+        if (roster) cfg.names = roster;
+      }
+      return cfg;
+    })() }));
   if (mode === 'new') {
     if (!createBoard(tpl.name, tpl.bg, widgets)) return false;
   } else {
@@ -7261,6 +7627,7 @@ function templateThumb(tpl) {
   t.style.background = (tpl.bg && tpl.bg.value) || DEFAULT_BG.value;
   (tpl.widgets || []).forEach(w => {
     const r = el('span');
+    r.innerHTML = icon(w.type, 16);
     r.style.cssText = 'left:' + (w.x / LAYOUT_BASE.w * 100).toFixed(2) + '%;top:' + (w.y / LAYOUT_BASE.h * 100).toFixed(2)
       + '%;width:' + (w.w / LAYOUT_BASE.w * 100).toFixed(2) + '%;height:' + (w.h / LAYOUT_BASE.h * 100).toFixed(2) + '%';
     t.appendChild(r);
@@ -7287,13 +7654,20 @@ function openStartDialog(mode) {
           <button id="start-ai-go">Tafel erstellen</button>
         </div>
       </div>` : ''}
-      <h3>${isNew ? 'Oder mit einer Vorlage starten' : 'Vorlagen'}</h3>
+      <h3>${isNew ? 'Oder mit einer Vorlage starten' : 'Vorlagen'} <span class="start-count">${BUILT_IN_TEMPLATES.length}</span></h3>
+      <div class="start-filter">
+        <div class="start-search">${icon('search', 18)}<input id="start-q" type="search" maxlength="40" placeholder="Suchen, z. B. Bewegung, Mathe, Spiel, Würfel" aria-label="Vorlage suchen"></div>
+        <div class="start-chips" id="start-chips"></div>
+      </div>
       <div class="start-grid" id="start-grid"></div>
+      <div class="start-none" id="start-none" hidden>${isNew ? 'Keine passende Vorlage. Beschreib deine Stunde oben – dann baut die KI die Tafel.' : 'Keine passende Vorlage gefunden.'}</div>
     </div>
   `);
   const grid = overlay.querySelector('#start-grid');
-  const addCard = (thumb, name, desc, fn) => {
+  const addCard = (thumb, name, desc, fn, cat, extra) => {
     const b = el('button', 'tpl-card2');
+    b.dataset.cat = cat || 'blank';
+    b.dataset.text = name + ' ' + desc + ' ' + (extra || '');
     const txt = el('span', 'tpl-txt');
     const n = el('span', 'tpl-name2'); n.textContent = name;
     const d = el('span', 'tpl-desc2'); d.textContent = desc;
@@ -7301,6 +7675,7 @@ function openStartDialog(mode) {
     b.append(thumb, txt);
     b.addEventListener('click', fn);
     grid.appendChild(b);
+    return b;
   };
   if (isNew) {
     addCard(templateThumb({ bg: DEFAULT_BG, widgets: [] }), 'Leere Tafel', 'Ganz von vorn beginnen', () => {
@@ -7314,7 +7689,42 @@ function openStartDialog(mode) {
   BUILT_IN_TEMPLATES.forEach(tpl => addCard(templateThumb(tpl), tpl.name, tpl.desc, () => {
     close();
     applyTemplate(tpl, mode);
-  }));
+  }, tpl.cat, ((TPL_CATS.find(x => x[0] === tpl.cat) || [])[1] || '') + ' ' + tpl.widgets.map(w => (REGISTRY[w.type] || {}).label || '').join(' ')));
+
+  // Filtern nach Kategorie und Suchbegriff (Umlaute egal: „wurfel“ findet „Würfel“)
+  const cards = [...grid.children];
+  const none = overlay.querySelector('#start-none');
+  const qIn = overlay.querySelector('#start-q');
+  const chips = overlay.querySelector('#start-chips');
+  const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  let cat = 'all';
+  const filter = () => {
+    const t = norm(qIn.value.trim());
+    let n = 0;
+    cards.forEach(b => {
+      const ok = b.dataset.cat === 'blank'
+        ? (cat === 'all' && !t)
+        : ((cat === 'all' || b.dataset.cat === cat) && (!t || norm(b.dataset.text).includes(t)));
+      b.hidden = !ok;
+      if (ok && b.dataset.cat !== 'blank') n++;
+    });
+    none.hidden = n > 0;
+  };
+  [['all', 'Alle']].concat(TPL_CATS).forEach(([k, label]) => {
+    const count = k === 'all' ? BUILT_IN_TEMPLATES.length : BUILT_IN_TEMPLATES.filter(t => t.cat === k).length;
+    if (!count) return;
+    const chip = document.createElement('button');
+    chip.className = 'start-chip' + (k === 'all' ? ' on' : '');
+    chip.textContent = label;
+    chip.addEventListener('click', () => {
+      cat = k;
+      chips.querySelectorAll('.start-chip').forEach(x => x.classList.toggle('on', x === chip));
+      filter();
+    });
+    chips.appendChild(chip);
+  });
+  qIn.addEventListener('input', filter);
+  qIn.addEventListener('keydown', e => { if (e.key !== 'Escape') e.stopPropagation(); });
 
   if (isNew) {
     const input = overlay.querySelector('#start-topic');
@@ -7342,6 +7752,8 @@ function openBgModal() {
     {label:'Schiefer',  v:'#262C33'},
     {label:'Nachtblau', v:'#182840'},
     {label:'Weinrot',   v:'#3A1F2B'},
+    {label:'Ozeanblau', v:'#123B4A'},
+    {label:'Pflaume',   v:'#2E2440'},
     {label:'Tafel kariert', v:'linear-gradient(rgba(255,255,255,0.16) 1px, transparent 1px) 0 0/40px 40px, linear-gradient(90deg, rgba(255,255,255,0.16) 1px, transparent 1px) 0 0/40px 40px, #1F3531'},
     {label:'Tafel liniert', v:'linear-gradient(transparent 55px, rgba(255,255,255,0.22) 55px) 0 0/100% 56px, #1F3531'},
     {label:'Waldgrün',  v:'linear-gradient(135deg,#1a5c3a,#0f3d2e)'},

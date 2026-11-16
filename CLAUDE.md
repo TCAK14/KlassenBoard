@@ -40,6 +40,10 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
 - **Textgrößen messen:** `textWidthEm()` / `countWrappedLines()` / `fitFontSize()` (Canvas-Messung mit der geladenen Schrift)
 - **Vorlagen + Demo:** `BUILT_IN_TEMPLATES` sind für die Fläche `LAYOUT_BASE` (1076×532) entworfen; `fitLayout()` rechnet
   beim Anwenden auf den Bildschirm um (Handy: untereinander). Neue Vorlagen immer in diesem Raster anlegen
+- **Vorlagen-Kategorien:** jede Vorlage hat `cat` (siehe `TPL_CATS`: start, phase, move, game, social, fach, orga);
+  Start-Dialog filtert nach Kategorie und Suchbegriff (Umlaute egal). Namensrad/Gruppen ohne Namen bekommen beim
+  Anwenden die gemerkte Klassenliste. Ampel kann eigene Beschriftung haben (`config.labels`, immer über `safeText`),
+  Uhr hat `config.style` digital/analog/both/practice (Übungsuhr mit `sayTime`)
 - **Start-Dialog:** `openStartDialog('new' | 'replace')` — Vorlagen-Galerie mit automatischen Vorschaubildern + KI-Feld;
   „+" in der oberen Leiste öffnet ihn. `applyTemplate(tpl, mode)`
 - **Timer:** Ring + direkte Bedienung (−/+, Voreinstellungen); Layout `wide`/`tall`/`compact` je nach Größe.
