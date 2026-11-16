@@ -11,7 +11,8 @@ index.html                          ← Haupt-App (gesamte Logik + UI)
 landing.html                        ← Landing Page (Pricing, FAQ, Checkout)
 impressum.html / datenschutz.html   ← Rechtsseiten (Impressum hat noch Platzhalter!)
 netlify/functions/create-checkout.js ← Stripe Backend (Serverless Function)
-netlify/functions/ai-chat.js        ← KI-Chat (Gemini 2.5 Flash + Web-Suche)
+netlify/functions/ai-chat.js        ← KI-Assistent (Gemini 2.5 Flash; Web-Suche nur bei Bedarf)
+netlify/functions/image-search.js   ← Bildersuche des KI-Assistenten (Pixabay/Wikimedia, liefert data:-URL)
 netlify/functions/ical.js           ← Stundenplan-Abruf (iCal/WebUntis), ersetzt fremden CORS-Proxy
 fonts/                              ← Atkinson Hyperlegible Next (lokal gehostet, OFL) — nie von Google-Servern laden
 supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq) — separat via Supabase deployen
@@ -46,6 +47,20 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
 - **Ampel = „Arbeitsform":** Liste mit Wort + Symbol (ab ca. 230×170), sonst drei Lichter; `config.state` bleibt red/yellow/green
 - **Leere Elemente:** `emptyCta(icon, text, onClick)` statt Hinweistext „⚙ Einstellungen" — funktioniert auch in der Ansicht
 - **Demo:** bewusst nur 2 Tafeln (Gratis-Limit 3), damit „+" beim ersten Besuch nicht sofort die Bezahl-Meldung zeigt
+
+## KI-Assistent (Fenster `#ki-panel`, Knopf „KI" in der unteren Leiste)
+- Antworten kommen als Markdown und werden mit `renderMarkdown()` sicher als DOM aufgebaut (nie `innerHTML`)
+- Aktionen an der Antwort: „Auf die Tafel" (`addWidget('text', …, size)`), „Ohne Lösungen" (der Prompt verlangt
+  eine eigene Zeile „Lösungen:"), „Kopieren", „Im Web prüfen" (`web:true`)
+- **Web-Suche (Google Grounding):** nur wenn `needsWeb()` in `ai-chat.js` anschlägt oder `web:true`. Antworten aus der
+  Web-Suche MÜSSEN mit Quellen und Googles Suchvorschlägen (`searchHtml`, im sandboxed iframe) angezeigt werden und
+  bekommen deshalb kein „Auf die Tafel" — Vorgabe aus Googles Gemini-API-Bedingungen, nicht entfernen
+- **Bilder:** „Zeige/Male …" → `image-search` (Pixabay mit safesearch, Jugendschutz-Prüfung über Gemini). Der Server
+  lädt das Bild und liefert eine data:-URL, damit kein Schul-Browser Drittanbieter aufruft und das Bild dauerhaft bleibt
+- **Server-Schutz:** beide Funktionen verlangen `Origin: https://klassenboard.netlify.app` (auch fehlender Origin → 403)
+  und haben eine einfache Bremse pro IP (nur pro Instanz!). Lokal (python http.server) laufen die Funktionen nicht —
+  zum Testen `fetch` nachstellen oder auf der Live-Seite testen. Fehler gehen als Kürzel (`busy`, `rate`, `timeout`)
+  an den Browser, Details nur ins Netlify-Protokoll
 
 ## Stripe / Payments
 - **Publishable Key** (im Code erlaubt): `pk_test_51TibNc9fJyerANl5...`
