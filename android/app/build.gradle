@@ -9,7 +9,12 @@ def keyFile = rootProject.file('release.p12')
 
 android {
     namespace = 'de.klassenboard.app'
-    compileSdk = 37
+    // GeckoView 160 verlangt Android-API 37.2 zum Kompilieren (ändert nichts an den unterstützten Geräten: minSdk bleibt 26)
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 2
+        }
+    }
 
     defaultConfig {
         applicationId = 'de.klassenboard.app'
