@@ -18,7 +18,7 @@ public class MainActivity extends BaseActivity {
         session = createSession();
         geckoView.setSession(session);
         session.loadUri(HOME);
-        setImmersive(true);
+        applyFullscreen(true);
     }
 
     @Override

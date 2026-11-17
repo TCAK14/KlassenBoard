@@ -92,7 +92,7 @@ public abstract class BaseActivity extends Activity implements
         return s;
     }
 
-    protected void setImmersive(boolean on) {
+    protected void applyFullscreen(boolean on) {
         View d = getWindow().getDecorView();
         if (on) {
             d.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
@@ -111,7 +111,7 @@ public abstract class BaseActivity extends Activity implements
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus && wantsImmersive()) setImmersive(true);
+        if (hasFocus && wantsImmersive()) applyFullscreen(true);
     }
 
     protected void openPopup(String uri) {
@@ -134,7 +134,7 @@ public abstract class BaseActivity extends Activity implements
     // ── Inhalt ──────────────────────────────────────────────────────────────
     @Override
     public void onFullScreen(GeckoSession s, boolean fullScreen) {
-        setImmersive(fullScreen || wantsImmersive());
+        applyFullscreen(fullScreen || wantsImmersive());
     }
 
     @Override
