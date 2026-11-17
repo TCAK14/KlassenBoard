@@ -80,6 +80,13 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
 - `dayplan` (Tagesplan): Zeilen `{text, icon, time, done, manual}`; farbige SVG-Bildsymbole `PICTOS` (31 + 4 Jahreszeiten,
   Auswahl `PICTO_LIST`, Picker `openPictoPicker`), `guessPicto(text)` wählt das Symbol nach Stichwort. Antippen hakt ab,
   erste offene Zeile = „jetzt". Haken verschwinden am nächsten Tag (`config.day` = `todayKey()`, abschaltbar `autoReset`)
+- Tagesplan „automatisch aus dem Stundenplan" (`config.source = 'timetable'`): `dayplanRowsFromTimetable(w, cache, now)` baut
+  die heutigen Zeilen aus `APP.icalCache` (Doppelstunden zusammengefasst, parallele Fächer „Religion / Ethik", Pausen/Mittagessen
+  aus Lücken ≥ 15 min, Ganztägiges als Banner, Ausfall/Vertretung markiert). Erledigt = nach der Uhr, Antippen überschreibt
+  (`config.marks` pro Tag). Kürzel → Wörter über `SUBJECT_NAMES`/`subjectName()`, eigene Namen/Symbole in `config.subjects`,
+  eigene Punkte mit Uhrzeit in `config.extras`. Abo pro Tafel; `icalFor(board, adopt)` übernimmt das einer anderen Tafel der Klasse.
+  Aktualisierung läuft über `startTimetableRefresh`/`rerenderTimetables` wie beim Stundenplan-Element. Passt nicht alles hin,
+  wird Erledigtes oben eingeklappt („✓ 3 erledigt"). `_slimConfig` lässt `icalUrl`/`marks` beim Teilen weg (persönlicher Kalender-Schlüssel!)
 - `today` (Datum): Karten (Wochentag mit Wochenfarben, Tag/Monat/Jahr, Jahreszeit über `seasonOf`) oder Satz „Heute ist …";
   stellt sich selbst um (Intervall 30 s). `link`: Webseite (nur http/https, per `new URL` geprüft) oder andere Tafel (`switchBoard`)
 - Hintergrund-Muster: `{type:'pattern', value:key}` aus `BG_PATTERNS` (SVG erst beim Anzeigen erzeugt, gespeichert wird nur das

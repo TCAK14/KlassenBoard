@@ -1073,6 +1073,30 @@ body[data-cards="dark"] .dp-title { color:var(--accent-soft); }
 .dp-check { flex:none; width:1.15em; height:1.15em; border:2px solid var(--w-line-strong); border-radius:.28em; display:flex; align-items:center; justify-content:center; color:transparent; }
 .dp-check svg { width:85%; height:85%; }
 .dp-row.done .dp-check { background:var(--accent); border-color:var(--accent); color:#fff; }
+.dp-row.off .dp-text { text-decoration:line-through; }
+.dp-row.off { opacity:.55; }
+.dp-tag { flex:none; font-size:.5em; font-weight:800; padding:.2em .5em; border-radius:.45em; background:var(--w-danger); color:#fff; letter-spacing:.02em; }
+.dp-tag.chg { background:#F59F00; color:#1B2422; }
+.dp-title { line-height:1.2; }
+.dp-skip { flex:0 0 calc(var(--dp-row) * .7); min-height:0; border:0; background:transparent; color:var(--w-muted); font:inherit; font-size:calc(var(--dp-fs) * .7); font-weight:700; cursor:pointer; }
+.dp-row.dp-hid { display:none; }
+.dp.dp-all .dp-row.dp-hid { display:flex; }
+.dp.dp-all .dp-skip { display:none; }
+.dp-banner { flex:none; margin:0 0 .35em; padding:.35em .6em; line-height:1.2; border-radius:10px; background:rgba(11,122,116,0.13); color:var(--accent-ink); font-size:calc(var(--dp-fs) * .8); font-weight:800; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+body[data-cards="dark"] .dp-banner { color:var(--accent-soft); }
+.dp-note { flex:none; padding:.6em .4em; text-align:center; font-size:var(--dp-fs); font-weight:700; color:var(--w-muted); }
+.dp-src { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 16px; }
+.dp-src button { display:flex; flex-direction:column; gap:3px; padding:12px 14px; border-radius:12px; border:1.5px solid rgba(255,255,255,0.16); background:rgba(255,255,255,0.05); color:#fff; font:inherit; text-align:left; cursor:pointer; }
+.dp-src button b { font-size:15px; }
+.dp-src button small { font-size:12.5px; color:rgba(255,255,255,0.65); line-height:1.35; }
+.dp-src button.on { border-color:var(--accent-soft); background:rgba(11,122,116,0.35); box-shadow:0 0 0 2px rgba(127,227,218,0.25); }
+.dp-urlrow { display:flex; gap:8px; align-items:stretch; }
+.dp-urlrow input { flex:1 1 0; min-width:0; margin:0; }
+.dp-urlrow button { flex:none; margin:0; }
+.dp-status { font-size:13.5px; line-height:1.45; color:rgba(255,255,255,0.75); margin:-2px 0 12px; }
+.dp-status.ok { color:#8CE99A; }
+.dp-code { flex:none; min-width:54px; max-width:110px; padding:0 6px; font-size:13px; font-weight:700; color:rgba(255,255,255,0.7); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@media (max-width: 560px) { .dp-src { grid-template-columns:1fr; } }
 .dp-edit { display:flex; flex-direction:column; gap:6px; margin:6px 0; max-height:46vh; overflow-y:auto; }
 .dp-erow { display:flex; align-items:center; gap:6px; }
 .dp-erow input { margin:0; }
@@ -3127,6 +3151,9 @@ function findFreeSpot(board, w, h) {
 // Standard-Einstellungen; Namensrad und Gruppen starten mit der gemerkten Klassenliste statt mit Beispielnamen
 function newWidgetConfig(type, extraConfig) {
   const cfg = { ...getDefaultConfig(type), ...(extraConfig || {}) };
+  if (type === 'dayplan' && !(extraConfig && ('source' in extraConfig || 'items' in extraConfig)) && icalFor(APP.activeBoard(), false)) {
+    cfg.source = 'timetable';
+  }
   if ((type === 'names' || type === 'groups') && !(extraConfig && 'names' in extraConfig)) {
     const roster = getRoster();
     if (roster) cfg.names = roster;
@@ -3413,7 +3440,10 @@ function renderWidgets() {
   });
   updateLayerSize();
   // restart timetable refresh
-  board.widgets.filter(w=>w.type==='timetable').forEach(w => startTimetableRefresh(w));
+  board.widgets.filter(w => w.type === 'timetable' || (w.type === 'dayplan' && w.config && w.config.source === 'timetable')).forEach(w => {
+    if (w.type === 'dayplan') icalFor(board, true);
+    startTimetableRefresh(w);
+  });
 }
 
 // Fläche so groß wie der Inhalt halten (Scrollbereich) und die Zeichenebene mitziehen
@@ -4267,7 +4297,7 @@ async function _pipe(bytes, stream) {
 function _slimConfig(cfg) {
   const out = {};
   Object.keys(cfg || {}).forEach(k => {
-    if (k.startsWith('_') || k === 'fileId' || k === 'fileData' || k === 'messages' || k === 'entries') return;
+    if (k.startsWith('_') || k === 'fileId' || k === 'fileData' || k === 'messages' || k === 'entries' || k === 'icalUrl' || k === 'marks') return;
     const v = cfg[k];
     if (typeof v === 'string' && (v.length > 4000 || v.startsWith('data:'))) return;
     if (v && typeof v === 'object' && JSON.stringify(v).length > 6000) return;
@@ -4455,6 +4485,8 @@ const PICTOS = {
   geburtstag: _P('#FFF0F6', '<rect x="9" y="24" width="30" height="15" rx="3" fill="#F783AC"/><path d="M9 29c5 3 10-3 15 0s10 3 15 0" stroke="#fff" stroke-width="2.5" fill="none"/><path d="M17 24v-7M24 24v-7M31 24v-7" stroke="#748FFC" stroke-width="2.5"/><path d="M17 15c-2-2 0-5 0-5s2 3 0 5zM24 15c-2-2 0-5 0-5s2 3 0 5zM31 15c-2-2 0-5 0-5s2 3 0 5z" fill="#FAB005"/>'),
   frei: _P('#FFF9DB', '<path d="M24 7l5.2 10.6 11.7 1.7-8.5 8.2 2 11.6L24 33.6l-10.4 5.5 2-11.6-8.5-8.2 11.7-1.7z" fill="#FCC419" stroke="#E67700" stroke-width="2" stroke-linejoin="round"/>'),
   heimweg: _P('#FFF5F5', '<path d="M8 23L24 9l16 14" stroke="#E03131" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 21v19h24V21" fill="#FFE3E3" stroke="#E03131" stroke-width="2.5"/><rect x="20" y="28" width="8" height="12" fill="#E03131"/>'),
+  welt: _P('#E7F5FF', '<circle cx="24" cy="24" r="16" fill="#4DABF7"/><path d="M13 15c3-2 8-2 9 1s-2 4-1 7 4 3 3 6-4 4-6 2-2-5-4-6-3-6-1-10z" fill="#51CF66"/><path d="M28 11c4 0 9 3 10 7-2 1-5 0-6 2s1 4 3 5-1 5-3 6-3-2-3-4-3-3-3-6 0-7 2-10z" fill="#51CF66"/><circle cx="24" cy="24" r="16" fill="none" stroke="#1C7ED6" stroke-width="2"/>'),
+  forschen: _P('#F3F0FF', '<path d="M19 8h10M21 8v11L11 37a3 3 0 0 0 2.6 4.5h20.8A3 3 0 0 0 37 37L27 19V8" fill="#fff" stroke="#7048E8" stroke-width="2.5" stroke-linejoin="round"/><path d="M15.5 30h17l4 7.2a2 2 0 0 1-1.8 3H13.3a2 2 0 0 1-1.8-3z" fill="#B197FC"/><circle cx="22" cy="34" r="1.8" fill="#fff"/><circle cx="27" cy="31.5" r="1.3" fill="#fff"/>'),
   // Jahreszeiten
   fruehling: _P('#EBFBEE', '<path d="M24 27v14" stroke="#2F9E44" stroke-width="3"/><path d="M24 35c-4-6-10-6-12-4 3 4 8 5 12 4z" fill="#40C057"/><path d="M15 10c3 4 6 6 9 6s6-2 9-6c1 7-2 14-9 14s-10-7-9-14z" fill="#F06595"/><path d="M24 16c-2-3-2-7 0-10 2 3 2 7 0 10z" fill="#F783AC"/>'),
   sommer: _P('#FFF9DB', '<circle cx="24" cy="24" r="9" fill="#FCC419"/><path d="M24 6v6M24 36v6M6 24h6M36 24h6M11.3 11.3l4.2 4.2M32.5 32.5l4.2 4.2M11.3 36.7l4.2-4.2M32.5 15.5l4.2-4.2" stroke="#F59F00" stroke-width="3" stroke-linecap="round"/>'),
@@ -4462,7 +4494,8 @@ const PICTOS = {
   winter: _P('#E7F5FF', '<path d="M24 7v34M9.3 15.5l29.4 17M9.3 32.5l29.4-17M24 13l-4-4M24 13l4-4M24 35l-4 4M24 35l4 4M13 17.5l-5 1M13 30.5l-5-1M35 17.5l5 1M35 30.5l5-1" stroke="#1C7ED6" stroke-width="2.6" stroke-linecap="round"/>'),
 };
 const PICTO_LIST = [
-  ['mathe','Mathe'], ['deutsch','Deutsch'], ['sachunterricht','Sachunterricht'], ['englisch','Englisch / Sprachen'], ['kunst','Kunst'],
+  ['mathe','Mathe'], ['deutsch','Deutsch'], ['sachunterricht','Sachunterricht'], ['forschen','Forschen / NaWi'], ['welt','Welt / Gesellschaft'],
+  ['englisch','Englisch / Sprachen'], ['kunst','Kunst'],
   ['musik','Musik'], ['sport','Sport'], ['schwimmen','Schwimmen'], ['religion','Religion / Ethik'], ['werken','Werken'],
   ['computer','Computer / MINT'], ['lesen','Lesen'], ['schreiben','Schreiben'], ['hausaufgaben','Hausaufgaben'], ['test','Test / Arbeit'],
   ['lernzeit','Lernzeit'], ['gruppe','Gruppenarbeit'], ['leise','Stillarbeit'], ['morgenkreis','Morgenkreis'], ['klassenrat','Klassenrat'],
@@ -4471,16 +4504,19 @@ const PICTO_LIST = [
 ];
 // Passendes Bildsymbol zum eingetippten Fach erraten („Mathe“ → Rechenzeichen)
 const PICTO_GUESS = [
-  [/fr(ü|ue)hst(ü|ue)ck|brotzeit|snack/, 'fruehstueck'], [/mittag|mensa/, 'mittagessen'], [/mathe|rechn|einmaleins|zahlen/, 'mathe'],
+  [/fr(ü|ue)hst(ü|ue)ck|brotzeit|snack/, 'fruehstueck'], [/mittag|mensa/, 'mittagessen'], [/mathe|rechn|einmaleins|zahlen|geometrie/, 'mathe'],
   [/deutsch|diktat|rechtschreib|grammatik/, 'deutsch'], [/lese|lesen|buch|b(ü|ue)cherei/, 'lesen'], [/schreib|schrift/, 'schreiben'],
-  [/sachunterricht|\bsu\b|bio|physik|chemie|erdkunde|geo|forsch/, 'sachunterricht'], [/englisch|english|franz|spanisch|sprache/, 'englisch'],
+  [/physik|chemie|naturwiss|nawi|experiment|forsch|labor/, 'forschen'], [/sachunterricht|sachkunde|heimat|\bsu\b|bio/, 'sachunterricht'],
+  [/erdkunde|\bgeo\b|geograf|geograph|geschichte|politik|gesellschaft|sozial|wirtschaft|welt/, 'welt'],
+  [/englisch|english|franz|spanisch|latein|t(ü|ue)rkisch|sprache/, 'englisch'],
   [/kunst|malen|basteln|zeichnen/, 'kunst'], [/musik|singen|lied|chor/, 'musik'], [/schwimm/, 'schwimmen'], [/sport|turnen|bewegung/, 'sport'],
   [/religion|ethik|philo/, 'religion'], [/werken|technik|textil|handarbeit/, 'werken'], [/computer|mint|informatik|medien|tablet|ipad/, 'computer'],
-  [/hausaufgab|\bha\b/, 'hausaufgaben'], [/test|arbeit|klausur|lernkontrolle|pr(ü|ue)fung/, 'test'],
-  [/lernzeit|(ü|ue)bungszeit|wochenplan|perle|freiarbeit|station/, 'lernzeit'], [/gruppe|team|projekt/, 'gruppe'], [/still|leise|ruhe/, 'leise'],
-  [/morgenkreis|begr(ü|ue)(ß|ss)ung|ankommen|erz(ä|ae)hlkreis/, 'morgenkreis'], [/klassenrat|stuhlkreis|besprech/, 'klassenrat'],
+  [/hausaufgab|\bha\b/, 'hausaufgaben'], [/gruppe|team|projekt/, 'gruppe'], [/still|leise|ruhe/, 'leise'],
+  [/lernzeit|(ü|ue)bungszeit|wochenplan|perle|freiarbeit|station|f(ö|oe)rder/, 'lernzeit'],
+  [/test|klassenarbeit|klausur|lernkontrolle|pr(ü|ue)fung|^arbeit\b/, 'test'],
+  [/morgenkreis|begr(ü|ue)(ß|ss)ung|ankommen|erz(ä|ae)hlkreis/, 'morgenkreis'], [/klassenrat|klassenstunde|stuhlkreis|besprech/, 'klassenrat'],
   [/pause|hof/, 'pause'], [/spiel/, 'spielen'], [/garten|drau(ß|ss)en|wald|natur/, 'garten'], [/ausflug|exkursion|wandertag/, 'ausflug'],
-  [/aufr(ä|ae)um|ordnung|putz/, 'aufraeumen'], [/dienst/, 'dienste'], [/geburtstag|feier|fest/, 'geburtstag'], [/schluss|heim|nach hause|ende/, 'heimweg'],
+  [/aufr(ä|ae)um|ordnung|putz/, 'aufraeumen'], [/dienst/, 'dienste'], [/geburtstag|feier|fest\b|party/, 'geburtstag'], [/schluss|heimweg|nach hause|\bende\b/, 'heimweg'],
 ];
 function guessPicto(text) {
   const t = String(text || '').toLowerCase();
@@ -4514,6 +4550,97 @@ function openPictoPicker(anchor, onPick) {
   }, 0);
 }
 
+// Kürzel aus WebUntis & Co. in Wörter, die Kinder lesen können
+const SUBJECT_NAMES = {
+  m:'Mathe', ma:'Mathe', mat:'Mathe', d:'Deutsch', de:'Deutsch', deu:'Deutsch', su:'Sachunterricht', sach:'Sachunterricht',
+  e:'Englisch', en:'Englisch', eng:'Englisch', f:'Französisch', fr:'Französisch', fra:'Französisch', l:'Latein', la:'Latein', lat:'Latein',
+  spa:'Spanisch', ku:'Kunst', bk:'Kunst', mu:'Musik', mus:'Musik', sp:'Sport', spo:'Sport', sw:'Schwimmen', schw:'Schwimmen',
+  re:'Religion', rel:'Religion', rk:'Religion', rka:'Religion', rev:'Religion', er:'Religion', kr:'Religion', ev:'Religion', evr:'Religion', isl:'Religion',
+  eth:'Ethik', et:'Ethik', pp:'Philosophie', ppl:'Philosophie', phil:'Philosophie', we:'Werken', tw:'Werken', te:'Technik', tc:'Technik', tx:'Textil', tex:'Textil',
+  inf:'Informatik', info:'Informatik', bio:'Biologie', bi:'Biologie', ph:'Physik', phy:'Physik', ch:'Chemie', che:'Chemie',
+  ge:'Geschichte', ges:'Geschichte', ek:'Erdkunde', erd:'Erdkunde', geo:'Erdkunde', po:'Politik', pol:'Politik', pk:'Politik', sowi:'Sozialwissenschaften', sk:'Sozialkunde',
+  wi:'Wirtschaft', nw:'Naturwissenschaften', nawi:'Naturwissenschaften', 'fö':'Förderunterricht', foe:'Förderunterricht', 'förd':'Förderunterricht',
+  lz:'Lernzeit', kl:'Klassenstunde', kls:'Klassenstunde', ha:'Hausaufgaben', hab:'Hausaufgaben', ag:'AG',
+};
+function subjectName(raw) {
+  const s = String(raw || '').trim();
+  const k = s.toLowerCase().replace(/[^a-zäöüß]/g, '');
+  return (s.length <= 7 && SUBJECT_NAMES[k]) || s;
+}
+const parseHM = s => { const m = /^\s*(\d{1,2})[:.](\d{2})\s*$/.exec(String(s || '')); return m && +m[1] < 24 && +m[2] < 60 ? +m[1] * 60 + +m[2] : null; };
+const fmtHM = m => Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0');
+const normIcalUrl = u => String(u || '').trim().replace(/^webcal:\/\//i, 'https://');
+
+// Stundenplan-Abo einer Tafel; hat sie keins, das einer anderen Tafel dieser Klasse verwenden (adopt = übernehmen)
+function icalFor(board, adopt) {
+  if (!board) return null;
+  const own = APP.icalCache[board.id];
+  if (own && own.url) return own;
+  const other = APP.state.boards.map(b => APP.icalCache[b.id]).find(x => x && x.url);
+  if (other && adopt) {
+    APP.icalCache[board.id] = { url: other.url, entries: other.entries || [], lastFetched: other.lastFetched };
+    return APP.icalCache[board.id];
+  }
+  return other || null;
+}
+
+// Heutige Zeilen aus dem Stundenplan: Doppelstunden zusammengefasst, Pausen ergänzt, eigene Punkte nach Uhrzeit einsortiert
+function dayplanRowsFromTimetable(w, cache, now) {
+  const cfg = w.config || {};
+  const subj = cfg.subjects && typeof cfg.subjects === 'object' ? cfg.subjects : {};
+  const day0 = new Date(now); day0.setHours(0, 0, 0, 0);
+  const day1 = new Date(day0.getTime() + 86400000);
+  const mins = d => d.getHours() * 60 + d.getMinutes();
+  const raw = [], allDay = [];
+  ((cache && cache.entries) || []).forEach(e => {
+    const s = new Date(e.start), en = new Date(e.end);
+    if (isNaN(s) || isNaN(en) || en <= day0 || s >= day1) return;
+    const name = String(e.subject || '').trim();
+    // Ganztägiges (Projekttag, Ferien, Ausflug) wird zur Überschrift-Zeile, nicht zur Stunde
+    if (mins(s) === 0 || en - s >= 10 * 3600000 || s < day0) { if (name && !e.cancelled && !allDay.includes(name) && allDay.length < 2) allDay.push(name); return; }
+    if (name) raw.push({ raw: name, start: mins(s), end: Math.max(mins(s) + 1, en >= day1 ? 1440 : mins(en)), cancelled: !!e.cancelled, changed: !!e.changed });
+  });
+  raw.sort((a, b) => a.start - b.start || a.raw.localeCompare(b.raw));
+  const lessons = [];
+  raw.forEach(l => {
+    const last = lessons[lessons.length - 1];
+    if (last && l.start === last.start) {                       // geteilte Klasse, z. B. Religion / Ethik
+      if (!last.raws.includes(l.raw)) last.raws.push(l.raw);
+      last.end = Math.max(last.end, l.end); last.cancelled = last.cancelled && l.cancelled; last.changed = last.changed || l.changed;
+      return;
+    }
+    if (last && last.raws.length === 1 && last.raws[0] === l.raw && last.cancelled === l.cancelled && l.start - last.end <= 10) {
+      last.end = Math.max(last.end, l.end); last.changed = last.changed || l.changed;   // Doppelstunde
+      return;
+    }
+    lessons.push({ raws: [l.raw], start: l.start, end: l.end, cancelled: l.cancelled, changed: l.changed });
+  });
+  const nameOf = r => (subj[r] && String(subj[r].name || '').trim()) || subjectName(r);
+  const rows = [];
+  lessons.forEach((l, i) => {
+    const prev = lessons[i - 1];
+    if (prev && cfg.breaks !== false && l.start - prev.end >= 15) {
+      const lunch = l.start - prev.end >= 40 && prev.end >= 11 * 60 && prev.end <= 14 * 60;
+      rows.push({ text: lunch ? 'Mittagessen' : 'Pause', icon: lunch ? 'mittagessen' : 'pause', start: prev.end, end: l.start, kind: 'break' });
+    }
+    const names = l.raws.map(nameOf);
+    const own = subj[l.raws[0]] && subj[l.raws[0]].icon;
+    rows.push({ text: names.join(' / '), icon: PICTOS[own] ? own : guessPicto(names[0]), start: l.start, end: l.end,
+      cancelled: l.cancelled, changed: l.changed && !l.cancelled, kind: 'lesson' });
+  });
+  (Array.isArray(cfg.extras) ? cfg.extras : []).forEach(x => {
+    if (!x || !String(x.text || '').trim()) return;
+    const t = parseHM(x.time);
+    rows.push({ text: String(x.text).trim().slice(0, 40), icon: PICTOS[x.icon] ? x.icon : guessPicto(x.text), start: t == null ? -1 : t, end: null, kind: 'extra' });
+  });
+  rows.sort((a, b) => a.start - b.start);
+  rows.forEach((r, i) => {
+    if (r.end == null) { const n = rows.slice(i + 1).find(x => x.start > r.start); r.end = n ? n.start : (r.start < 0 ? Infinity : r.start + 30); }
+    r.key = (r.start < 0 ? 'x' : r.start) + '|' + r.text;
+  });
+  return { rows, lessons: lessons.length, names: lessons.map(l => l.raws.map(nameOf).join(' / ')), allDay };
+}
+
 const todayKey = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
 function seasonOf(d) {
   const md = d.getMonth() * 100 + d.getDate();
@@ -4524,23 +4651,43 @@ function seasonOf(d) {
 }
 
 function openDayplanEdit(w) {
-  let rows = (Array.isArray(w.config.items) ? w.config.items : []).map(it => ({ ...it }));
+  const board = APP.activeBoard();
+  let src = w.config.source === 'timetable' ? 'timetable' : 'manual';
+  const copyRows = a => (Array.isArray(a) ? a : []).filter(it => it && typeof it === 'object').map(it => ({ ...it }));
+  const lists = { manual: copyRows(w.config.items), timetable: copyRows(w.config.extras) };
+  const subjects = JSON.parse(JSON.stringify(w.config.subjects && typeof w.config.subjects === 'object' ? w.config.subjects : {}));
+  const known = icalFor(board, false);
   const { overlay, close } = openModal(`
     <div class="modal modal-lg">
       <button class="modal-close" data-close>✕</button>
       <h2>Tagesplan</h2>
+      <div class="dp-src">
+        <button type="button" data-src="timetable"><b>Automatisch aus dem Stundenplan</b><small>Stellt sich jeden Morgen selbst zusammen und hakt nach der Uhr ab</small></button>
+        <button type="button" data-src="manual"><b>Selbst eintragen</b><small>Eigene Liste – die Haken verschwinden über Nacht</small></button>
+      </div>
+      <div id="dp-tt">
+        <div class="form-group"><label>Stundenplan-Link (WebUntis / iCal)</label>
+          <div class="dp-urlrow"><input type="url" id="dp-url" placeholder="https://…webuntis.com/…" value="${safeText((known && known.url) || '')}"><button class="btn-secondary" type="button" id="dp-fetch">Abrufen</button></div></div>
+        <p class="ical-info">In WebUntis: Mein Untis → Kalender → Mein Kalender → iCal-Link kopieren. Der Link dient nur zum Abruf des Stundenplans.</p>
+        <div id="dp-status" class="dp-status"></div>
+        <label class="dp-opt"><input type="checkbox" id="dp-breaks" ${w.config.breaks !== false ? 'checked' : ''}> Pausen automatisch einfügen</label>
+        <div id="dp-subj-wrap"><label>Fächer – so heißen sie für die Kinder (z. B. „M“ → „Mathe“)</label><div id="dp-subj" class="dp-edit"></div></div>
+      </div>
       <div class="form-group"><label>Überschrift (optional)</label>
         <input type="text" id="dp-title" maxlength="40" placeholder="z. B. Tagesplan" value="${safeText(w.config.title || '')}"></div>
-      <label>Ablauf – das Bildsymbol wird passend zum Fach gewählt, ein Tipp darauf ändert es</label>
+      <label id="dp-rows-label"></label>
       <div id="dp-rows" class="dp-edit"></div>
       <button class="btn-secondary" id="dp-add" type="button" style="margin:4px 0 14px">+ Zeile hinzufügen</button>
       <label class="dp-opt"><input type="checkbox" id="dp-times" ${w.config.showTimes !== false ? 'checked' : ''}> Uhrzeiten anzeigen</label>
-      <label class="dp-opt"><input type="checkbox" id="dp-auto" ${w.config.autoReset !== false ? 'checked' : ''}> Haken an jedem neuen Tag automatisch entfernen</label>
+      <label class="dp-opt" id="dp-auto-wrap"><input type="checkbox" id="dp-auto" ${w.config.autoReset !== false ? 'checked' : ''}> Haken an jedem neuen Tag automatisch entfernen</label>
       <div class="btn-row"><button class="btn-secondary" id="dp-clear" type="button">Alle Haken entfernen</button><button class="btn-primary" id="dp-save">Speichern</button></div>
     </div>
   `);
-  const list = overlay.querySelector('#dp-rows');
+  const $ = s => overlay.querySelector(s);
+  const list = $('#dp-rows');
+  const cacheNow = () => icalFor(board, false);
   const paint = () => {
+    const rows = lists[src];
     list.innerHTML = '';
     rows.forEach((r, i) => {
       const row = document.createElement('div');
@@ -4550,10 +4697,10 @@ function openDayplanEdit(w) {
       pic.innerHTML = pictoSvg(r.icon || guessPicto(r.text));
       pic.addEventListener('click', () => openPictoPicker(pic, k => { r.icon = k; r.manual = true; paint(); }));
       const time = document.createElement('input');
-      time.type = 'text'; time.maxLength = 5; time.placeholder = '8:00'; time.value = r.time || ''; time.className = 'dp-etime';
+      time.type = 'text'; time.maxLength = 5; time.placeholder = src === 'timetable' ? '7:50' : '8:00'; time.value = r.time || ''; time.className = 'dp-etime';
       time.addEventListener('input', () => { r.time = time.value; });
       const txt = document.createElement('input');
-      txt.type = 'text'; txt.maxLength = 40; txt.placeholder = 'z. B. Mathe'; txt.value = r.text || '';
+      txt.type = 'text'; txt.maxLength = 40; txt.placeholder = src === 'timetable' ? 'z. B. Morgenkreis' : 'z. B. Mathe'; txt.value = r.text || '';
       txt.addEventListener('input', () => {
         r.text = txt.value;
         if (!r.manual) { r.icon = guessPicto(r.text); pic.innerHTML = pictoSvg(r.icon); }
@@ -4565,30 +4712,108 @@ function openDayplanEdit(w) {
         b.addEventListener('click', fn);
         return b;
       };
-      row.append(pic, time, txt,
+      row.append(pic, time, txt);
+      if (src === 'manual') row.append(
         mk('chevronUp', 'Nach oben', () => { [rows[i - 1], rows[i]] = [rows[i], rows[i - 1]]; paint(); }, i === 0),
-        mk('chevronDown', 'Nach unten', () => { [rows[i + 1], rows[i]] = [rows[i], rows[i + 1]]; paint(); }, i === rows.length - 1),
-        mk('x', 'Zeile löschen', () => { rows.splice(i, 1); paint(); }));
+        mk('chevronDown', 'Nach unten', () => { [rows[i + 1], rows[i]] = [rows[i], rows[i + 1]]; paint(); }, i === rows.length - 1));
+      row.append(mk('x', 'Zeile löschen', () => { rows.splice(i, 1); paint(); }));
       list.appendChild(row);
     });
   };
-  paint();
-  overlay.querySelector('#dp-add').addEventListener('click', () => {
-    rows.push({ text: '', icon: 'frei' });
+  const status = () => {
+    const cc = cacheNow(), st = $('#dp-status');
+    if (!cc || !cc.url) { st.textContent = 'Noch kein Stundenplan verbunden – Link einfügen und „Abrufen“ tippen.'; st.className = 'dp-status'; return; }
+    if (!cc.lastFetched) { st.textContent = 'Noch nicht abgerufen – auf „Abrufen“ tippen.'; st.className = 'dp-status'; return; }
+    const res = dayplanRowsFromTimetable({ config: { subjects, breaks: $('#dp-breaks').checked } }, cc, new Date());
+    st.className = 'dp-status ok';
+    st.textContent = res.lessons ? '✓ Verbunden · heute: ' + res.allDay.concat(res.names).join(', ')
+      : '✓ Verbunden · heute steht kein Unterricht im Plan. An Schultagen erscheint der Tagesplan von selbst.';
+  };
+  const paintSubjects = () => {
+    const cc = cacheNow();
+    const isLesson = e => { const s = new Date(e.start); return !isNaN(s) && (s.getHours() || s.getMinutes()); };   // Ganztägiges ist kein Fach
+    const raws = [...new Set(((cc && cc.entries) || []).filter(isLesson).map(e => String(e.subject || '').trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'de')).slice(0, 40);
+    const box = $('#dp-subj');
+    $('#dp-subj-wrap').style.display = raws.length ? '' : 'none';
+    box.innerHTML = '';
+    raws.forEach(raw => {
+      const cur = subjects[raw] || {};
+      const row = document.createElement('div'); row.className = 'dp-erow';
+      const pic = document.createElement('button'); pic.type = 'button'; pic.className = 'dp-epic'; pic.title = 'Bildsymbol wählen';
+      const setPic = () => { pic.innerHTML = pictoSvg(PICTOS[cur.icon] ? cur.icon : guessPicto(cur.name || subjectName(raw))); };
+      setPic();
+      pic.addEventListener('click', () => openPictoPicker(pic, k => { cur.icon = k; subjects[raw] = cur; setPic(); }));
+      const code = document.createElement('span'); code.className = 'dp-code'; code.textContent = raw; code.title = 'So steht es im Stundenplan';
+      const inp = document.createElement('input'); inp.type = 'text'; inp.maxLength = 40; inp.placeholder = subjectName(raw); inp.value = cur.name || '';
+      inp.addEventListener('input', () => { cur.name = inp.value.trim(); subjects[raw] = cur; setPic(); status(); });
+      row.append(pic, code, inp);
+      box.appendChild(row);
+    });
+  };
+  const syncSrc = () => {
+    overlay.querySelectorAll('[data-src]').forEach(b => { b.classList.toggle('on', b.dataset.src === src); b.setAttribute('aria-pressed', String(b.dataset.src === src)); });
+    $('#dp-tt').style.display = src === 'timetable' ? '' : 'none';
+    $('#dp-auto-wrap').style.display = $('#dp-clear').style.display = src === 'manual' ? '' : 'none';
+    $('#dp-rows-label').textContent = src === 'timetable'
+      ? 'Eigene Punkte ergänzen (z. B. Morgenkreis 7:50, Frühstück 9:30) – sie werden nach der Uhrzeit einsortiert'
+      : 'Ablauf – das Bildsymbol wird passend zum Fach gewählt, ein Tipp darauf ändert es';
+    paint();
+    if (src === 'timetable') { paintSubjects(); status(); }
+  };
+  overlay.querySelectorAll('[data-src]').forEach(b => b.addEventListener('click', () => { src = b.dataset.src; syncSrc(); }));
+  $('#dp-breaks').addEventListener('change', status);
+  $('#dp-fetch').addEventListener('click', async () => {
+    const url = normIcalUrl($('#dp-url').value);
+    if (!/^https?:\/\//i.test(url)) { toast('Bitte den vollständigen Link einfügen (https://…)'); return; }
+    const prev = APP.icalCache[board.id] || {};
+    if (prev.url !== url) APP.icalCache[board.id] = { url, entries: [] };
+    const bt = $('#dp-fetch'); bt.disabled = true; bt.textContent = 'Lädt …';
+    await fetchIcal(url, board.id);
+    bt.disabled = false; bt.textContent = 'Abrufen';
+    if (overlay.isConnected) { paintSubjects(); status(); }
+  });
+  $('#dp-add').addEventListener('click', () => {
+    lists[src].push({ text: '', icon: 'frei' });
     paint();
     list.querySelector('.dp-erow:last-child input:not(.dp-etime)')?.focus();
   });
   const rerender = () => { const shell = document.querySelector('[data-wid="' + w.id + '"]'); if (shell) renderWidgetContent(w, shell.querySelector('.widget-body')); };
-  overlay.querySelector('#dp-clear').addEventListener('click', () => { rows.forEach(r => { r.done = false; }); toast('Alle Haken entfernt – zum Übernehmen „Speichern“'); });
-  overlay.querySelector('#dp-save').addEventListener('click', () => {
-    w.config.title = overlay.querySelector('#dp-title').value.trim();
-    w.config.items = rows.filter(r => String(r.text || '').trim()).slice(0, 20).map(r => ({
+  $('#dp-clear').addEventListener('click', () => { lists.manual.forEach(r => { r.done = false; }); toast('Alle Haken entfernt – zum Übernehmen „Speichern“'); });
+  $('#dp-save').addEventListener('click', () => {
+    const clean = arr => arr.filter(r => String(r.text || '').trim()).slice(0, 20).map(r => ({
       text: String(r.text).trim().slice(0, 40), icon: PICTOS[r.icon] ? r.icon : guessPicto(r.text),
       time: String(r.time || '').trim().slice(0, 5), done: !!r.done, manual: !!r.manual }));
-    w.config.showTimes = overlay.querySelector('#dp-times').checked;
-    w.config.autoReset = overlay.querySelector('#dp-auto').checked;
+    if (src === 'timetable') {
+      const url = normIcalUrl($('#dp-url').value);
+      if (!/^https?:\/\//i.test(url)) { toast('Bitte den Stundenplan-Link einfügen (https://…)'); return; }
+      const own = APP.icalCache[board.id], base = icalFor(board, false);
+      if (!(own && own.url === url)) {
+        APP.icalCache[board.id] = base && base.url === url ? { url, entries: base.entries || [], lastFetched: base.lastFetched } : { url, entries: [] };
+      }
+      const subj = {};
+      Object.keys(subjects).forEach(k => {
+        const s = subjects[k] || {}, o = {};
+        if (String(s.name || '').trim()) o.name = String(s.name).trim().slice(0, 40);
+        if (PICTOS[s.icon]) o.icon = s.icon;
+        if (o.name || o.icon) subj[k.slice(0, 60)] = o;
+      });
+      w.config.subjects = subj;
+      w.config.extras = clean(lists.timetable).map(({ done, ...r }) => r);
+      w.config.breaks = $('#dp-breaks').checked;
+    }
+    w.config.source = src;
+    w.config.title = $('#dp-title').value.trim();
+    w.config.items = clean(lists.manual);
+    w.config.showTimes = $('#dp-times').checked;
+    w.config.autoReset = $('#dp-auto').checked;
     APP.save(); rerender(); close();
+    if (src === 'timetable') {
+      if (!APP.icalCache[board.id].lastFetched) fetchIcal(APP.icalCache[board.id].url, board.id);
+      startTimetableRefresh(w);
+    }
   });
+  syncSrc();
 }
 
 function openTodaySettings(w) {
@@ -7039,37 +7264,75 @@ const WIDGET_RENDERERS = {
     }, () => { video.remove(); empty('Das Video konnte nicht geladen werden.', 'Video erneut auswählen'); });
   },
 
-  // ── Tagesplan ── Bildsymbole, abhaken, „jetzt“ hervorgehoben; Haken verschwinden am nächsten Tag
+  // ── Tagesplan ── Bildsymbole, abhaken, „jetzt“ hervorgehoben. Selbst eingetragen (Haken verschwinden am nächsten Tag)
+  //    oder automatisch aus dem Stundenplan (hakt nach der Uhr ab, Ausfall/Vertretung markiert)
   dayplan(w, body) {
-    const items = (Array.isArray(w.config.items) ? w.config.items : []).filter(it => it && typeof it === 'object').slice(0, 20);
-    if (!items.length) { body.appendChild(emptyCta('dayplan', 'Tagesplan eintragen', () => openDayplanEdit(w))); return; }
-    if (w.config.autoReset !== false && w.config.day && w.config.day !== todayKey() && items.some(it => it.done)) {
-      items.forEach(it => { it.done = false; });
-      w.config.day = todayKey();
-      APP.save();
+    const fromTT = w.config.source === 'timetable';
+    let items, note = '', banner = '';
+    if (fromTT) {
+      const board = APP.state.boards.find(b => b.widgets.includes(w)) || APP.activeBoard();
+      const cache = icalFor(board, false);
+      if (!cache || !cache.url) { body.appendChild(emptyCta('timetable', 'Stundenplan verbinden', () => openDayplanEdit(w))); return; }
+      const now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
+      const res = dayplanRowsFromTimetable(w, cache, now);
+      const marks = w.config.marks && w.config.marks.day === todayKey() && w.config.marks.set ? w.config.marks.set : {};
+      items = res.rows.map(r => ({ ...r, time: r.start >= 0 ? fmtHM(r.start) : '', done: r.key in marks ? !!marks[r.key] : r.end <= nowMin }));
+      banner = res.allDay.length ? 'Heute: ' + res.allDay.join(' · ') : '';
+      if (!res.lessons && !banner) note = !cache.lastFetched ? 'Stundenplan wird geladen …'
+        : (now.getDay() === 0 || now.getDay() === 6 ? 'Schönes Wochenende!' : 'Heute kein Unterricht im Stundenplan');
+    } else {
+      items = (Array.isArray(w.config.items) ? w.config.items : []).filter(it => it && typeof it === 'object').slice(0, 20);
+      if (!items.length) { body.appendChild(emptyCta('dayplan', 'Tagesplan eintragen', () => openDayplanEdit(w))); return; }
+      if (w.config.autoReset !== false && w.config.day && w.config.day !== todayKey() && items.some(it => it.done)) {
+        items.forEach(it => { it.done = false; });
+        w.config.day = todayKey();
+        APP.save();
+      }
     }
     const bodyH = w.h - (APP.state.editMode ? 34 : 0);
     const title = String(w.config.title || '').trim();
     const titleFs = title ? Math.max(15, Math.min(bodyH * 0.06, w.w * 0.08, 34)) : 0;
-    const rowH = Math.max(30, (bodyH - 14 - (title ? titleFs * 1.5 : 0)) / items.length);
+    const cur = items.findIndex(it => !it.done && !it.cancelled);
+    const extra = (note ? 1.6 : 0) + (banner ? 1.2 : 0);
+    const avail = bodyH - 14 - (title ? titleFs * 1.6 : 0);
+    // Passt nicht alles hin: Erledigtes oben einklappen, damit „jetzt“ und der Rest groß und lesbar bleiben
+    let skip = 0;
+    const maxRows = Math.floor(avail / 34 - extra);
+    if (items.length > maxRows && maxRows >= 3) skip = Math.max(0, Math.min(cur >= 0 ? cur : items.length, items.length - maxRows + 1));
+    const n = items.length - skip + (skip ? 0.7 : 0) + extra;
+    const rowH = Math.max(30, avail / Math.max(1, n));
     const fs = Math.max(13, Math.min(rowH * 0.4, w.w * 0.07, 40));
     const wrap = el('div', 'dp');
     wrap.style.setProperty('--dp-fs', fs + 'px');
     wrap.style.setProperty('--dp-row', rowH + 'px');
     if (title) { const t = el('div', 'dp-title'); t.textContent = title; t.style.fontSize = titleFs + 'px'; wrap.appendChild(t); }
-    const cur = items.findIndex(it => !it.done);
+    if (banner) { const bn = el('div', 'dp-banner'); bn.textContent = banner; wrap.appendChild(bn); }
+    if (note) { const nt = el('div', 'dp-note'); nt.textContent = note; wrap.appendChild(nt); }
+    if (skip) {
+      const sk = el('button', 'dp-skip');
+      sk.textContent = '✓ ' + skip + ' erledigt';
+      sk.title = 'Alles anzeigen';
+      sk.addEventListener('click', e => { e.stopPropagation(); wrap.classList.add('dp-all'); });
+      wrap.appendChild(sk);
+    }
     items.forEach((it, i) => {
-      const row = el('button', 'dp-row' + (it.done ? ' done' : '') + (i === cur ? ' now' : ''));
+      const row = el('button', 'dp-row' + (it.done ? ' done' : '') + (i === cur ? ' now' : '') + (it.cancelled ? ' off' : '') + (i < skip ? ' dp-hid' : ''));
       row.setAttribute('aria-pressed', String(!!it.done));
       const pic = el('span', 'dp-pic'); pic.innerHTML = pictoSvg(it.icon || guessPicto(it.text));
       const txt = el('span', 'dp-text'); txt.textContent = it.text || '';
       row.append(pic, txt);
+      if (it.cancelled || it.changed) { const tg = el('span', 'dp-tag' + (it.changed ? ' chg' : '')); tg.textContent = it.cancelled ? 'entfällt' : 'Vertretung'; row.appendChild(tg); }
       if (it.time && w.config.showTimes !== false) { const tm = el('span', 'dp-time'); tm.textContent = it.time; row.appendChild(tm); }
       const chk = el('span', 'dp-check'); chk.innerHTML = icon('check', 18); row.appendChild(chk);
       row.addEventListener('click', e => {
         e.stopPropagation();
-        it.done = !it.done;
-        w.config.day = todayKey();
+        if (fromTT) {
+          if (!w.config.marks || w.config.marks.day !== todayKey() || !w.config.marks.set) w.config.marks = { day: todayKey(), set: {} };
+          w.config.marks.set[it.key] = !it.done;
+        } else {
+          it.done = !it.done;
+          w.config.day = todayKey();
+        }
         APP.save();
         renderWidgetContent(w, body);
       });
@@ -7467,7 +7730,7 @@ function renderTimetableEntries(inner, entries) {
     const subj = el('div','tt-subject');
     subj.classList.toggle('tt-cancelled', !!current.cancelled);
     subj.classList.toggle('tt-changed', !!current.changed);
-    subj.textContent = current.subject;
+    subj.textContent = subjectName(current.subject);
     const meta = el('div','tt-meta');
     meta.textContent = fmtTime(current.start) + '–' + fmtTime(current.end) + (current.room ? ' · ' + current.room : '');
     box.append(lbl, subj, meta);
@@ -7482,7 +7745,7 @@ function renderTimetableEntries(inner, entries) {
     upcoming.forEach(e => {
       const li = document.createElement('li');
       const time = el('span','tt-time'); time.textContent = fmtTime(e.start) + ' Uhr';
-      const subj = el('span'); subj.textContent = e.subject;
+      const subj = el('span'); subj.textContent = subjectName(e.subject);
       if (e.cancelled) subj.classList.add('tt-cancelled');
       if (e.changed) subj.classList.add('tt-changed');
       li.append(time, subj);
@@ -7509,7 +7772,7 @@ const _icalLastAttempt = {};   // boardId → Zeitpunkt des letzten Abrufversuch
 function rerenderTimetables() {
   const board = APP.activeBoard();
   if (!board) return;
-  board.widgets.filter(w => w.type === 'timetable').forEach(w => {
+  board.widgets.filter(w => w.type === 'timetable' || (w.type === 'dayplan' && w.config && w.config.source === 'timetable')).forEach(w => {
     const body = document.querySelector('[data-wid="' + w.id + '"] .widget-body');
     if (body) renderWidgetContent(w, body);
   });
@@ -7993,7 +8256,7 @@ function openTimetableSettings(w) {
     </div>
   `);
   overlay.querySelector('#ical-save').addEventListener('click', () => {
-    const url = overlay.querySelector('#ical-url').value.trim();
+    const url = normIcalUrl(overlay.querySelector('#ical-url').value);
     if (url && !/^https?:\/\//i.test(url)) { toast('Bitte einen vollständigen Link eingeben (https://…)'); return; }
     if (board) {
       // Neue URL → alte Termine verwerfen, damit nicht der Plan des vorherigen Links stehen bleibt
@@ -8007,7 +8270,7 @@ function openTimetableSettings(w) {
     if (url && board) { fetchIcal(url, board.id); startTimetableRefresh(w); }
   });
   overlay.querySelector('#ical-test').addEventListener('click', () => {
-    const url = overlay.querySelector('#ical-url').value.trim();
+    const url = normIcalUrl(overlay.querySelector('#ical-url').value);
     if (!url) { toast('Bitte URL eingeben'); return; }
     if (board) { APP.icalCache[board.id] = { ...APP.icalCache[board.id], url }; }
     fetchIcal(url, board?.id);
