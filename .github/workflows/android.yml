@@ -63,6 +63,9 @@ jobs:
             adb exec-out screencap -p > shots/2-spaeter.png
             adb shell dumpsys activity activities | grep -i -E "mResumedActivity|topResumedActivity" > shots/activity.txt || true
             adb logcat -d | grep -i -E "gecko|classpuls|klassenboard|AndroidRuntime|FATAL" | tail -300 > shots/logcat.txt || true
+      - name: Leere Dateien entfernen (GitHub lehnt sie ab)
+        if: always()
+        run: find shots -type f -size 0 -delete 2>/dev/null || true
       - name: Bildschirmfotos veröffentlichen (Vorab-Release app-test)
         if: always()
         uses: softprops/action-gh-release@v2
