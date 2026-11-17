@@ -87,6 +87,12 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
   eigene Punkte mit Uhrzeit in `config.extras`. Abo pro Tafel; `icalFor(board, adopt)` übernimmt das einer anderen Tafel der Klasse.
   Aktualisierung läuft über `startTimetableRefresh`/`rerenderTimetables` wie beim Stundenplan-Element. Passt nicht alles hin,
   wird Erledigtes oben eingeklappt („✓ 3 erledigt"). `_slimConfig` lässt `icalUrl`/`marks` beim Teilen weg (persönlicher Kalender-Schlüssel!)
+- `duties` (Klassendienste): `config {names, duties:[{text, icon, count}], rotate:'week'|'day'|'manual', startPeriod, offset, absent}`.
+  `dutyAssign(cfg, now)`: Platz j im Zeitraum p bekommt Name (p·S + j) mod L → alle Kinder reihum. Zeitraum über `dutyBase`
+  (Wochen bzw. Schultage seit 1.1.2024; Wochenende = Freitag) minus `startPeriod` (wird beim Ändern von Namen/Wechsel/Anzahl
+  neu gesetzt → Liste beginnt oben) plus `offset` (‹ › im Dialog, „Weiter" bei „von Hand"). Name antippen = fehlt in diesem
+  Zeitraum (`absent`), die Nächsten ohne Dienst rücken nach, „für …" holt zurück. Eigene Bildsymbole `DUTY_PICTO_LIST`/`guessDuty`;
+  `openPictoPicker(anchor, onPick, list)`. Namen kommen aus der Klassenliste (`newWidgetConfig`/`applyTemplate`); `absent` wird nicht geteilt
 - `today` (Datum): Karten (Wochentag mit Wochenfarben, Tag/Monat/Jahr, Jahreszeit über `seasonOf`) oder Satz „Heute ist …";
   stellt sich selbst um (Intervall 30 s). `link`: Webseite (nur http/https, per `new URL` geprüft) oder andere Tafel (`switchBoard`)
 - Hintergrund-Muster: `{type:'pattern', value:key}` aus `BG_PATTERNS` (SVG erst beim Anzeigen erzeugt, gespeichert wird nur das

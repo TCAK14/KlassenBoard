@@ -1115,6 +1115,31 @@ body[data-cards="dark"] .dp-banner { color:var(--accent-soft); }
 .picto-pick button:hover { background:var(--accent-tint); }
 .picto-pick button svg { width:40px; height:40px; }
 
+/* ── Klassendienste ── */
+.du { width:100%; height:100%; box-sizing:border-box; padding:8px; display:flex; flex-direction:column; gap:6px; }
+.du-head { flex:none; display:flex; align-items:center; gap:.5em; padding:0 .25em; min-width:0; line-height:1.2; }
+.du-title { font-weight:800; color:var(--accent-ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+body[data-cards="dark"] .du-title { color:var(--accent-soft); }
+.du-sub { flex:1 1 auto; font-size:.62em; font-weight:700; color:var(--w-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:right; }
+.du-next { flex:none; display:flex; align-items:center; gap:.2em; padding:.2em .6em; border:0; border-radius:.5em; background:var(--accent); color:#fff; font:inherit; font-size:.6em; font-weight:800; cursor:pointer; }
+.du-grid { flex:1 1 0; min-height:0; display:grid; gap:6px 8px; overflow-y:auto; align-content:start; }
+.du-cell { display:flex; align-items:center; gap:.5em; padding:0 .55em; border-radius:12px; background:var(--w-fill); min-width:0; }
+.du-pic { flex:none; }
+.du-pic svg { display:block; width:100%; height:100%; }
+.du-txt { flex:1 1 0; min-width:0; display:flex; flex-direction:column; line-height:1.12; }
+.du-lbl { font-size:.58em; font-weight:700; color:var(--w-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.du-names { font-weight:800; color:var(--w-ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.du-name { border:0; background:transparent; color:inherit; font:inherit; padding:0; cursor:pointer; border-radius:.2em; }
+.du-name:hover { text-decoration:underline; text-decoration-thickness:2px; }
+.du-for { border:0; background:transparent; font:inherit; font-weight:800; color:var(--accent-ink); padding:0; margin-left:.45em; cursor:pointer; text-decoration:underline; }
+body[data-cards="dark"] .du-for { color:var(--accent-soft); }
+.du.compact .du-lbl { display:none; }
+.du.compact .du-cell { padding:0 .4em; gap:.4em; border-radius:9px; }
+.du.compact .du-for { font-size:.6em; }
+.du-prev { display:flex; align-items:center; gap:8px; }
+#du-preview { flex:1 1 0; min-width:0; font-size:13.5px; line-height:1.5; color:rgba(255,255,255,0.85); padding:8px 10px; border-radius:10px; background:rgba(255,255,255,0.06); max-height:150px; overflow-y:auto; }
+.du-count { flex:none; width:auto !important; margin:0 !important; padding:6px 8px !important; }
+
 /* ── Datum ── */
 .td { width:100%; height:100%; box-sizing:border-box; padding:8px; display:flex; flex-direction:column; gap:8px; }
 .td-card { min-height:0; display:flex; align-items:center; justify-content:center; gap:.4em; border-radius:12px; border:1.5px solid var(--w-line); background:var(--w-bg); line-height:1.05; text-align:center; overflow:hidden; }
@@ -1749,6 +1774,7 @@ const ICONS = {
   pdf: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
   chevronLeft: 'M15 6l-6 6 6 6',
   dayplan: 'M4 5h4v4H4zM4 15h4v4H4zM11 7h9M11 17h9M5 7l1 1 2-2',
+  duties: 'M12 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10zM9 12l-2 9 5-3 5 3-2-9',
   today: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M9.5 15.5l2 2 3.5-4',
   link: 'M10 14a4.5 4.5 0 0 0 6.4 0l3.2-3.2a4.5 4.5 0 0 0-6.4-6.4L12 5.6M14 10a4.5 4.5 0 0 0-6.4 0l-3.2 3.2a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2',
   worksymbols: 'M9 11V5a1.5 1.5 0 0 1 3 0v5M12 10V4a1.5 1.5 0 0 1 3 0v6M15 10V6.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-1a5 5 0 0 1-4.3-2.4L4.2 13a1.5 1.5 0 0 1 2.6-1.5L9 14.5',
@@ -2218,6 +2244,7 @@ const REGISTRY = {
   pdf:          { label:'PDF',           emoji:'📕', w:520, h:660 },
   worksymbols:  { label:'Arbeitssymbole', emoji:'🤫', w:460, h:320 },
   dayplan:      { label:'Tagesplan',     emoji:'🗒', w:380, h:600 },
+  duties:       { label:'Klassendienste', emoji:'🧹', w:460, h:440 },
   today:        { label:'Datum',         emoji:'📅', w:520, h:360 },
   link:         { label:'Link',          emoji:'🔗', w:400, h:130 },
   scoreboard:   { label:'Punktetafel',   emoji:'🏆', w:460, h:300 },
@@ -2238,7 +2265,7 @@ const WIDGET_CATS = [
   { label:'Zeit',        types:['clock','today','timer','visualtimer','stopwatch','countdown','calendar'] },
   { label:'Unterricht',  types:['text','goal','homework','traffic','worksymbols','names','scoreboard','sticker'] },
   { label:'Tools',       types:['qr','dice','randomnum','groups','noise','poll'] },
-  { label:'Planung',     types:['dayplan','agenda','checklist','phases','status'] },
+  { label:'Planung',     types:['dayplan','duties','agenda','checklist','phases','status'] },
   { label:'Medien',      types:['pdf','image','video','youtube','webcam','link','files','browser','favorites'] },
   { label:'Stundenplan', types:['timetable'] },
 ];
@@ -2445,6 +2472,11 @@ const BUILT_IN_TEMPLATES = [
       { text:'Morgenkreis', icon:'morgenkreis' }, { text:'Mathe', icon:'mathe' }, { text:'Frühstück', icon:'fruehstueck' }, { text:'Pause', icon:'pause' },
       { text:'Deutsch', icon:'deutsch' }, { text:'Sachunterricht', icon:'sachunterricht' }, { text:'Aufräumen', icon:'aufraeumen' }, { text:'Schulschluss', icon:'heimweg' } ] } },
     { type:'goal',        x:24,  y:348, w:456, h:160, config:{ text:'' } },
+  ]},
+  { id:'tpl-dienste', cat:'orga', name:'Klassendienste', desc:'Wer hat diese Woche welchen Dienst? Wechselt montags von selbst', bg:{ type:'pattern', value:'dots' }, widgets:[
+    { type:'duties', x:24,  y:24,  w:600, h:484, config:{} },
+    { type:'today',  x:648, y:24,  w:404, h:270, config:{ style:'cards', season:false } },
+    { type:'text',   x:648, y:318, w:404, h:190, config:{ text:'Danke für eure Hilfe!\nFehlt jemand? Namen antippen.' } },
   ]},
   { id:'tpl-stimmung', cat:'start', name:'Stimmungscheck', desc:'Wie geht es euch heute? Daumen-Abfrage mit Zählung', bg:TPL_BG.plum, widgets:[
     { type:'text',       x:24,  y:24,  w:620, h:250, config:{ text:'Wie geht es dir heute?\nZeig es mit dem Daumen: 👍 gut · 👉 geht so · 👎 nicht so gut' } },
@@ -3154,7 +3186,7 @@ function newWidgetConfig(type, extraConfig) {
   if (type === 'dayplan' && !(extraConfig && ('source' in extraConfig || 'items' in extraConfig)) && icalFor(APP.activeBoard(), false)) {
     cfg.source = 'timetable';
   }
-  if ((type === 'names' || type === 'groups') && !(extraConfig && 'names' in extraConfig)) {
+  if ((type === 'names' || type === 'groups' || type === 'duties') && !(extraConfig && 'names' in extraConfig)) {
     const roster = getRoster();
     if (roster) cfg.names = roster;
   }
@@ -3229,6 +3261,9 @@ function getDefaultConfig(type) {
       { text:'Pause', icon:'pause' }, { text:'Deutsch', icon:'deutsch' }, { text:'Sachunterricht', icon:'sachunterricht' },
       { text:'Aufräumen', icon:'aufraeumen' } ] },
     today:     { style:'cards' },
+    duties:    { title:'Klassendienste', rotate:'week', names:'Anna\nBen\nClara\nDavid\nEva\nFinn\nGreta\nHannes\nIda\nJonas', duties:[
+      { text:'Tafeldienst', icon:'tafel', count:1 }, { text:'Blumendienst', icon:'giessen', count:1 }, { text:'Ordnungsdienst', icon:'aufraeumen', count:2 },
+      { text:'Austeildienst', icon:'austeilen', count:1 }, { text:'Mülldienst', icon:'muell', count:1 }, { text:'Kalenderdienst', icon:'kalender', count:1 } ] },
     timer:     { minutes: 5, seconds: 0, running: false, endAt: null },
     stopwatch: { running: false, elapsed: 0, laps: [] },
     text:      { text: 'Doppelklick zum Bearbeiten' },
@@ -3519,7 +3554,7 @@ function exitWidgetFull(skipRender) {
 // Elemente mit Einstellungs-Dialog (muss zu openWidgetSettings passen)
 const WIDGET_HAS_SETTINGS = new Set(['timer','text','qr','names','homework','goal','timetable','image','youtube',
   'noise','poll','randomnum','groups','agenda','checklist','phases',
-  'visualtimer','worksymbols','countdown','sticker','scoreboard','clock','traffic','dayplan','today','link']);
+  'visualtimer','worksymbols','countdown','sticker','scoreboard','clock','traffic','dayplan','today','link','duties']);
 
 function buildWidgetEl(w) {
   const shell = el('div','widget' + (w.id === APP.selectedId ? ' selected' : ''));
@@ -4297,7 +4332,7 @@ async function _pipe(bytes, stream) {
 function _slimConfig(cfg) {
   const out = {};
   Object.keys(cfg || {}).forEach(k => {
-    if (k.startsWith('_') || k === 'fileId' || k === 'fileData' || k === 'messages' || k === 'entries' || k === 'icalUrl' || k === 'marks') return;
+    if (k.startsWith('_') || k === 'fileId' || k === 'fileData' || k === 'messages' || k === 'entries' || k === 'icalUrl' || k === 'marks' || k === 'absent') return;
     const v = cfg[k];
     if (typeof v === 'string' && (v.length > 4000 || v.startsWith('data:'))) return;
     if (v && typeof v === 'object' && JSON.stringify(v).length > 6000) return;
@@ -4317,7 +4352,7 @@ async function shareBoardLink() {
   } catch (e) { payload = '0' + _b64url(raw); }
   const url = location.origin + location.pathname + SHARE_PREFIX + payload;
   if (url.length > 30000) { toast('Diese Tafel ist zu umfangreich für einen Link. Nutze stattdessen Export / Import.', 5000); return; }
-  const hasNames = board.widgets.some(w => ['names', 'groups'].includes(w.type) && w.config && w.config.names);
+  const hasNames = board.widgets.some(w => ['names', 'groups', 'duties'].includes(w.type) && w.config && w.config.names);
   const { overlay } = openModal(`
     <div class="modal">
       <button class="modal-close" data-close>✕</button>
@@ -4487,6 +4522,15 @@ const PICTOS = {
   heimweg: _P('#FFF5F5', '<path d="M8 23L24 9l16 14" stroke="#E03131" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 21v19h24V21" fill="#FFE3E3" stroke="#E03131" stroke-width="2.5"/><rect x="20" y="28" width="8" height="12" fill="#E03131"/>'),
   welt: _P('#E7F5FF', '<circle cx="24" cy="24" r="16" fill="#4DABF7"/><path d="M13 15c3-2 8-2 9 1s-2 4-1 7 4 3 3 6-4 4-6 2-2-5-4-6-3-6-1-10z" fill="#51CF66"/><path d="M28 11c4 0 9 3 10 7-2 1-5 0-6 2s1 4 3 5-1 5-3 6-3-2-3-4-3-3-3-6 0-7 2-10z" fill="#51CF66"/><circle cx="24" cy="24" r="16" fill="none" stroke="#1C7ED6" stroke-width="2"/>'),
   forschen: _P('#F3F0FF', '<path d="M19 8h10M21 8v11L11 37a3 3 0 0 0 2.6 4.5h20.8A3 3 0 0 0 37 37L27 19V8" fill="#fff" stroke="#7048E8" stroke-width="2.5" stroke-linejoin="round"/><path d="M15.5 30h17l4 7.2a2 2 0 0 1-1.8 3H13.3a2 2 0 0 1-1.8-3z" fill="#B197FC"/><circle cx="22" cy="34" r="1.8" fill="#fff"/><circle cx="27" cy="31.5" r="1.3" fill="#fff"/>'),
+  // Dienste
+  tafel: _P('#E6F7EC', '<rect x="7" y="8" width="34" height="23" rx="2" fill="#2F6B4F" stroke="#8D5B3E" stroke-width="2.5"/><path d="M12 15c3-2 5 2 8 0s5 2 8 0M12 22h10" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M9 34h30" stroke="#8D5B3E" stroke-width="2.5" stroke-linecap="round"/><rect x="26" y="36" width="13" height="6" rx="2" fill="#FCC419" stroke="#E67700" stroke-width="1.5"/>'),
+  giessen: _P('#E7F5FF', '<path d="M10 20h18v16a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3z" fill="#339AF0"/><path d="M28 24l10-8" stroke="#339AF0" stroke-width="4" stroke-linecap="round"/><path d="M13 20c0-6 12-6 12 0" stroke="#1C7ED6" stroke-width="2.5" fill="none"/><path d="M40 21v3M43 23v3M38 26v3" stroke="#74C0FC" stroke-width="2" stroke-linecap="round"/>'),
+  austeilen: _P('#FFF9DB', '<rect x="9" y="13" width="20" height="26" rx="2" fill="#fff" stroke="#ADB5BD" stroke-width="2" transform="rotate(-8 19 26)"/><rect x="13" y="9" width="20" height="26" rx="2" fill="#fff" stroke="#495057" stroke-width="2"/><path d="M17 16h12M17 21h12M17 26h8" stroke="#ADB5BD" stroke-width="2" stroke-linecap="round"/><path d="M28 39h11m-4-4l4 4-4 4" stroke="#F08C00" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'),
+  muell: _P('#EBFBEE', '<path d="M13 16h22l-2 24a2 2 0 0 1-2 2H17a2 2 0 0 1-2-2z" fill="#40C057"/><rect x="10" y="11" width="28" height="5" rx="2" fill="#2F9E44"/><path d="M20 8h8" stroke="#2F9E44" stroke-width="3" stroke-linecap="round"/><path d="M20 22v14M24 22v14M28 22v14" stroke="#EBFBEE" stroke-width="2" stroke-linecap="round"/>'),
+  fenster: _P('#E7F5FF', '<rect x="10" y="8" width="28" height="32" rx="2" fill="#A5D8FF" stroke="#8D5B3E" stroke-width="3"/><path d="M24 8v32M10 24h28" stroke="#8D5B3E" stroke-width="3"/><circle cx="17" cy="16" r="3" fill="#FCC419"/>'),
+  licht: _P('#FFF9DB', '<path d="M24 7a11 11 0 0 0-6 20c1 1 2 3 2 5h8c0-2 1-4 2-5a11 11 0 0 0-6-20z" fill="#FFD43B" stroke="#F59F00" stroke-width="2"/><rect x="19" y="33" width="10" height="6" rx="1.5" fill="#868E96"/><path d="M21 42h6" stroke="#868E96" stroke-width="2.5" stroke-linecap="round"/>'),
+  kalender: _P('#FFF5F5', '<rect x="9" y="11" width="30" height="28" rx="3" fill="#fff" stroke="#E03131" stroke-width="2"/><path d="M9 14a3 3 0 0 1 3-3h24a3 3 0 0 1 3 3v6H9z" fill="#E03131"/><path d="M16 8v6M32 8v6" stroke="#495057" stroke-width="2.5" stroke-linecap="round"/><text x="24" y="35" font-size="13" fill="#212529" ' + _FONT + '>17</text>'),
+  post: _P('#F3F0FF', '<rect x="8" y="13" width="32" height="22" rx="3" fill="#fff" stroke="#7048E8" stroke-width="2.5"/><path d="M9 15l15 11 15-11" stroke="#7048E8" stroke-width="2.5" fill="none" stroke-linejoin="round"/>'),
   // Jahreszeiten
   fruehling: _P('#EBFBEE', '<path d="M24 27v14" stroke="#2F9E44" stroke-width="3"/><path d="M24 35c-4-6-10-6-12-4 3 4 8 5 12 4z" fill="#40C057"/><path d="M15 10c3 4 6 6 9 6s6-2 9-6c1 7-2 14-9 14s-10-7-9-14z" fill="#F06595"/><path d="M24 16c-2-3-2-7 0-10 2 3 2 7 0 10z" fill="#F783AC"/>'),
   sommer: _P('#FFF9DB', '<circle cx="24" cy="24" r="9" fill="#FCC419"/><path d="M24 6v6M24 36v6M6 24h6M36 24h6M11.3 11.3l4.2 4.2M32.5 32.5l4.2 4.2M11.3 36.7l4.2-4.2M32.5 15.5l4.2-4.2" stroke="#F59F00" stroke-width="3" stroke-linecap="round"/>'),
@@ -4502,6 +4546,23 @@ const PICTO_LIST = [
   ['fruehstueck','Frühstück'], ['pause','Pause'], ['mittagessen','Mittagessen'], ['spielen','Spielen'], ['garten','Natur / Garten'],
   ['ausflug','Ausflug'], ['aufraeumen','Aufräumen'], ['dienste','Dienste'], ['geburtstag','Geburtstag'], ['frei','Besonderes'], ['heimweg','Schulschluss'],
 ];
+const DUTY_PICTO_LIST = [
+  ['tafel','Tafel'], ['giessen','Blumen gießen'], ['aufraeumen','Ordnung'], ['austeilen','Austeilen'], ['muell','Müll'], ['fenster','Fenster / Lüften'],
+  ['licht','Licht'], ['kalender','Kalender / Datum'], ['post','Botengang'], ['leise','Ruhe'], ['spielen','Pausenspiele'], ['lesen','Bücherei'],
+  ['computer','Computer / Tablets'], ['fruehstueck','Milch / Obst'], ['sport','Sportgeräte'], ['morgenkreis','Begrüßung'], ['dienste','Sonstiges'],
+];
+const DUTY_GUESS = [
+  [/tafel/, 'tafel'], [/blume|pflanz|gie(ß|ss)/, 'giessen'], [/ordnung|aufr(ä|ae)um|fege|besen|kehr/, 'aufraeumen'], [/austeil|einsammel|hefte|bl(ä|ae)tter|material/, 'austeilen'],
+  [/m(ü|ue)ll|abfall|papierkorb|recycl/, 'muell'], [/fenster|l(ü|ue)ft/, 'fenster'], [/licht|lampe|strom/, 'licht'], [/kalender|datum|wetter/, 'kalender'],
+  [/bote|post|sekretariat|nachricht/, 'post'], [/ruhe|leise|l(ä|ae)rm/, 'leise'], [/spiel|pause/, 'spielen'], [/b(ü|ue)ch|bibliothek|lese/, 'lesen'],
+  [/computer|tablet|ipad|laptop/, 'computer'], [/milch|obst|essen|fr(ü|ue)hst(ü|ue)ck|wasser/, 'fruehstueck'], [/sport|turn|ball/, 'sport'], [/begr(ü|ue)(ß|ss)|tür|t(ü|ue)r/, 'morgenkreis'],
+];
+function guessDuty(text) {
+  const t = String(text || '').toLowerCase();
+  const hit = DUTY_GUESS.find(([re]) => re.test(t));
+  return hit ? hit[1] : 'dienste';
+}
+
 // Passendes Bildsymbol zum eingetippten Fach erraten („Mathe“ → Rechenzeichen)
 const PICTO_GUESS = [
   [/fr(ü|ue)hst(ü|ue)ck|brotzeit|snack/, 'fruehstueck'], [/mittag|mensa/, 'mittagessen'], [/mathe|rechn|einmaleins|zahlen|geometrie/, 'mathe'],
@@ -4527,12 +4588,12 @@ function pictoSvg(key) {
   return '<svg viewBox="0 0 48 48" aria-hidden="true">' + (PICTOS[key] || PICTOS.frei) + '</svg>';
 }
 // Kleine Auswahl der Bildsymbole (an den Dialog gehängt, damit sie über ihm liegt)
-function openPictoPicker(anchor, onPick) {
+function openPictoPicker(anchor, onPick, list) {
   document.querySelector('.picto-pick')?.remove();
   const host = anchor.closest('.modal-overlay') || document.body;
   const pop = document.createElement('div');
   pop.className = 'picto-pick';
-  PICTO_LIST.forEach(([k, label]) => {
+  (list || PICTO_LIST).forEach(([k, label]) => {
     const b = document.createElement('button');
     b.type = 'button'; b.title = label; b.setAttribute('aria-label', label);
     b.innerHTML = pictoSvg(k) + '<span>' + label + '</span>';
@@ -4639,6 +4700,140 @@ function dayplanRowsFromTimetable(w, cache, now) {
     r.key = (r.start < 0 ? 'x' : r.start) + '|' + r.text;
   });
   return { rows, lessons: lessons.length, names: lessons.map(l => l.raws.map(nameOf).join(' / ')), allDay };
+}
+
+// ══════════════════════════════════════════════════════════════
+// KLASSENDIENSTE — alle Kinder kommen der Reihe nach dran, Wechsel jede Woche / jeden Schultag / von Hand
+// ══════════════════════════════════════════════════════════════
+function dutyBase(rot, now) {
+  const d = new Date(now || Date.now()); d.setHours(12, 0, 0, 0);
+  const days = Math.round((d - new Date(2024, 0, 1, 12)) / 86400000);   // 1.1.2024 war ein Montag
+  const wk = Math.floor(days / 7), dow = ((days % 7) + 7) % 7;
+  return rot === 'day' ? wk * 5 + Math.min(dow, 4) : wk;   // am Wochenende gelten die Dienste vom Freitag
+}
+const dutyNames = cfg => [...new Set(String(cfg.names || '').split('\n').map(s => s.trim().slice(0, 40)).filter(Boolean))].slice(0, 60);
+const dutyList = cfg => (Array.isArray(cfg.duties) ? cfg.duties : []).filter(d => d && String(d.text || '').trim()).slice(0, 16)
+  .map(d => ({ text: String(d.text).trim().slice(0, 40), icon: PICTOS[d.icon] ? d.icon : guessDuty(d.text), count: Math.max(1, Math.min(3, Math.round(Number(d.count) || 1))) }));
+function dutyRot(cfg) { return cfg.rotate === 'day' || cfg.rotate === 'manual' ? cfg.rotate : 'week'; }
+function dutyPeriod(cfg, now) {
+  const rot = dutyRot(cfg);
+  return (rot === 'manual' ? 0 : dutyBase(rot, now) - (Number(cfg.startPeriod) || 0)) + (Number(cfg.offset) || 0);
+}
+// Verteilung für einen Zeitraum: Platz j bekommt Name (p·S + j) — so ist jedes Kind reihum dran.
+// Wer fehlt, wird durch die nächsten in der Reihe ersetzt, die gerade keinen Dienst haben.
+function dutyAssign(cfg, now) {
+  const names = dutyNames(cfg), duties = dutyList(cfg), L = names.length;
+  const p = dutyPeriod(cfg, now);
+  const S = duties.reduce((s, d) => s + d.count, 0);
+  const absent = cfg.absent && cfg.absent.p === p && Array.isArray(cfg.absent.names) ? cfg.absent.names : [];
+  if (!L) return { p, slots: duties.map(d => ({ ...d, people: [] })), absent };
+  const start = (((p * S) % L) + L) % L;
+  let j = 0;
+  const slots = duties.map(d => ({ ...d, people: Array.from({ length: d.count }, () => ({ name: names[(start + j++) % L] })) }));
+  const taken = new Set();
+  slots.forEach(s => s.people.forEach(x => { if (!absent.includes(x.name)) taken.add(x.name); }));
+  let k = start + S;
+  slots.forEach(s => s.people.forEach(x => {
+    if (!absent.includes(x.name)) return;
+    let sub = '';
+    for (let t = 0; t < L && !sub; t++, k++) { const cand = names[k % L]; if (!absent.includes(cand) && !taken.has(cand)) sub = cand; }
+    x.missing = x.name; x.name = sub;
+    if (sub) taken.add(sub);
+  }));
+  return { p, slots, absent };
+}
+function dutyPeriodLabel(cfg, now) {
+  const rot = dutyRot(cfg), d = new Date(now || Date.now());
+  if (rot === 'manual') return '';
+  const WD = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+  if (rot === 'day') return d.getDay() === 0 || d.getDay() === 6 ? 'am Freitag' : 'heute';
+  const mon = new Date(d); mon.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
+  return 'diese Woche · ' + mon.getDate() + '.' + (mon.getMonth() === fri.getMonth() ? '' : (mon.getMonth() + 1) + '.') + '–' + fri.getDate() + '.' + (fri.getMonth() + 1) + '.';
+}
+
+function openDutiesEdit(w) {
+  const cfg = w.config;
+  let rows = dutyList(cfg).map(d => ({ ...d, manual: true }));
+  let offset = Number(cfg.offset) || 0, reset = false;
+  const { overlay, close } = openModal(`
+    <div class="modal modal-lg">
+      <button class="modal-close" data-close>✕</button>
+      <h2>Klassendienste</h2>
+      <div class="form-group"><label>Wechsel</label>
+        <select id="du-rot"><option value="week">Jede Woche (montags)</option><option value="day">Jeden Schultag</option><option value="manual">Nur von Hand (Knopf „Weiter“ im Element)</option></select></div>
+      <div class="form-group"><label>Namen – einer pro Zeile. Alle kommen der Reihe nach dran.</label>
+        <textarea id="du-names" rows="6" placeholder="Anna&#10;Ben&#10;…">${safeText(cfg.names || '')}</textarea></div>
+      <label>Dienste – Bild antippen zum Ändern, Zahl = wie viele Kinder</label>
+      <div id="du-rows" class="dp-edit"></div>
+      <button class="btn-secondary" id="du-add" type="button" style="margin:4px 0 14px">+ Dienst hinzufügen</button>
+      <div class="form-group"><label>Wer ist dran?</label>
+        <div class="du-prev"><button type="button" class="dp-ebtn" id="du-back" aria-label="Eine Runde zurück">${icon('chevronLeft', 18)}</button><div id="du-preview"></div><button type="button" class="dp-ebtn" id="du-fwd" aria-label="Eine Runde weiter">${icon('chevronRight', 18)}</button></div></div>
+      <div class="form-group"><label>Überschrift</label><input type="text" id="du-title" maxlength="40" value="${safeText(cfg.title || '')}" placeholder="Klassendienste"></div>
+      <div class="btn-row"><button class="btn-primary" id="du-save">Speichern</button></div>
+    </div>
+  `);
+  const $ = s => overlay.querySelector(s);
+  attachRosterButtons(overlay, '#du-names');
+  $('#du-rot').value = dutyRot(cfg);
+  const draft = () => ({ ...cfg, rotate: $('#du-rot').value, names: $('#du-names').value, duties: rows,
+    startPeriod: reset ? dutyBase($('#du-rot').value) : cfg.startPeriod, offset, absent: reset ? null : cfg.absent });
+  const preview = () => {
+    const res = dutyAssign(draft(), new Date());
+    const box = $('#du-preview');
+    box.innerHTML = '';
+    if (!dutyNames(draft()).length) { box.textContent = 'Noch keine Namen eingetragen.'; return; }
+    res.slots.forEach(s => {
+      const line = document.createElement('div');
+      line.textContent = s.text + ': ' + (s.people.map(x => x.name || '—').join(' & ') || '—');
+      box.appendChild(line);
+    });
+  };
+  const markReset = () => { reset = true; offset = 0; preview(); };
+  const paint = () => {
+    const list = $('#du-rows');
+    list.innerHTML = '';
+    rows.forEach((r, i) => {
+      const row = document.createElement('div'); row.className = 'dp-erow';
+      const pic = document.createElement('button'); pic.type = 'button'; pic.className = 'dp-epic'; pic.title = 'Bildsymbol wählen';
+      pic.innerHTML = pictoSvg(r.icon || guessDuty(r.text));
+      pic.addEventListener('click', () => openPictoPicker(pic, k => { r.icon = k; r.manual = true; paint(); }, DUTY_PICTO_LIST));
+      const txt = document.createElement('input'); txt.type = 'text'; txt.maxLength = 40; txt.placeholder = 'z. B. Tafeldienst'; txt.value = r.text || '';
+      txt.addEventListener('input', () => { r.text = txt.value; if (!r.manual) { r.icon = guessDuty(r.text); pic.innerHTML = pictoSvg(r.icon); } preview(); });
+      const cnt = document.createElement('select'); cnt.className = 'du-count'; cnt.title = 'Wie viele Kinder?';
+      [1, 2, 3].forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n + (n === 1 ? ' Kind' : ' Kinder'); cnt.appendChild(o); });
+      cnt.value = r.count || 1;
+      cnt.addEventListener('change', () => { r.count = Number(cnt.value); markReset(); });
+      const mk = (ic, title, fn, dis) => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'dp-ebtn'; b.title = title; b.setAttribute('aria-label', title);
+        b.innerHTML = icon(ic, 16); b.disabled = !!dis; b.addEventListener('click', fn); return b;
+      };
+      row.append(pic, txt, cnt,
+        mk('chevronUp', 'Nach oben', () => { [rows[i - 1], rows[i]] = [rows[i], rows[i - 1]]; paint(); preview(); }, i === 0),
+        mk('x', 'Dienst löschen', () => { rows.splice(i, 1); paint(); markReset(); }));
+      list.appendChild(row);
+    });
+  };
+  paint(); preview();
+  $('#du-add').addEventListener('click', () => { rows.push({ text: '', icon: 'dienste', count: 1 }); paint(); markReset(); $('#du-rows .dp-erow:last-child input')?.focus(); });
+  $('#du-names').addEventListener('input', markReset);
+  $('#du-rot').addEventListener('change', markReset);
+  $('#du-back').addEventListener('click', () => { offset--; preview(); });
+  $('#du-fwd').addEventListener('click', () => { offset++; preview(); });
+  $('#du-save').addEventListener('click', () => {
+    const d = draft();
+    cfg.rotate = d.rotate;
+    cfg.names = dutyNames(d).join('\n');
+    cfg.duties = dutyList(d).map(({ text, icon, count }) => ({ text, icon, count }));
+    cfg.startPeriod = typeof d.startPeriod === 'number' ? d.startPeriod : dutyBase(d.rotate);
+    cfg.offset = offset;
+    if (reset) delete cfg.absent;
+    cfg.title = $('#du-title').value.trim();
+    APP.save();
+    const shell = document.querySelector('[data-wid="' + w.id + '"]');
+    if (shell) renderWidgetContent(w, shell.querySelector('.widget-body'));
+    close();
+  });
 }
 
 const todayKey = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
@@ -7341,6 +7536,92 @@ const WIDGET_RENDERERS = {
     body.appendChild(wrap);
   },
 
+  // ── Klassendienste ── wer ist diese Woche dran? Antippen eines Namens = fehlt heute → Vertretung rückt nach
+  duties(w, body) {
+    const cfg = w.config;
+    const names = dutyNames(cfg), list = dutyList(cfg);
+    if (!names.length || !list.length) { body.appendChild(emptyCta('duties', names.length ? 'Dienste eintragen' : 'Namen eintragen', () => openDutiesEdit(w))); return; }
+    if (typeof cfg.startPeriod !== 'number') { cfg.startPeriod = dutyBase(dutyRot(cfg)); APP.save(); }
+    const res = dutyAssign(cfg, new Date());
+    const bodyW = w.w, bodyH = w.h - (APP.state.editMode ? 34 : 0);
+    const n = res.slots.length;
+    const title = String(cfg.title || '').trim(), sub = dutyPeriodLabel(cfg, new Date());
+    const manual = dutyRot(cfg) === 'manual';
+    const headFs = (title || sub || manual) ? Math.max(14, Math.min(bodyH * 0.065, bodyW * 0.06, 30)) : 0;
+    const gap = 6, headH = headFs ? headFs * 1.35 + gap : 0;
+    const fitRow = k => { const r = Math.ceil(n / k); return (bodyH - 16 - headH - (r - 1) * gap) / r; };
+    let cols = bodyW >= 560 && n >= 5 ? 2 : 1;
+    if (cols === 1 && fitRow(1) < 40 && bodyW >= 300 && n >= 3) cols = 2;   // flach: lieber zwei Spalten als scrollen
+    // Sehr wenig Platz: nur Bild + Name (das Bild sagt, welcher Dienst)
+    const compact = fitRow(cols) < 44;
+    const rowH = Math.max(compact ? 26 : 34, fitRow(cols));
+    const cellW = (bodyW - 16 - (cols - 1) * 8) / cols;
+    const fs = Math.max(13, Math.min(rowH * (compact ? 0.5 : 0.42), cellW * (compact ? 0.1 : 0.09), 40));
+    const picS = compact ? rowH - 6 : Math.min(rowH - 8, fs * 2.3);
+    const wrap = el('div', 'du' + (compact ? ' compact' : ''));
+    if (headFs) {
+      const head = el('div', 'du-head');
+      head.style.fontSize = headFs + 'px';
+      const t = el('span', 'du-title'); t.textContent = title;
+      const s = el('span', 'du-sub'); s.textContent = sub;
+      head.append(t, s);
+      if (manual) {
+        const nx = el('button', 'du-next');
+        nx.innerHTML = '<span>Weiter</span>' + icon('chevronRight', 16);
+        nx.title = 'Nächste Kinder sind dran';
+        nx.addEventListener('click', e => { e.stopPropagation(); cfg.offset = (Number(cfg.offset) || 0) + 1; delete cfg.absent; APP.save(); renderWidgetContent(w, body); });
+        head.appendChild(nx);
+      }
+      wrap.appendChild(head);
+    }
+    const grid = el('div', 'du-grid');
+    grid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
+    grid.style.gridAutoRows = rowH + 'px';
+    const toggleAbsent = name => {
+      const cur = cfg.absent && cfg.absent.p === res.p && Array.isArray(cfg.absent.names) ? cfg.absent.names.slice() : [];
+      const i = cur.indexOf(name);
+      if (i >= 0) cur.splice(i, 1); else cur.push(name);
+      cfg.absent = { p: res.p, names: cur };
+      APP.save();
+      renderWidgetContent(w, body);
+    };
+    res.slots.forEach(s => {
+      const cell = el('div', 'du-cell');
+      cell.style.fontSize = fs + 'px';
+      const pic = el('span', 'du-pic'); pic.style.width = pic.style.height = picS + 'px'; pic.innerHTML = pictoSvg(s.icon);
+      const txt = el('span', 'du-txt');
+      const lbl = el('span', 'du-lbl'); lbl.textContent = s.text;
+      const nm = el('span', 'du-names');
+      const joined = s.people.map(x => x.name || '—').join(' & ');
+      const availW = (cellW - picS - fs * 1.6) * 0.94;
+      nm.style.fontSize = Math.max(11, Math.min(fs, availW / Math.max(1, textWidthEm(joined, 800)))) + 'px';
+      cell.title = s.text;
+      s.people.forEach((x, i) => {
+        if (i) nm.appendChild(document.createTextNode(' & '));
+        const b = el('button', 'du-name');
+        b.textContent = x.name || '—';
+        b.title = x.name ? x.name + ' fehlt? Antippen – dann ist jemand anderes dran' : 'Niemand mehr frei';
+        if (x.name) b.addEventListener('click', e => { e.stopPropagation(); toggleAbsent(x.name); });
+        nm.appendChild(b);
+      });
+      s.people.filter(x => x.missing).forEach(x => {
+        const f = el('button', 'du-for');
+        f.textContent = 'für ' + x.missing;
+        f.title = x.missing + ' ist doch da';
+        f.addEventListener('click', e => { e.stopPropagation(); toggleAbsent(x.missing); });
+        (compact ? nm : lbl).appendChild(f);
+      });
+      txt.append(lbl, nm);
+      cell.append(pic, txt);
+      grid.appendChild(cell);
+    });
+    wrap.appendChild(grid);
+    body.appendChild(wrap);
+    // Um Mitternacht / montags von selbst weiterschalten
+    let last = res.p;
+    startInterval(w.id, () => { if (dutyPeriod(cfg, new Date()) !== last) renderWidgetContent(w, body); }, 60000);
+  },
+
   // ── Datum ── stellt sich jeden Tag selbst um (Wochentag, Datum, Jahreszeit)
   today(w, body) {
     const WD = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
@@ -7940,6 +8221,7 @@ function openWidgetSettings(wid) {
     visualtimer: openTimerSettings,
     clock: openClockSettings,
     dayplan: openDayplanEdit,
+    duties: openDutiesEdit,
     today: openTodaySettings,
     link: openLinkSettings,
     traffic: openTrafficSettings,
@@ -8589,7 +8871,7 @@ function applyTemplate(tpl, mode) {
   const widgets = fitLayout(tpl.widgets).map(w => ({ ...w, locked: false,
     config: (() => {
       const cfg = { ...getDefaultConfig(w.type), ...JSON.parse(JSON.stringify(w.config || {})) };
-      if ((w.type === 'names' || w.type === 'groups') && !String(cfg.names || '').trim()) {
+      if ((w.type === 'names' || w.type === 'groups' || w.type === 'duties') && !String(cfg.names || '').trim()) {
         const roster = getRoster();
         if (roster) cfg.names = roster;
       }
@@ -11492,7 +11774,7 @@ const DOCK_DEFAULT = ['clock','timer','traffic','dayplan','text','goal','checkli
 const DOCK_LABEL = {
   goal: 'Ziel', names: 'Namen', poll: 'Umfrage', phases: 'Phasen', status: 'Status',
   randomnum: 'Zufall', ai: 'KI-Text', ask: 'KI-Frage', homework: 'Hausaufg.', timetable: 'Plan',
-  worksymbols: 'Symbole', scoreboard: 'Punkte', visualtimer: 'Zeitkreis', dayplan: 'Tagesplan', today: 'Datum',
+  worksymbols: 'Symbole', scoreboard: 'Punkte', visualtimer: 'Zeitkreis', dayplan: 'Tagesplan', today: 'Datum', duties: 'Dienste',
 };
 
 function getDockItems() {
