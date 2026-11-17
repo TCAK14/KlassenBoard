@@ -15,6 +15,9 @@ netlify/functions/ai-chat.js        ← KI-Assistent (Gemini 2.5 Flash; Web-Such
 netlify/functions/image-search.js   ← Bildersuche des KI-Assistenten (Pixabay/Wikimedia, liefert data:-URL)
 netlify/functions/ical.js           ← Stundenplan-Abruf (iCal/WebUntis), ersetzt fremden CORS-Proxy
 fonts/                              ← Atkinson Hyperlegible Next (lokal gehostet, OFL) — nie von Google-Servern laden
+manifest.webmanifest, sw.js, icons/ ← installierbare App (PWA). sw.js: Seite immer Netz zuerst (8 s), Speicher nur als Ersatz;
+                                      /.netlify/ und fremde Adressen nie anfassen. Bei Änderungen an sw.js CACHE-Version erhöhen
+                                      Symbole erzeugt per Python/PIL (Herz + Puls auf Petrol), auch favicon.png/apple-touch-icon.png
 supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq) — separat via Supabase deployen
 ```
 
@@ -152,6 +155,14 @@ const code = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 new Function(code);   // wirft SyntaxError, wenn der Code kaputt ist
 ```
 Zusätzlich die Seite laden und die Konsole auf Fehler prüfen.
+
+## App-Installation + alte Browser (17.11.2026)
+- `installApp()` nutzt `beforeinstallprompt` (ein Klick), sonst `openInstallHelp()` mit Anleitung passend zum Gerät;
+  Menü ⋯ „Als App installieren", einmaliger Hinweis `#install-hint` (gemerkt in `kb_install_hint`)
+- `<script data-guard>` vor allen anderen Skripten (bewusst ES5!): fehlen `?.`/`??` oder Container-Queries (Chrome < 105),
+  erscheint statt einer kaputten Seite eine Erklärung mit erkannter Browser-Version + „Trotzdem öffnen". Der Syntax-Check
+  oben greift nur das erste `<script>` OHNE Attribute — der Wächter hat deshalb ein Attribut und muss es behalten
+- Zielgeräte des Nutzers: CTOUCH Riva (1) mit Android 8 und Riva D2 — Browser-Version dort noch unbekannt; APK/Store erst danach
 
 ## Häufige Fallstricke
 - **File-Truncation:** Bei großen Ersetzungen mit Python arbeiten (nicht Edit-Tool direkt), danach Syntax-Check

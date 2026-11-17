@@ -9,6 +9,23 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# App (PWA): Service Worker immer frisch prüfen, Manifest kurz, Symbole eine Woche
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
 [[redirects]]
   from = "/.netlify/functions/*"
   to = "/.netlify/functions/:splat"

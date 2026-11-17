@@ -15,6 +15,10 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ClassPuls">
 <style>
 :root {
   --brand: #0B7A74;
@@ -1437,6 +1441,27 @@ body.draw-mode .w-full-btn { display:none; }
   box-shadow:0 20px 56px rgba(0,0,0,0.4); overflow-y:auto; scrollbar-width:thin;
 }
 #more-menu { min-width:260px; max-height:calc(100vh - 90px); }
+.inst-modal { max-width:520px; }
+.inst-head { display:flex; gap:14px; align-items:flex-start; margin:0 30px 14px 0; }
+.inst-head img { flex:none; border-radius:14px; }
+.inst-head h2 { margin:0 0 4px; }
+.inst-head p { margin:0; font-size:14.5px; line-height:1.45; color:rgba(255,255,255,0.75); }
+.inst-steps { margin:4px 0 12px 22px; padding:0; font-size:16px; line-height:1.5; color:#fff; }
+.inst-steps li { margin:0 0 8px; }
+.inst-note { font-size:14px; line-height:1.45; color:rgba(255,255,255,0.7); margin:0 0 10px; }
+.inst-dev { font-size:12.5px; color:rgba(255,255,255,0.5); margin:6px 0 0; }
+#install-hint {
+  position:fixed; left:16px; bottom:calc(var(--dock-h, 84px) + 22px); z-index:1700; display:flex; align-items:center; gap:12px;
+  max-width:min(440px, calc(100vw - 32px)); padding:10px 10px 10px 12px; border-radius:16px; background:var(--card, #FBFAF6); color:var(--ink, #1B2422);
+  box-shadow:0 14px 40px rgba(0,0,0,0.35); animation:fadeIn .25s;
+}
+#install-hint img { flex:none; border-radius:11px; }
+#install-hint .ih-txt { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; line-height:1.3; }
+#install-hint .ih-txt b { font-size:15px; }
+#install-hint .ih-txt span { font-size:13px; color:var(--ink-muted, #5B6763); }
+#install-hint .ih-go { flex:none; border:0; border-radius:10px; padding:10px 14px; background:var(--accent, #0B7A74); color:#fff; font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+#install-hint .ih-x { flex:none; width:36px; height:36px; border:0; border-radius:10px; background:transparent; color:var(--ink-muted, #5B6763); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+body.draw-mode #install-hint, body.wfull-on #install-hint { display:none; }
 .mm-item {
   display:flex; align-items:center; gap:12px; width:100%; min-height:44px; padding:8px 12px;
   border:0; border-radius:10px; background:transparent; color:var(--ink);
@@ -1738,6 +1763,43 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
   <div id="ki-foot"></div>
 </div>
 
+<script data-guard>
+/* Zu alter Browser (z. B. eingebauter Browser älterer Smartboards)? Statt einer kaputten Seite eine klare Erklärung zeigen.
+   Bewusst altes JavaScript, damit dieser Teil auch dort läuft. */
+(function () {
+  var ok = true;
+  try { new Function('var o = {}; return o?.a ?? 1;'); } catch (e) { ok = false; }
+  try { if (!window.CSS || !CSS.supports('container-type', 'inline-size')) ok = false; } catch (e) { ok = false; }
+  if (ok) return;
+  try { if (sessionStorage.getItem('kb_force_old') === '1') return; } catch (e) {}
+  var ua = navigator.userAgent || '';
+  var m = ua.match(/(Edg|Chrome|Firefox)\/(\d+)/) || ua.match(/Version\/(\d+)[^ ]* (Mobile\/\S+ )?Safari/);
+  var a = ua.match(/Android (\d+(\.\d+)?)/);
+  var info = (m ? (m[1] === 'Edg' ? 'Edge ' + m[2] : (/^\d+$/.test(m[1]) ? 'Safari ' + m[1] : m[1] + ' ' + m[2])) : 'unbekannter Browser') + (a ? ' · Android ' + a[1] : '');
+  var d = document.createElement('div');
+  d.setAttribute('data-kb-keep', '');
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483647;background:#1F3531;color:#fff;overflow:auto;font-family:system-ui,sans-serif;';
+  d.innerHTML = '<div style="max-width:620px;margin:0 auto;padding:40px 24px;line-height:1.5">'
+    + '<div style="font-size:44px;line-height:1">&#9888;</div>'
+    + '<h1 style="font-size:28px;margin:12px 0 10px">Dieser Browser ist zu alt f\u00fcr ClassPuls</h1>'
+    + '<p style="font-size:17px;opacity:.9;margin:0 0 18px">ClassPuls braucht einen aktuellen Browser: Chrome oder Edge ab Version 105, Safari ab 16 oder Firefox ab 110.</p>'
+    + '<p style="font-size:17px;margin:0 0 6px"><b>So geht es weiter:</b></p>'
+    + '<ul style="font-size:16px;margin:0 0 18px 20px;padding:0">'
+    + '<li style="margin-bottom:6px">Am PC oder Laptop: Chrome oder Edge \u00f6ffnen und <b>klassenboard.netlify.app</b> aufrufen.</li>'
+    + '<li style="margin-bottom:6px">Auf einem Smartboard mit Android: im App-Store des Ger\u00e4ts nach <b>Chrome</b> suchen, installieren und ClassPuls dort \u00f6ffnen.</li>'
+    + '<li>Sonst: das Smartboard mit einem Laptop verbinden oder die Schul-IT um ein Browser-Update bitten.</li></ul>'
+    + '<p style="font-size:14px;opacity:.75;margin:0 0 22px">Erkannt: ' + info + '</p>'
+    + '<button id="kb-old-go" style="font:inherit;font-size:16px;padding:12px 18px;border-radius:12px;border:0;background:#0B7A74;color:#fff;cursor:pointer">Trotzdem \u00f6ffnen</button></div>';
+  function show() {
+    document.body.appendChild(d);
+    document.getElementById('kb-old-go').onclick = function () {
+      try { sessionStorage.setItem('kb_force_old', '1'); } catch (e) {}
+      d.parentNode.removeChild(d);
+    };
+  }
+  if (document.body) show(); else document.addEventListener('DOMContentLoaded', show);
+})();
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
@@ -1773,6 +1835,7 @@ const ICONS = {
   files: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
   pdf: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
   chevronLeft: 'M15 6l-6 6 6 6',
+  app: 'M8 3h8a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM11 18h2',
   dayplan: 'M4 5h4v4H4zM4 15h4v4H4zM11 7h9M11 17h9M5 7l1 1 2-2',
   duties: 'M12 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10zM9 12l-2 9 5-3 5 3-2-9',
   today: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M9.5 15.5l2 2 3.5-4',
@@ -11950,6 +12013,7 @@ function openMoreMenu() {
   item('mic', 'Sprachbefehl', () => VOICE.toggle());
   item('share', 'Tafel teilen (Link)', shareBoardLink);
   item('download', 'Export / Import', openExportModal);
+  if (!isStandaloneApp()) item('app', 'Als App installieren', installApp, _installEvt ? { note: '1 Klick' } : {});
   sep();
   item('dock', 'Leiste anpassen', openDockCustomizer);
   const dark = document.body.dataset.cards === 'dark';
@@ -11972,6 +12036,94 @@ function openMoreMenu() {
       }
     });
   }, 0);
+}
+
+// ══════════════════════════════════════════════════════════════
+// ALS APP INSTALLIEREN — ein Klick, wo der Browser es anbietet; sonst eine kurze Anleitung für genau dieses Gerät
+// ══════════════════════════════════════════════════════════════
+let _installEvt = null;
+const isStandaloneApp = () => {
+  try { return matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true; }
+  catch (e) { return false; }
+};
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _installEvt = e;
+  setTimeout(maybeShowInstallHint, 25000);
+});
+window.addEventListener('appinstalled', () => {
+  _installEvt = null;
+  document.getElementById('install-hint')?.remove();
+  try { localStorage.setItem('kb_install_hint', 'done'); } catch (e) {}
+  toast('✅ ClassPuls ist jetzt als App installiert');
+});
+function deviceLine() {
+  const ua = navigator.userAgent || '';
+  const m = ua.match(/(Edg|OPR|Firefox|Chrome)\/(\d+)/), s = !m && ua.match(/Version\/(\d+).*Safari/);
+  const a = ua.match(/Android (\d+(\.\d+)?)/);
+  const name = m ? ({ Edg: 'Edge', OPR: 'Opera' }[m[1]] || m[1]) + ' ' + m[2] : s ? 'Safari ' + s[1] : 'Browser';
+  return name + (a ? ' · Android ' + a[1] : /iPad|iPhone/.test(ua) ? ' · iOS' : /Windows/.test(ua) ? ' · Windows' : /Mac OS/.test(ua) ? ' · Mac' : '');
+}
+async function installApp() {
+  document.getElementById('install-hint')?.remove();
+  if (_installEvt) {
+    const ev = _installEvt;
+    _installEvt = null;
+    try { ev.prompt(); await ev.userChoice; } catch (e) { openInstallHelp(); }
+    return;
+  }
+  openInstallHelp();
+}
+function openInstallHelp() {
+  const ua = navigator.userAgent || '';
+  const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(ua), firefox = /Firefox\//.test(ua), edge = /Edg\//.test(ua);
+  const chromeLike = /Chrome\//.test(ua) && !/SamsungBrowser|OPR\//.test(ua);
+  let steps, note = '';
+  if (isStandaloneApp()) {
+    steps = ['ClassPuls läuft hier bereits als App. 🎉'];
+  } else if (ios) {
+    steps = ['Oben bzw. unten auf das <b>Teilen-Symbol</b> tippen (Quadrat mit Pfeil nach oben).', 'Nach unten wischen und <b>„Zum Home-Bildschirm“</b> wählen.', 'Oben rechts auf <b>„Hinzufügen“</b> tippen – fertig.'];
+  } else if (android && chromeLike) {
+    steps = ['Oben rechts auf <b>⋮</b> (drei Punkte) tippen.', '<b>„App installieren“</b> bzw. <b>„Zum Startbildschirm hinzufügen“</b> wählen.', 'Bestätigen – ClassPuls liegt jetzt als Symbol auf dem Startbildschirm.'];
+  } else if (android) {
+    steps = ['Im Menü dieses Browsers <b>„Zum Startbildschirm hinzufügen“</b> wählen, falls vorhanden.', 'Gibt es das nicht (z. B. auf manchen Smartboards): im App-Store des Geräts <b>Chrome</b> installieren, klassenboard.netlify.app dort öffnen und hier erneut auf „Als App installieren“ tippen.'];
+  } else if (firefox) {
+    steps = ['Firefox kann Web-Apps leider nicht installieren.', 'Öffne <b>klassenboard.netlify.app</b> in <b>Chrome</b> oder <b>Edge</b> – dort geht es mit einem Klick.'];
+  } else if (edge) {
+    steps = ['Oben rechts auf <b>…</b> klicken.', '<b>„Apps“ → „ClassPuls installieren“</b> wählen.'];
+    note = 'Siehst du das nicht, ist ClassPuls vielleicht schon installiert – schau im Startmenü nach.';
+  } else if (chromeLike) {
+    steps = ['In der Adressleiste rechts auf das Symbol <b>„Installieren“</b> klicken (Bildschirm mit Pfeil).', 'Oder: Menü <b>⋮</b> → <b>„Streamen, speichern und teilen“ → „ClassPuls installieren“</b>.'];
+    note = 'Siehst du das nicht, ist ClassPuls vielleicht schon installiert – schau im Startmenü bzw. bei den Apps nach.';
+  } else {
+    steps = ['Safari am Mac: Menü <b>„Ablage“ → „Zum Dock hinzufügen“</b>.', 'Andere Browser: ClassPuls in <b>Chrome</b> oder <b>Edge</b> öffnen, dort geht es mit einem Klick.'];
+  }
+  openModal(`
+    <div class="modal inst-modal">
+      <button class="modal-close" data-close>✕</button>
+      <div class="inst-head"><img src="/icons/icon-192.png" alt="" width="56" height="56"><div><h2>ClassPuls als App</h2>
+        <p>Eigenes Symbol, startet im Vollbild ohne Adressleiste und läuft auch weiter, wenn das WLAN kurz weg ist.</p></div></div>
+      <ol class="inst-steps">${steps.map(s => '<li>' + s + '</li>').join('')}</ol>
+      ${note ? '<p class="inst-note">' + note + '</p>' : ''}
+      <p class="inst-dev">Dein Gerät: ${safeText(deviceLine())}</p>
+    </div>
+  `);
+}
+// Einmaliger, unaufdringlicher Hinweis – nur wo der Browser die Installation mit einem Klick anbietet
+function maybeShowInstallHint() {
+  if (!_installEvt || isStandaloneApp() || document.getElementById('install-hint')) return;
+  try { if (localStorage.getItem('kb_install_hint')) return; } catch (e) { return; }
+  if (document.querySelector('.modal-overlay') || document.body.classList.contains('draw-mode')) { setTimeout(maybeShowInstallHint, 30000); return; }
+  const h = document.createElement('div');
+  h.id = 'install-hint';
+  h.setAttribute('data-kb-keep', '');
+  h.innerHTML = '<img src="/icons/icon-192.png" alt="" width="44" height="44"><div class="ih-txt"><b>ClassPuls als App installieren?</b><span>Eigenes Symbol, startet im Vollbild</span></div>'
+    + '<button class="ih-go">Installieren</button><button class="ih-x" aria-label="Nicht mehr anzeigen">' + icon('x', 18) + '</button>';
+  const done = () => { try { localStorage.setItem('kb_install_hint', '1'); } catch (e) {} h.remove(); };
+  h.querySelector('.ih-go').addEventListener('click', () => { done(); installApp(); });
+  h.querySelector('.ih-x').addEventListener('click', done);
+  document.body.appendChild(h);
 }
 
 // „Leiste anpassen“: welche Elemente unten direkt erreichbar sind
@@ -12108,6 +12260,9 @@ if (_pollParam) {
   }
   if (new URLSearchParams(window.location.search).has('reset')) openResetDialog();
   checkSharedBoard();
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+  }
 }
 </script>
 </body>
