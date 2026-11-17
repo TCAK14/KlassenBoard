@@ -1449,6 +1449,7 @@ body.draw-mode .w-full-btn { display:none; }
 .inst-steps { margin:4px 0 12px 22px; padding:0; font-size:16px; line-height:1.5; color:#fff; }
 .inst-steps li { margin:0 0 8px; }
 .inst-note { font-size:14px; line-height:1.45; color:rgba(255,255,255,0.7); margin:0 0 10px; }
+.inst-link { display:inline-block; margin-top:6px; padding:8px 14px; border-radius:10px; background:var(--accent, #0B7A74); color:#fff !important; font-weight:700; text-decoration:none; }
 .inst-dev { font-size:12.5px; color:rgba(255,255,255,0.5); margin:6px 0 0; }
 #install-hint {
   position:fixed; left:16px; bottom:calc(var(--dock-h, 84px) + 22px); z-index:1700; display:flex; align-items:center; gap:12px;
@@ -1786,10 +1787,11 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
     + '<p style="font-size:17px;margin:0 0 6px"><b>So geht es weiter:</b></p>'
     + '<ul style="font-size:16px;margin:0 0 18px 20px;padding:0">'
     + '<li style="margin-bottom:6px">Am PC oder Laptop: Chrome oder Edge \u00f6ffnen und <b>klassenboard.netlify.app</b> aufrufen.</li>'
-    + '<li style="margin-bottom:6px">Auf einem Smartboard mit Android: im App-Store des Ger\u00e4ts nach <b>Chrome</b> suchen, installieren und ClassPuls dort \u00f6ffnen.</li>'
+    + '<li style="margin-bottom:6px">Auf einem Smartboard oder Tablet mit Android: die <b>ClassPuls-App</b> installieren \u2013 sie bringt einen modernen Browser mit (Anleitung: <b>klassenboard.netlify.app/app</b>).</li>'
     + '<li>Sonst: das Smartboard mit einem Laptop verbinden oder die Schul-IT um ein Browser-Update bitten.</li></ul>'
     + '<p style="font-size:14px;opacity:.75;margin:0 0 22px">Erkannt: ' + info + '</p>'
-    + '<button id="kb-old-go" style="font:inherit;font-size:16px;padding:12px 18px;border-radius:12px;border:0;background:#0B7A74;color:#fff;cursor:pointer">Trotzdem \u00f6ffnen</button></div>';
+    + (a ? '<a href="/app" style="display:inline-block;font-size:18px;font-weight:700;padding:14px 22px;border-radius:12px;background:#0B7A74;color:#fff;text-decoration:none;margin:0 12px 12px 0">ClassPuls-App f\u00fcr Android laden</a>' : '')
+    + '<button id="kb-old-go" style="font:inherit;font-size:16px;padding:12px 18px;border-radius:12px;border:' + (a ? '2px solid rgba(255,255,255,.4);background:transparent' : '0;background:#0B7A74') + ';color:#fff;cursor:pointer">Trotzdem \u00f6ffnen</button></div>';
   function show() {
     document.body.appendChild(d);
     document.getElementById('kb-old-go').onclick = function () {
@@ -12042,7 +12044,9 @@ function openMoreMenu() {
 // ALS APP INSTALLIEREN — ein Klick, wo der Browser es anbietet; sonst eine kurze Anleitung für genau dieses Gerät
 // ══════════════════════════════════════════════════════════════
 let _installEvt = null;
+const IN_ANDROID_APP = /ClassPulsApp\//.test(navigator.userAgent || '');   // unsere Android-App (GeckoView)
 const isStandaloneApp = () => {
+  if (IN_ANDROID_APP) return true;
   try { return matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true; }
   catch (e) { return false; }
 };
@@ -12087,7 +12091,7 @@ function openInstallHelp() {
   } else if (android && chromeLike) {
     steps = ['Oben rechts auf <b>⋮</b> (drei Punkte) tippen.', '<b>„App installieren“</b> bzw. <b>„Zum Startbildschirm hinzufügen“</b> wählen.', 'Bestätigen – ClassPuls liegt jetzt als Symbol auf dem Startbildschirm.'];
   } else if (android) {
-    steps = ['Im Menü dieses Browsers <b>„Zum Startbildschirm hinzufügen“</b> wählen, falls vorhanden.', 'Gibt es das nicht (z. B. auf manchen Smartboards): im App-Store des Geräts <b>Chrome</b> installieren, klassenboard.netlify.app dort öffnen und hier erneut auf „Als App installieren“ tippen.'];
+    steps = ['Am einfachsten: die <b>ClassPuls-App für Android</b> laden – sie läuft auch auf Smartboards mit älterem Browser. <a href="/app" class="inst-link">Zur App-Seite</a>', 'Oder im Menü dieses Browsers <b>„Zum Startbildschirm hinzufügen“</b> wählen, falls vorhanden.'];
   } else if (firefox) {
     steps = ['Firefox kann Web-Apps leider nicht installieren.', 'Öffne <b>klassenboard.netlify.app</b> in <b>Chrome</b> oder <b>Edge</b> – dort geht es mit einem Klick.'];
   } else if (edge) {

@@ -1,0 +1,11 @@
+# Signatur-Schlüssel der Android-App – niemals einchecken
+.signing/
+
+# Android-Build
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/release.p12
+
+node_modules/

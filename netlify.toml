@@ -69,10 +69,34 @@
   force = true
 
 [[redirects]]
+  from = "/android/*"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.github/*"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.gitignore"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
   from = "/.claude/*"
   to = "/index.html"
   status = 404
   force = true
+
+# Download-Seite der Android-App (Smartboards)
+[[redirects]]
+  from = "/app"
+  to = "/app.html"
+  status = 200
 
 [[redirects]]
   from = "/landing"
