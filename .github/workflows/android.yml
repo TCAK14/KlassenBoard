@@ -18,12 +18,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
         with:
           gradle-version: '9.9.1'
       - name: KVM einschalten
@@ -33,7 +33,17 @@ jobs:
           sudo udevadm trigger --name-match=kvm
       - name: Test-APK bauen (x86_64)
         working-directory: android
-        run: gradle assembleDebug -PabiFilters=x86_64 --no-daemon --stacktrace
+        shell: bash
+        run: |
+          mkdir -p ../shots
+          set -o pipefail
+          # Protokoll mit ablegen: die Job-Logs sind ohne Anmeldung nicht lesbar, das Vorab-Release schon
+          gradle assembleDebug -PabiFilters=x86_64 --no-daemon --console=plain 2>&1 | tee ../shots/build-full.log
+          STATUS=${PIPESTATUS[0]}
+          grep -n -i -E "error|failed|what went wrong|exception|warning: \[" ../shots/build-full.log | head -150 > ../shots/build-fehler.txt || true
+          tail -250 ../shots/build-full.log > ../shots/build-ende.txt
+          rm -f ../shots/build-full.log
+          exit $STATUS
       - name: Starten und Bildschirmfotos machen
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -71,12 +81,12 @@ jobs:
     needs: test
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
         with:
           gradle-version: '9.9.1'
       - name: Signatur-Schlüssel einsetzen

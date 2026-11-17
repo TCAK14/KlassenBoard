@@ -162,7 +162,20 @@ Zusätzlich die Seite laden und die Konsole auf Fehler prüfen.
 - `<script data-guard>` vor allen anderen Skripten (bewusst ES5!): fehlen `?.`/`??` oder Container-Queries (Chrome < 105),
   erscheint statt einer kaputten Seite eine Erklärung mit erkannter Browser-Version + „Trotzdem öffnen". Der Syntax-Check
   oben greift nur das erste `<script>` OHNE Attribute — der Wächter hat deshalb ein Attribut und muss es behalten
-- Zielgeräte des Nutzers: CTOUCH Riva (1) mit Android 8 und Riva D2 — Browser-Version dort noch unbekannt; APK/Store erst danach
+- Zielgeräte des Nutzers: CTOUCH Riva (1) mit Android 8 und Riva D2. Nutzer will es OHNE CTOUCH (kein CTOUCH-Store)
+
+## Android-App (`android/`, seit 17.11.2026)
+- Schlanke Java-App mit **GeckoView** (Mozilla, Maven `maven.mozilla.org`), weil die System-Browser/WebViews alter
+  Smartboards zu alt sind. minSdk 26 (= GeckoView-Minimum, Android 8), targetSdk 34 (damit `onBackPressed` noch kommt),
+  Paket `de.klassenboard.app` (NIE ändern – sonst keine Updates), Name „ClassPuls" nur als Beschriftung
+- `BaseActivity`: Sitzung + Delegates (Downloads → „Downloads", Dateiauswahl, Mikrofon/Kamera nur für unsere Domain,
+  alert/confirm/prompt, neue Fenster → `PopupActivity`). User-Agent endet auf `ClassPulsApp/<version>` → Web-App
+  setzt `IN_ANDROID_APP`. `MainActivity`: Vollbild, Bildschirm bleibt an, Zurück = in den Hintergrund statt beenden
+- Gebaut wird NUR in GitHub Actions (`.github/workflows/android.yml`, kein Java/SDK lokal): Job `test` baut x86_64 und
+  macht im Android-8-Emulator Bildschirmfotos → Vorab-Release `app-test` (öffentlich lesbar). Job `release` signiert mit
+  Secrets `KEYSTORE_BASE64` + `KEYSTORE_PASSWORD` und veröffentlicht `ClassPuls.apk` als neuestes Release
+- Download-Link (fest): `https://github.com/TCAK14/KlassenBoard/releases/latest/download/ClassPuls.apk`, Seite `/app` (`app.html`)
+- Signatur-Schlüssel liegt NUR lokal in `.signing/` (gitignored) + in den GitHub-Secrets. Verlust = keine Updates mehr
 
 ## Häufige Fallstricke
 - **File-Truncation:** Bei großen Ersetzungen mit Python arbeiten (nicht Edit-Tool direkt), danach Syntax-Check
