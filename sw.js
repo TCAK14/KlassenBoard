@@ -5,8 +5,13 @@
 //   in einem ruhigen Moment selbst neu (siehe index.html, „Aktualisierung im Hintergrund").
 // - Schrift, Symbole, Bibliotheken (/vendor/): aus dem Speicher.
 // - Server-Funktionen, Anmeldung, Cloud und fremde Seiten werden nie angefasst.
-const CACHE = 'classpuls-v2';
+const CACHE = 'classpuls-v3';
 const PAGE = '/';
+// Unter scolavis.de/.com ist die Startadresse die Verkaufsseite – die Tafel liegt dort unter /index.html.
+// Unter klassenboard.netlify.app (Android-App, bestehende Nutzer) bleibt die Tafel die Startadresse.
+const LANDING_HOST = /(^|\.)scolavis\.(de|com)$/.test(self.location.hostname);
+const APP_URL = '/index.html';
+const isAppPath = p => p === '/index.html' || (p === '/' && !LANDING_HOST);
 const CORE = [
   '/manifest.webmanifest',
   '/fonts/atkinson-hyperlegible-next-latin.woff2',
@@ -49,7 +54,7 @@ let pending = null;
 function refreshPage() {
   if (!pending) {
     pending = (async () => {
-      const res = await fetch('/', { cache: 'no-cache', credentials: 'same-origin' });
+      const res = await fetch(APP_URL, { cache: 'no-cache', credentials: 'same-origin' });
       if (!res.ok) throw new Error('status ' + res.status);
       const buf = await res.arrayBuffer();
       const text = new TextDecoder().decode(buf);
@@ -110,7 +115,7 @@ self.addEventListener('fetch', event => {
 
   if (req.mode === 'navigate') {
     // Die Tafel: vom Gerät starten, im Hintergrund aktualisieren
-    if (url.pathname === '/' || url.pathname === '/index.html') {
+    if (isAppPath(url.pathname)) {
       const net = refreshPage();
       event.waitUntil(net.catch(() => {}));                    // auch nach der Antwort fertig laden und speichern
       event.respondWith((async () => {

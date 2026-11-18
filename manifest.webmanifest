@@ -4,7 +4,7 @@
   "short_name": "Scolavis",
   "description": "Die digitale Tafel für den Unterricht: Timer, Tagesplan, Klassendienste, Zeichnen, PDF und mehr.",
   "lang": "de",
-  "start_url": "/",
+  "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",

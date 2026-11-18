@@ -32,6 +32,13 @@
   [headers.values]
     Cache-Control = "public, max-age=604800"
 
+# Unter der eigenen Adresse ist die Startseite die Verkaufsseite; die Tafel liegt unter /index.html
+[[redirects]]
+  from = "https://scolavis.de/"
+  to = "/landing.html"
+  status = 200
+  force = true
+
 # Zweitadresse scolavis.com leitet auf die Hauptadresse scolavis.de um
 [[redirects]]
   from = "https://scolavis.com/*"
