@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Scolavis – Handy</title>
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#1F3531">
+<meta name="theme-color" content="#050136">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Scolavis Handy">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 @font-face { font-family:'Atkinson Hyperlegible Next'; src:url('fonts/atkinson-hyperlegible-next-latin.woff2') format('woff2'); font-weight:200 800; font-display:swap; }
-:root { --board:#1F3531; --card:#FBFAF6; --ink:#1B2422; --muted:#5B6763; --line:rgba(27,36,34,0.12); --accent:#0B7A74; --accent-d:#075E59; --tint:#E3F3F0; --danger:#B42318; }
+:root { --board:#050136; --card:#FBFAF6; --ink:#1B2422; --muted:#5B6763; --line:rgba(27,36,34,0.12); --accent:#6D4BFF; --accent-d:#5234E0; --tint:#ECE8FF; --danger:#B42318; }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html, body { height:100%; }
 body { margin:0; background:var(--board); color:var(--ink); font-family:'Atkinson Hyperlegible Next', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; font-size:16px; line-height:1.45; overscroll-behavior:none; }
@@ -22,13 +22,13 @@ button { cursor:pointer; touch-action:manipulation; }
 header { flex:none; display:flex; align-items:center; gap:10px; padding:calc(10px + env(safe-area-inset-top)) 16px 10px; color:#fff; }
 header img { width:32px; height:32px; border-radius:9px; }
 header b { font-size:18px; }
-#status { margin-left:auto; display:flex; align-items:center; gap:7px; font-size:13.5px; color:#C9E9E4; }
+#status { margin-left:auto; display:flex; align-items:center; gap:7px; font-size:13.5px; color:#D6D0FF; }
 #status i { width:10px; height:10px; border-radius:50%; background:#F0B429; }
 #status.on i { background:#3DDC97; box-shadow:0 0 0 4px rgba(61,220,151,0.2); }
 #status.off i { background:#F87171; }
 main { flex:1 1 auto; overflow:auto; padding:4px 14px 14px; -webkit-overflow-scrolling:touch; }
-nav { flex:none; display:flex; background:#16302C; padding:6px 8px calc(6px + env(safe-area-inset-bottom)); gap:4px; }
-nav button { flex:1; position:relative; display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 2px; border:0; border-radius:12px; background:transparent; color:#9FB5B0; font-size:12px; font-weight:700; }
+nav { flex:none; display:flex; background:#0A0747; padding:6px 8px calc(6px + env(safe-area-inset-bottom)); gap:4px; }
+nav button { flex:1; position:relative; display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 2px; border:0; border-radius:12px; background:transparent; color:#A9A4DA; font-size:12px; font-weight:700; }
 nav button svg { width:24px; height:24px; }
 nav button.on { background:rgba(255,255,255,0.12); color:#fff; }
 nav .badge { position:absolute; top:3px; left:calc(50% + 8px); min-width:19px; height:19px; padding:0 5px; border-radius:10px; background:#F0B429; color:#1B2422; font-size:12px; line-height:19px; }
@@ -55,14 +55,14 @@ p { margin:0 0 10px; }
 .bar { height:10px; border-radius:5px; background:var(--line); overflow:hidden; margin:14px 0 6px; }
 .bar i { display:block; height:100%; width:0; background:var(--accent); transition:width .2s; }
 /* Foto bearbeiten */
-.stage { position:relative; margin:0 auto 12px; background:#0F1F1C; border-radius:14px; overflow:hidden; touch-action:none; }
+.stage { position:relative; margin:0 auto 12px; background:#07052B; border-radius:14px; overflow:hidden; touch-action:none; }
 .stage canvas { display:block; width:100%; height:100%; }
 .crop { position:absolute; border:2px solid #fff; box-shadow:0 0 0 2000px rgba(0,0,0,0.5); touch-action:none; }
 .crop b { position:absolute; width:34px; height:34px; margin:-17px; touch-action:none; }
 .crop b::after { content:''; position:absolute; inset:9px; border-radius:50%; background:#fff; box-shadow:0 1px 5px rgba(0,0,0,0.5); }
 .crop .tl { left:0; top:0; } .crop .tr { left:100%; top:0; } .crop .bl { left:0; top:100%; } .crop .br { left:100%; top:100%; }
 /* Live */
-.live-box { position:relative; background:#0F1F1C; border-radius:16px; overflow:hidden; aspect-ratio:4/3; margin-bottom:12px; }
+.live-box { position:relative; background:#07052B; border-radius:16px; overflow:hidden; aspect-ratio:4/3; margin-bottom:12px; }
 .live-box video { width:100%; height:100%; object-fit:cover; display:block; }
 .live-tag { position:absolute; left:10px; top:10px; padding:4px 10px; border-radius:20px; background:rgba(0,0,0,0.6); color:#fff; font-size:13px; font-weight:700; }
 .live-tag::before { content:''; display:inline-block; width:9px; height:9px; margin-right:6px; border-radius:50%; background:#F87171; }
@@ -75,7 +75,7 @@ p { margin:0 0 10px; }
 .wcard:first-of-type { border-top:0; padding-top:0; }
 .wcard .wt { display:flex; align-items:center; gap:8px; font-weight:800; margin-bottom:8px; }
 .wcard .wt button { margin-left:auto; }
-#laser { height:170px; border-radius:16px; background:#12231F; color:#9FB5B0; display:flex; align-items:center; justify-content:center; text-align:center; font-size:14.5px; touch-action:none; user-select:none; -webkit-user-select:none; position:relative; overflow:hidden; }
+#laser { height:170px; border-radius:16px; background:#0B0850; color:#A9A4DA; display:flex; align-items:center; justify-content:center; text-align:center; font-size:14.5px; touch-action:none; user-select:none; -webkit-user-select:none; position:relative; overflow:hidden; }
 #laser i { position:absolute; width:22px; height:22px; margin:-11px; border-radius:50%; background:#ff3b30; box-shadow:0 0 18px 6px rgba(255,59,48,0.6); display:none; pointer-events:none; }
 textarea, input[type=text] { width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:13px; background:#fff; font-size:17px; margin-bottom:10px; }
 textarea { min-height:92px; resize:vertical; }

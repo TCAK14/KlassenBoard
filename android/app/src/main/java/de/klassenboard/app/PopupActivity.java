@@ -32,7 +32,7 @@ public class PopupActivity extends BaseActivity {
         LinearLayout bar = new LinearLayout(this);
         bar.setOrientation(LinearLayout.HORIZONTAL);
         bar.setGravity(Gravity.CENTER_VERTICAL);
-        bar.setBackgroundColor(Color.parseColor("#1F3531"));
+        bar.setBackgroundColor(Color.parseColor("#050136"));
         bar.setPadding(dp(8), dp(4), dp(12), dp(4));
 
         Button close = new Button(this);

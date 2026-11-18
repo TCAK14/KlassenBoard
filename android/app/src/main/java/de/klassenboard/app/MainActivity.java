@@ -13,7 +13,7 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);   // Tafel soll nicht einschlafen
         geckoView = new GeckoView(this);
-        geckoView.coverUntilFirstPaint(0xFF1F3531);
+        geckoView.coverUntilFirstPaint(0xFF050136);
         setContentView(geckoView);
         session = createSession();
         geckoView.setSession(session);

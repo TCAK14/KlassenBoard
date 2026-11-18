@@ -5,7 +5,7 @@
 //   in einem ruhigen Moment selbst neu (siehe index.html, „Aktualisierung im Hintergrund").
 // - Schrift, Symbole, Bibliotheken (/vendor/): aus dem Speicher.
 // - Server-Funktionen, Anmeldung, Cloud und fremde Seiten werden nie angefasst.
-const CACHE = 'classpuls-v3';
+const CACHE = 'classpuls-v4';
 const PAGE = '/';
 // Unter scolavis.de/.com ist die Startadresse die Verkaufsseite – die Tafel liegt dort unter /index.html.
 // Unter klassenboard.netlify.app (Android-App, bestehende Nutzer) bleibt die Tafel die Startadresse.

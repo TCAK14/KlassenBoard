@@ -9,3 +9,6 @@ android/local.properties
 android/release.p12
 
 node_modules/
+
+# Arbeitsordner mit Logo-Entwürfen (nicht veröffentlichen)
+entwuerfe/
