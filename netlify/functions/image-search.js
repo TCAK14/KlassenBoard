@@ -2,7 +2,9 @@
 // Schlüssel liegen NUR in Netlify-Umgebungsvariablen.
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 const PIXABAY_KEY = process.env.PIXABAY_API_KEY;
-const ALLOWED_ORIGIN = 'https://klassenboard.netlify.app';
+const ALLOWED_ORIGIN = 'https://scolavis.de';
+// Alte Adresse bleibt erlaubt: die Android-App und bestehende Nutzer öffnen weiter klassenboard.netlify.app
+const ALLOWED_ORIGINS = ['https://scolavis.de', 'https://www.scolavis.de', 'https://scolavis.com', 'https://www.scolavis.com', 'https://klassenboard.netlify.app'];
 
 const headers = {
   'Content-Type': 'application/json',
@@ -132,7 +134,7 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return reply(405, { error: 'method' });
   // Nur die eigene Seite darf suchen (Browser senden bei POST immer einen Origin-Header)
   const origin = event.headers.origin || event.headers.Origin || '';
-  if (origin !== ALLOWED_ORIGIN) return reply(403, { error: 'forbidden' });
+  if (!ALLOWED_ORIGINS.includes(origin)) return reply(403, { error: 'forbidden' });
 
   const ip = event.headers['x-nf-client-connection-ip'] || event.headers['client-ip'] || 'unknown';
   if (rateLimited(ip)) return reply(429, { error: 'rate' });

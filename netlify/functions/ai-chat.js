@@ -1,6 +1,8 @@
 // KI-Assistent (Chat) — Google Gemini. Der Schlüssel liegt NUR in der Netlify-Umgebungsvariable.
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
-const ALLOWED_ORIGIN = 'https://klassenboard.netlify.app';
+const ALLOWED_ORIGIN = 'https://scolavis.de';
+// Alte Adresse bleibt erlaubt: die Android-App und bestehende Nutzer öffnen weiter klassenboard.netlify.app
+const ALLOWED_ORIGINS = ['https://scolavis.de', 'https://www.scolavis.de', 'https://scolavis.com', 'https://www.scolavis.com', 'https://klassenboard.netlify.app'];
 const MODEL = 'gemini-2.5-flash';
 
 const headers = {
@@ -72,7 +74,7 @@ exports.handler = async (event) => {
   // Nur die eigene Seite darf den Assistenten aufrufen. Browser senden bei POST immer einen
   // Origin-Header — fehlt er, kommt die Anfrage von einem Skript und wird abgelehnt.
   const origin = event.headers.origin || event.headers.Origin || '';
-  if (origin !== ALLOWED_ORIGIN) return reply(403, { error: 'forbidden' });
+  if (!ALLOWED_ORIGINS.includes(origin)) return reply(403, { error: 'forbidden' });
 
   if (!GEMINI_KEY) {
     console.error('GEMINI_API_KEY fehlt');

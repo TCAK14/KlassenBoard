@@ -3,7 +3,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 exports.handler = async (event) => {
   const headers = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': 'https://klassenboard.netlify.app',
+    'Access-Control-Allow-Origin': 'https://scolavis.de',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
@@ -19,7 +19,7 @@ exports.handler = async (event) => {
   try {
     const { plan, teachers = 5, email, schoolName = '' } = JSON.parse(event.body);
     const isYearly = plan === 'pro-yearly';
-    const BASE_URL = 'https://klassenboard.netlify.app';
+    const BASE_URL = 'https://scolavis.de';
 
     let session;
 

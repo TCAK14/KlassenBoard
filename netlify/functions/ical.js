@@ -2,7 +2,9 @@
 // Der Browser darf das wegen CORS nicht direkt — und der Kalender-Link enthält einen
 // persönlichen Schlüssel, der nicht über fremde öffentliche Proxys laufen soll.
 
-const ALLOWED_ORIGIN = 'https://klassenboard.netlify.app';
+const ALLOWED_ORIGIN = 'https://scolavis.de';
+// Alte Adresse bleibt erlaubt: die Android-App und bestehende Nutzer öffnen weiter klassenboard.netlify.app
+const ALLOWED_ORIGINS = ['https://scolavis.de', 'https://www.scolavis.de', 'https://scolavis.com', 'https://www.scolavis.com', 'https://klassenboard.netlify.app'];
 const MAX_BYTES = 3 * 1024 * 1024;
 
 const headers = {
@@ -35,7 +37,7 @@ exports.handler = async (event) => {
 
   // Nur die eigene Seite darf den Endpunkt nutzen (kein offener Proxy für andere)
   const origin = event.headers.origin || event.headers.Origin || '';
-  if (origin && origin !== ALLOWED_ORIGIN) return json(403, { error: 'Nicht erlaubt' });
+  if (origin && !ALLOWED_ORIGINS.includes(origin)) return json(403, { error: 'Nicht erlaubt' });
 
   let url;
   try { url = String(JSON.parse(event.body || '{}').url || '').trim(); }

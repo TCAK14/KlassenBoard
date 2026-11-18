@@ -32,6 +32,25 @@
   [headers.values]
     Cache-Control = "public, max-age=604800"
 
+# Zweitadresse scolavis.com leitet auf die Hauptadresse scolavis.de um
+[[redirects]]
+  from = "https://scolavis.com/*"
+  to = "https://scolavis.de/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.scolavis.com/*"
+  to = "https://scolavis.de/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://scolavis.com/*"
+  to = "https://scolavis.de/:splat"
+  status = 301
+  force = true
+
 [[redirects]]
   from = "/.netlify/functions/*"
   to = "/.netlify/functions/:splat"

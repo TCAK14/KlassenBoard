@@ -10,8 +10,8 @@
 <meta property="og:title" content="Scolavis">
 <meta property="og:description" content="Das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer">
 <meta property="og:type" content="website">
-<meta property="og:image" content="https://klassenboard.netlify.app/og-image.png">
-<meta property="og:url" content="https://klassenboard.netlify.app/">
+<meta property="og:image" content="https://scolavis.de/og-image.png">
+<meta property="og:url" content="https://scolavis.de/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -1901,8 +1901,8 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
     + '<p style="font-size:17px;opacity:.9;margin:0 0 18px">Scolavis braucht einen aktuellen Browser: Chrome oder Edge ab Version 105, Safari ab 16 oder Firefox ab 110.</p>'
     + '<p style="font-size:17px;margin:0 0 6px"><b>So geht es weiter:</b></p>'
     + '<ul style="font-size:16px;margin:0 0 18px 20px;padding:0">'
-    + '<li style="margin-bottom:6px">Am PC oder Laptop: Chrome oder Edge \u00f6ffnen und <b>klassenboard.netlify.app</b> aufrufen.</li>'
-    + '<li style="margin-bottom:6px">Auf einem Smartboard oder Tablet mit Android: die <b>Scolavis-App</b> installieren \u2013 sie bringt einen modernen Browser mit (Anleitung: <b>klassenboard.netlify.app/app</b>).</li>'
+    + '<li style="margin-bottom:6px">Am PC oder Laptop: Chrome oder Edge \u00f6ffnen und <b>scolavis.de</b> aufrufen.</li>'
+    + '<li style="margin-bottom:6px">Auf einem Smartboard oder Tablet mit Android: die <b>Scolavis-App</b> installieren \u2013 sie bringt einen modernen Browser mit (Anleitung: <b>scolavis.de/app</b>).</li>'
     + '<li>Sonst: das Smartboard mit einem Laptop verbinden oder die Schul-IT um ein Browser-Update bitten.</li></ul>'
     + '<p style="font-size:14px;opacity:.75;margin:0 0 22px">Erkannt: ' + info + '</p>'
     + (a ? '<a href="/app" style="display:inline-block;font-size:18px;font-weight:700;padding:14px 22px;border-radius:12px;background:#0B7A74;color:#fff;text-decoration:none;margin:0 12px 12px 0">Scolavis-App f\u00fcr Android laden</a>' : '')
@@ -3452,7 +3452,7 @@ function getDefaultConfig(type) {
     stopwatch: { running: false, elapsed: 0, laps: [] },
     text:      { text: 'Doppelklick zum Bearbeiten' },
     traffic:   { state: 'red' },
-    qr:        { url: 'https://klassenboard.netlify.app', label: '' },
+    qr:        { url: 'https://scolavis.de', label: '' },
     names:     { names: 'Anna\nBen\nClara\nDavid\nEva\nFinn\nGreta\nHannes', highlighted: -1 },
     homework:  { subject: 'Fach', items: [] },
     goal:      { text: 'Heutiges Lernziel' },
@@ -5912,7 +5912,7 @@ const WIDGET_RENDERERS = {
     label.textContent = w.config.label || w.config.url || '';
     container.append(qrDiv, label);
     body.appendChild(container);
-    const url = w.config.url || 'https://klassenboard.netlify.app';
+    const url = w.config.url || 'https://scolavis.de';
     // Mit dem Widget mitwachsen: ein QR-Code muss auch aus der letzten Reihe scannbar sein
     const size = Math.round(Math.max(80, Math.min(w.w - 40, w.h - (APP.state.editMode ? 100 : 70), 900)));
     try {
@@ -8977,7 +8977,7 @@ function openYoutubeOverlay(videoId) {
   box.style.cssText = 'position:relative;width:min(94vw,1200px);aspect-ratio:16/9;border-radius:12px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.8);background:#000;';
 
   // Direkt-iframe mit origin-Parameter — das ist der entscheidende Fix
-  const origin = encodeURIComponent(window.location.origin || 'https://klassenboard.netlify.app');
+  const origin = encodeURIComponent(window.location.origin || 'https://scolavis.de');
   const iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;';
   iframe.src = 'https://www.youtube-nocookie.com/embed/' + videoId
@@ -12530,7 +12530,7 @@ function openInstallHelp() {
   } else if (android) {
     steps = ['Am einfachsten: die <b>Scolavis-App für Android</b> laden – sie läuft auch auf Smartboards mit älterem Browser. <a href="/app" class="inst-link">Zur App-Seite</a>', 'Oder im Menü dieses Browsers <b>„Zum Startbildschirm hinzufügen“</b> wählen, falls vorhanden.'];
   } else if (firefox) {
-    steps = ['Firefox kann Web-Apps leider nicht installieren.', 'Öffne <b>klassenboard.netlify.app</b> in <b>Chrome</b> oder <b>Edge</b> – dort geht es mit einem Klick.'];
+    steps = ['Firefox kann Web-Apps leider nicht installieren.', 'Öffne <b>scolavis.de</b> in <b>Chrome</b> oder <b>Edge</b> – dort geht es mit einem Klick.'];
   } else if (edge) {
     steps = ['Oben rechts auf <b>…</b> klicken.', '<b>„Apps“ → „Scolavis installieren“</b> wählen.'];
     note = 'Siehst du das nicht, ist Scolavis vielleicht schon installiert – schau im Startmenü nach.';
