@@ -39,22 +39,16 @@
   status = 200
   force = true
 
-# Zweitadresse scolavis.com leitet auf die Hauptadresse scolavis.de um
+# scolavis.com zeigt dieselbe Verkaufsseite unter der eigenen Adresse (keine Umleitung auf .de)
 [[redirects]]
-  from = "https://scolavis.com/*"
-  to = "https://scolavis.de/:splat"
-  status = 301
+  from = "https://scolavis.com/"
+  to = "/landing.html"
+  status = 200
   force = true
 
 [[redirects]]
   from = "https://www.scolavis.com/*"
-  to = "https://scolavis.de/:splat"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "http://scolavis.com/*"
-  to = "https://scolavis.de/:splat"
+  to = "https://scolavis.com/:splat"
   status = 301
   force = true
 
