@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scolavis – Die digitale Tafel für Lehrkräfte</title>
-<meta name="description" content="Scolavis macht aus jedem Smartboard, Beamer oder Tablet eine lebendige Unterrichtstafel: Timer, Tagesplan, Zeichnen, KI-Assistent, Handy als Dokumentenkamera und mehr. Kostenlos starten.">
+<meta name="description" content="Scolavis macht aus jedem Smartboard, Beamer oder Tablet eine lebendige Unterrichtstafel: Timer, Tagesplan, Zeichnen, KI-Assistent, Dienstgerät oder iPad als Dokumentenkamera und mehr. Kostenlos starten.">
 <meta name="theme-color" content="#050136">
 <meta property="og:title" content="Scolavis – Die digitale Tafel für Lehrkräfte">
-<meta property="og:description" content="Timer, Tagesplan, Zeichnen, KI-Assistent und das Handy als Dokumentenkamera – alles auf einer Tafel.">
+<meta property="og:description" content="Timer, Tagesplan, Zeichnen, KI-Assistent und das Dienstgerät als Dokumentenkamera – alles auf einer Tafel.">
 <meta property="og:image" content="https://scolavis.de/og-image.png">
 <meta property="og:url" content="https://scolavis.de/">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -24,7 +24,7 @@
 html { scroll-behavior:smooth; overflow-x:hidden; }
 body { margin:0; background:var(--bg); color:var(--ink); font-family:'Atkinson Hyperlegible Next', 'Segoe UI', Roboto, Arial, sans-serif; font-size:18px; line-height:1.6; overflow-x:hidden; }
 a { color:inherit; }
-img { max-width:100%; display:block; }
+img { max-width:100%; height:auto; display:block; }
 .wrap { width:min(1160px, calc(100% - 40px)); margin:0 auto; }
 .grad-text { background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent; }
 
@@ -60,7 +60,7 @@ h1 { font-size:clamp(40px, 6vw, 68px); line-height:1.05; letter-spacing:-1.5px; 
 .cta { display:flex; flex-wrap:wrap; gap:12px; }
 .note { margin-top:16px; font-size:15px; color:var(--muted); }
 .hero-logo { position:relative; }
-.hero-logo img { width:100%; max-width:520px; margin:0 auto; -webkit-mask-image:radial-gradient(closest-side, #000 72%, transparent 100%); mask-image:radial-gradient(closest-side, #000 72%, transparent 100%); animation:float 7s ease-in-out infinite; }
+.hero-logo img { width:100%; height:auto; max-width:520px; margin:0 auto; -webkit-mask-image:radial-gradient(closest-side, #000 72%, transparent 100%); mask-image:radial-gradient(closest-side, #000 72%, transparent 100%); animation:float 7s ease-in-out infinite; }
 @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-14px); } }
 
 /* Bildschirmfoto im leuchtenden Rahmen */
@@ -129,7 +129,7 @@ details[open] summary::after { content:'–'; }
 details p { margin:0 0 20px; color:var(--muted); }
 
 .final { text-align:center; }
-.final img { width:120px; margin:0 auto 20px; border-radius:30px; box-shadow:0 0 70px rgba(125,90,255,0.9); }
+.final img { width:120px; height:120px; margin:0 auto 20px; border-radius:30px; box-shadow:0 0 70px rgba(125,90,255,0.9); }
 footer { border-top:1px solid var(--line); padding:30px 0 44px; font-size:15.5px; color:var(--muted); }
 .foot { display:flex; flex-wrap:wrap; gap:14px 26px; align-items:center; }
 .foot a { text-decoration:none; }
@@ -151,6 +151,9 @@ footer { border-top:1px solid var(--line); padding:30px 0 44px; font-size:15.5px
   .hero { padding-top:34px; }
   .btn-lg { width:100%; }
   .price-in { padding:30px 20px; }
+  /* Am Handy nur den linken Teil des Bildschirmfotos zeigen – sonst wird alles unlesbar klein */
+  .shot-in > img { width:185%; max-width:none; }
+  .stat b { font-size:30px; }
   .foot .sp { margin-left:0; }
 }
 @media (prefers-reduced-motion: reduce) { .aura, .hero-logo img { animation:none; } html { scroll-behavior:auto; } }
@@ -163,7 +166,7 @@ footer { border-top:1px solid var(--line); padding:30px 0 44px; font-size:15.5px
     <a class="brand" href="/"><img src="icons/icon-192.png" alt=""><span>Scola<span class="grad-text">vis</span></span></a>
     <nav class="nav-links" aria-label="Seitenbereiche">
       <a href="#funktionen">Funktionen</a>
-      <a href="#handy">Handy</a>
+      <a href="#handy">Mobil</a>
       <a href="#smartboard">Smartboard</a>
       <a href="#preise">Preise</a>
       <a href="#fragen">Fragen</a>
@@ -180,7 +183,7 @@ footer { border-top:1px solid var(--line); padding:30px 0 44px; font-size:15.5px
       <div>
         <div class="pill"><i></i>Für Smartboard, Beamer, Tablet und PC</div>
         <h1>Die Tafel, die <span class="grad-text">mitdenkt.</span></h1>
-        <p class="lead">Scolavis macht aus jedem Bildschirm im Klassenzimmer eine lebendige Unterrichtstafel: Timer, Tagesplan, Zeichnen, KI-Assistent – und dein Handy wird zur Dokumentenkamera.</p>
+        <p class="lead">Scolavis macht aus jedem Bildschirm im Klassenzimmer eine lebendige Unterrichtstafel: Timer, Tagesplan, Zeichnen, KI-Assistent – und dein Dienstgerät oder iPad wird zur Dokumentenkamera.</p>
         <div class="cta">
           <a class="btn btn-main btn-lg" href="index.html">Kostenlos starten</a>
           <a class="btn btn-ghost btn-lg" href="#funktionen">Was kann Scolavis?</a>
@@ -242,15 +245,15 @@ footer { border-top:1px solid var(--line); padding:30px 0 44px; font-size:15.5px
       </div>
     </div>
     <div>
-      <div class="kicker">Handy-Verbindung</div>
-      <h2>Dein Handy wird zur <span class="grad-text">Dokumentenkamera.</span></h2>
-      <p class="sub">QR-Code an der Tafel scannen – fertig. Ohne App aus dem Store, ohne Anmeldung.</p>
+      <div class="kicker">Mobil-Verbindung</div>
+      <h2>Dienstgerät oder iPad wird zur <span class="grad-text">Dokumentenkamera.</span></h2>
+      <p class="sub">QR-Code an der Tafel mit dem mobilen Dienstgerät oder iPad scannen – fertig. Ohne App aus dem Store, ohne Anmeldung.</p>
       <ul class="checks">
         <li>Foto vom Schülerheft an die Tafel<small>Zuschneiden, drehen, Dokument-Modus: Papier wird weiß, Schrift kräftig.</small></li>
         <li>Live-Kamera<small>Experiment oder Heft live zeigen, Standbild mit einem Tipp festhalten.</small></li>
         <li>Fernbedienung<small>Tafel wechseln, Timer starten, Ampel umstellen – von überall im Raum.</small></li>
         <li>Schüler-Abgabe mit Freigabe<small>Die Klasse schickt Fotos, gezeigt wird nur, was du freigibst.</small></li>
-        <li>Ende-zu-Ende verschlüsselt<small>Fotos gehen direkt vom Handy zur Tafel und werden auf keinem Server gespeichert.</small></li>
+        <li>Ende-zu-Ende verschlüsselt<small>Fotos gehen direkt vom Gerät zur Tafel und werden auf keinem Server gespeichert.</small></li>
       </ul>
     </div>
   </div>
@@ -277,7 +280,7 @@ footer { border-top:1px solid var(--line); padding:30px 0 44px; font-size:15.5px
       <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 5h18v12H3zM8 21h8M12 17v4"/></svg></div><h3>Smartboard</h3><p>Android-App oder Browser, Bedienung mit dem Finger.</p></div>
       <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M4 6h16v10H4zM2 19h20"/></svg></div><h3>PC und Laptop</h3><p>Chrome, Edge, Safari, Firefox – am Beamer oder Monitor.</p></div>
       <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M6 3h12v18H6zM11 18h2"/></svg></div><h3>Tablet</h3><p>Zum Vorbereiten zu Hause und zum Steuern im Unterricht.</p></div>
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 18.5h2"/></svg></div><h3>Handy</h3><p>Als Kamera, Fernbedienung und für Abgaben der Klasse.</p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 18.5h2"/></svg></div><h3>Mobiles Dienstgerät</h3><p>Als Kamera, Fernbedienung und für Abgaben der Klasse.</p></div>
     </div>
   </div>
 </section>
@@ -306,7 +309,7 @@ footer { border-top:1px solid var(--line); padding:30px 0 44px; font-size:15.5px
     <details><summary>Muss ich etwas installieren?</summary><p>Nein. Scolavis läuft im Browser: Seite öffnen und loslegen. Nur für Smartboards mit veraltetem Browser gibt es eine eigene Android-App.</p></details>
     <details><summary>Brauche ich ein Konto?</summary><p>Nein. Ohne Anmeldung liegen deine Tafeln auf dem Gerät, an dem du sie baust. Mit einer kostenlosen Anmeldung erscheinen sie auf allen deinen Geräten.</p></details>
     <details><summary>Funktioniert es mit unserem Smartboard?</summary><p>Auf Geräten mit aktuellem Browser direkt. Für Smartboards mit Android ab Version 8 gibt es die Scolavis-App, die ihre eigene Browser-Technik mitbringt.</p></details>
-    <details><summary>Was passiert mit Fotos vom Handy?</summary><p>Sie gehen Ende-zu-Ende verschlüsselt vom Handy zur Tafel, werden auf keinem Server gespeichert und liegen danach nur auf dem Gerät der Tafel.</p></details>
+    <details><summary>Was passiert mit Fotos vom Dienstgerät oder iPad?</summary><p>Sie gehen Ende-zu-Ende verschlüsselt vom Gerät zur Tafel, werden auf keinem Server gespeichert und liegen danach nur auf dem Gerät der Tafel.</p></details>
     <details><summary>Wo liegen meine Daten?</summary><p>Ohne Anmeldung nur auf deinem Gerät. Mit Anmeldung in einer Datenbank in der EU. Einzelheiten stehen in der <a href="datenschutz.html">Datenschutzerklärung</a>.</p></details>
     <details><summary>Kann unsere ganze Schule Scolavis nutzen?</summary><p>Ja. Schreib uns an <a href="mailto:info@scolavis.de">info@scolavis.de</a>, dann melden wir uns mit einem Angebot für Schullizenzen.</p></details>
   </div>
