@@ -1401,6 +1401,44 @@ body.draw-mode .w-full-btn { display:none; }
 
 /* Laserpointer und Auswahl */
 #draw-laser { position:fixed; left:0; top:0; z-index:1795; pointer-events:none; }
+/* Laufender Strich von Textmarker, Bleistift und Kreide: eigene Ebene, damit er überall gleich deckt */
+#draw-live { position:fixed; left:0; top:0; z-index:501; pointer-events:none; }
+.draw-pop-item .sub { display:block; font-size:12.5px; font-weight:400; color:var(--ink-muted); }
+.draw-pop-item.on .sub { color:inherit; opacity:.8; }
+/* Farbauswahl (eigene, weil das Farb-Fenster des Browsers nicht überall funktioniert) */
+.draw-color-more {
+  position:relative; flex:none; width:28px; height:28px; padding:0; border-radius:50%; border:3px solid transparent; cursor:pointer;
+  background:conic-gradient(red, yellow, lime, cyan, blue, magenta, red); transition:transform .15s;
+}
+.draw-color-more:hover, .draw-color-more.active { transform:scale(1.25); border-color:#fff; }
+.draw-color-more i { position:absolute; inset:3px; border-radius:50%; display:none; box-shadow:0 0 0 1.5px rgba(0,0,0,0.4); }
+.draw-color-more.active i { display:block; }
+.color-pop {
+  position:fixed; z-index:100001; width:min(340px, calc(100vw - 16px)); padding:12px; border-radius:16px;
+  background:var(--card); color:var(--ink); border:1px solid rgba(27,36,34,0.08); box-shadow:0 18px 50px rgba(0,0,0,0.45);
+}
+.color-grid { display:grid; grid-template-columns:repeat(10, 1fr); gap:4px; }
+.color-grid button { height:28px; padding:0; border:0; border-radius:7px; cursor:pointer; box-shadow:inset 0 0 0 1px rgba(27,36,34,0.16); }
+.color-grid button.on { box-shadow:0 0 0 2px var(--card), 0 0 0 4px var(--accent); position:relative; }
+.color-mix { margin-top:12px; font-size:12.5px; font-weight:600; color:var(--ink-muted); }
+.color-mix input[type=range] {
+  -webkit-appearance:none; appearance:none; display:block; width:100%; height:16px; margin:5px 0 10px; border-radius:8px;
+  outline:none; cursor:pointer; box-shadow:inset 0 0 0 1px rgba(27,36,34,0.16);
+}
+.color-mix input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:26px; height:26px; border-radius:50%; background:#fff;
+  border:2px solid rgba(27,36,34,0.6); box-shadow:0 1px 4px rgba(0,0,0,0.35);
+}
+.color-mix input[type=range]::-moz-range-thumb {
+  width:22px; height:22px; border-radius:50%; background:#fff; border:2px solid rgba(27,36,34,0.6); box-shadow:0 1px 4px rgba(0,0,0,0.35);
+}
+.color-mix input[type=range]::-moz-range-track { background:transparent; }
+.color-foot { display:flex; align-items:center; gap:10px; }
+.color-now { flex:none; width:44px; height:38px; border-radius:10px; box-shadow:inset 0 0 0 1px rgba(27,36,34,0.2); }
+.color-foot button {
+  margin-left:auto; height:38px; padding:0 18px; border:0; border-radius:10px; background:var(--accent); color:#fff;
+  font:inherit; font-size:14.5px; font-weight:700; cursor:pointer;
+}
 .draw-selbox { position:fixed; z-index:1792; border:2px dashed #7FE3DA; background:rgba(127,227,218,0.08); pointer-events:none; }
 .draw-float { position:fixed; z-index:1792; outline:2px dashed #7FE3DA; outline-offset:2px; pointer-events:none; }
 .draw-float-img { display:block; width:100%; height:100%; }
@@ -1733,7 +1771,7 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
 
 <!-- Zeichnen-Toolbar -->
 <div id="draw-toolbar">
-  <button class="draw-tool-btn active" data-tool="pen" title="Stift"></button>
+  <button class="draw-tool-btn has-menu active" data-tool="pen" title="Stift – nochmal antippen: Stiftart wählen"></button>
   <button class="draw-tool-btn" data-tool="marker" title="Textmarker"></button>
   <button class="draw-tool-btn" data-tool="laser" title="Laserpointer – Spur verblasst von selbst"></button>
   <button class="draw-tool-btn" data-tool="eraser" title="Radiergummi"></button>
@@ -1751,10 +1789,7 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
   <button class="draw-color-btn" style="background:#60a5fa" data-color="#60a5fa" title="Blau"></button>
   <button class="draw-color-btn" style="background:#e879f9" data-color="#e879f9" title="Pink"></button>
   <button class="draw-color-btn" style="background:#000000; border:1px solid rgba(255,255,255,0.4)" data-color="#000000" title="Schwarz"></button>
-  <label title="Eigene Farbe" style="position:relative;cursor:pointer;flex:none">
-    <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:conic-gradient(red,yellow,green,cyan,blue,magenta,red);border:2px solid rgba(255,255,255,0.4)"></span>
-    <input type="color" id="draw-custom-color" style="position:absolute;opacity:0;width:0;height:0" title="Eigene Farbe">
-  </label>
+  <button class="draw-color-more" id="dt-color-more" title="Weitere Farben" aria-label="Weitere Farben"><i></i></button>
   <div class="draw-sep"></div>
   <input type="range" id="draw-size-slider" min="1" max="40" value="4" title="Strichstärke">
   <div class="draw-sep"></div>
@@ -1912,6 +1947,9 @@ const ICONS = {
   dots: 'M5 12h.01M12 12h.01M19 12h.01',
   grid: 'M5 5h4v4H5zM15 5h4v4h-4zM5 15h4v4H5zM15 15h4v4h-4z',
   pen: 'M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19zM14 7l3 3',
+  fountain: 'M12 2.5l5.5 9.5-3 7h-5l-3-7zM12 2.5V12M12 12.6a1 1 0 1 0 0-.01M9 21.5h6',
+  pencil: 'M3.5 20.5l1.6-5.6L15.6 4.4l4 4L9.1 18.9zM13.5 6.5l4 4M5.1 14.9l4 4',
+  chalk: 'M4.5 15.5L14 5l5 5-9.5 10.5zM4.5 15.5l5 5M12 7.2l5 5M3 21h4',
   brush: 'M18.5 3.2a1.9 1.9 0 0 1 2.7 2.7l-8.4 9.3-3.6-3.6zM8.6 12.4l3.4 3.4c.3 2.6-1.7 4.9-4.6 4.9-1.7 0-3.3-.6-4.4-1.6 1.4-.3 2.2-1.2 2.3-2.7.1-2.1 1.5-3.7 3.3-4z',
   edit: 'M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17zM13.5 7.5l3 3',
   eye: 'M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
@@ -10366,8 +10404,144 @@ const DRAW_INSTR = {
   },
 };
 
+// ── Farbauswahl ──
+// Eigenes kleines Fenster statt <input type="color">: das Farb-Fenster des Browsers gibt es in der Android-App
+// (GeckoView) nicht und auf Touch-Geräten ist es oft winzig.
+function hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => {
+    const k = (n + h / 30) % 12;
+    const v = l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    return ('0' + Math.round(v * 255).toString(16)).slice(-2);
+  };
+  return '#' + f(0) + f(8) + f(4);
+}
+function hexToHsl(hex) {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex || '');
+  if (!m) return { h: 45, s: 85, l: 55 };
+  const r = parseInt(m[1], 16) / 255, g = parseInt(m[2], 16) / 255, b = parseInt(m[3], 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min, l = (max + min) / 2;
+  let h = 0;
+  if (d) {
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
+    else if (max === g) h = ((b - r) / d + 2) * 60;
+    else h = ((r - g) / d + 4) * 60;
+  }
+  return { h: Math.round(h), s: d ? Math.round(d / (1 - Math.abs(2 * l - 1)) * 100) : 0, l: Math.round(l * 100) };
+}
+const COLOR_HUES = [0, 22, 42, 56, 90, 150, 185, 212, 262, 318];
+const COLOR_LIGHTS = [86, 72, 60, 48, 36, 24];
+let _colorPop = null;
+function closeColorPop() { if (_colorPop) { _colorPop.remove(); _colorPop = null; } }
+// anchor: Element, an dem das Fenster erscheint · current: '#rrggbb' · onPick(hex): bei jeder Auswahl
+function openColorPop(anchor, current, onPick) {
+  if (_colorPop && _colorPop._anchor === anchor) { closeColorPop(); return; }
+  closeColorPop();
+  const pop = document.createElement('div');
+  pop.className = 'color-pop';
+  pop.setAttribute('data-kb-keep', '');
+  pop._anchor = anchor;
+  let cur = (/^#[0-9a-f]{6}$/i.test(current || '') ? current : '#facc15').toLowerCase();
+  const start = hexToHsl(cur);
+
+  const grid = document.createElement('div');
+  grid.className = 'color-grid';
+  const swatch = hex => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.style.background = hex;
+    b.dataset.hex = hex;
+    b.setAttribute('aria-label', 'Farbe ' + hex);
+    if (hex === cur) b.classList.add('on');
+    b.addEventListener('click', () => { onPick(hex); closeColorPop(); });
+    grid.appendChild(b);
+  };
+  COLOR_LIGHTS.forEach(l => COLOR_HUES.forEach(h => swatch(hslToHex(h, 88, l))));
+  for (let i = 0; i < 10; i++) swatch(hslToHex(0, 0, Math.round(100 - i * 100 / 9)));
+  pop.appendChild(grid);
+
+  // Selbst mischen: Farbton und Helligkeit
+  const mix = document.createElement('div');
+  mix.className = 'color-mix';
+  const slider = (label, min, max, value) => {
+    const l = document.createElement('label');
+    l.textContent = label;
+    const r = document.createElement('input');
+    r.type = 'range'; r.min = min; r.max = max; r.value = value;
+    l.appendChild(r);
+    mix.appendChild(l);
+    return r;
+  };
+  const hue = slider('Farbton', 0, 359, start.h);
+  const light = slider('Helligkeit', 8, 94, Math.max(8, Math.min(94, start.l)));
+  hue.style.background = 'linear-gradient(to right,' + [0, 60, 120, 180, 240, 300, 359].map(h => 'hsl(' + h + ',88%,52%)').join(',') + ')';
+  pop.appendChild(mix);
+
+  const foot = document.createElement('div');
+  foot.className = 'color-foot';
+  const now = document.createElement('div');
+  now.className = 'color-now';
+  const done = document.createElement('button');
+  done.type = 'button';
+  done.textContent = 'Fertig';
+  done.addEventListener('click', closeColorPop);
+  foot.appendChild(now); foot.appendChild(done);
+  pop.appendChild(foot);
+
+  const paint = () => {
+    now.style.background = cur;
+    light.style.background = 'linear-gradient(to right,#000,' + hslToHex(+hue.value, 88, 50) + ',#fff)';
+  };
+  const mixed = () => {
+    cur = hslToHex(+hue.value, 88, +light.value);
+    grid.querySelectorAll('.on').forEach(b => b.classList.remove('on'));
+    paint();
+    onPick(cur);
+  };
+  hue.addEventListener('input', mixed);
+  light.addEventListener('input', mixed);
+  paint();
+
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight;
+  const above = r.top - ph - 12 >= 8 || r.top > window.innerHeight - r.bottom;
+  pop.style.left = Math.max(8, Math.min(window.innerWidth - pw - 8, r.left + r.width / 2 - pw / 2)) + 'px';
+  pop.style.top = Math.max(8, Math.min(window.innerHeight - ph - 8, above ? r.top - ph - 12 : r.bottom + 12)) + 'px';
+  _colorPop = pop;
+  setTimeout(() => {
+    const outside = ev => {
+      if (!pop.isConnected) { document.removeEventListener('pointerdown', outside, true); return; }
+      if (!pop.contains(ev.target) && !anchor.contains(ev.target)) { closeColorPop(); document.removeEventListener('pointerdown', outside, true); }
+    };
+    document.addEventListener('pointerdown', outside, true);
+  }, 0);
+}
+// In der Android-App öffnet ein Farbfeld sonst gar nichts → überall unser Fenster zeigen
+document.addEventListener('click', e => {
+  if (!IN_ANDROID_APP) return;
+  const inp = e.target && e.target.closest ? e.target.closest('input[type="color"]') : null;
+  if (!inp) return;
+  e.preventDefault();
+  openColorPop(inp, inp.value, hex => {
+    inp.value = hex;
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+    inp.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}, true);
+
+// Stiftarten: [Kürzel, Symbol, Name, Beschreibung]
+const DRAW_PENS = [
+  ['fine',     'pen',      'Fineliner', 'gleichmäßige Linie'],
+  ['fountain', 'fountain', 'Füller',    'mal dünn, mal dick – wie mit Tinte'],
+  ['pencil',   'pencil',   'Bleistift', 'fein und leicht körnig'],
+  ['chalk',    'chalk',    'Kreide',    'breit und rau wie an der Tafel'],
+  ['brush',    'brush',    'Pinsel',    'kräftig, für große Schrift'],
+];
+
 const DRAW = {
   canvas: null, ctx: null,
+  penKind: 'fine',   // fine | fountain | pencil | chalk | brush (siehe DRAW_PENS)
   active: false,
   tool: 'pen',   // pen | marker | eraser
   color: '#facc15',
@@ -10409,8 +10583,16 @@ const DRAW = {
     // Werkzeuge (Symbole statt Emojis, damit sie auf jedem Gerät gleich aussehen)
     document.querySelectorAll('#draw-toolbar [data-tool]').forEach(b => {
       b.innerHTML = icon(b.dataset.tool, 20);
-      b.addEventListener('click', () => { this._closePop(); this._setTool(b.dataset.tool); });
+      b.addEventListener('click', e => {
+        // Stift: ist er schon gewählt, öffnet ein weiteres Antippen die Stiftarten
+        const pensOpen = this._pop && this._pop.dataset.kind === 'pens';
+        this._closePop();
+        if (b.dataset.tool === 'pen' && this.tool === 'pen' && !pensOpen) { e.stopPropagation(); this._openPenMenu(); return; }
+        this._setTool(b.dataset.tool);
+      });
     });
+    this._updatePenBtn();
+    this._initLive();
     const setIcon = (id, name) => { const b = btn(id); if (b) b.innerHTML = icon(name, 20); };
     setIcon('dt-undo', 'undo'); setIcon('dt-redo', 'redo');
     setIcon('dt-clear', 'trash'); setIcon('dt-exit', 'x');
@@ -10430,21 +10612,28 @@ const DRAW = {
     });
 
     // Colors
+    const moreBtn = btn('dt-color-more');
     document.querySelectorAll('.draw-color-btn').forEach(b => {
       b.addEventListener('click', () => {
+        closeColorPop();
         document.querySelectorAll('.draw-color-btn').forEach(x => x.classList.remove('active'));
+        moreBtn?.classList.remove('active');
         b.classList.add('active');
         this.color = b.dataset.color;
         if (this.tool === 'eraser') this._setTool('pen');
       });
     });
 
-    // Custom color picker
-    const customColor = document.getElementById('draw-custom-color');
-    customColor?.addEventListener('input', () => {
-      this.color = customColor.value;
-      document.querySelectorAll('.draw-color-btn').forEach(x => x.classList.remove('active'));
-      if (this.tool === 'eraser') this._setTool('pen');
+    // Weitere Farben: eigene Farbauswahl (Raster + Farbton/Helligkeit)
+    moreBtn?.addEventListener('click', () => {
+      this._closePop();
+      openColorPop(moreBtn, this.color, hex => {
+        this.color = hex;
+        document.querySelectorAll('.draw-color-btn').forEach(x => x.classList.remove('active'));
+        moreBtn.classList.add('active');
+        moreBtn.firstElementChild.style.background = hex;
+        if (this.tool === 'eraser') this._setTool('pen');
+      });
     });
 
     // Size slider
@@ -10602,6 +10791,107 @@ const DRAW = {
       hint.textContent = 'Ziehen verschiebt, die grünen Punkte drehen. Striche entlang einer Kante werden gerade.';
       pop.appendChild(hint);
     });
+  },
+
+  // ── Stiftarten ──
+  _updatePenBtn() {
+    const b = document.querySelector('#draw-toolbar [data-tool="pen"]');
+    const kind = DRAW_PENS.find(p => p[0] === this.penKind) || DRAW_PENS[0];
+    if (b) { b.innerHTML = icon(kind[1], 20); b.title = 'Stift: ' + kind[2] + ' – nochmal antippen: Stiftart wählen'; }
+  },
+  _openPenMenu() {
+    this._openPop(document.querySelector('#draw-toolbar [data-tool="pen"]'), 'pens', pop => {
+      this._popTitle(pop, 'Stiftart');
+      DRAW_PENS.forEach(([k, ic, label, sub]) => {
+        const b = this._popItem(pop, ic, label, this.penKind === k, () => {
+          this.penKind = k;
+          this._updatePenBtn();
+          this._setTool('pen');
+          this._closePop();
+        });
+        const s = document.createElement('span');
+        s.className = 'sub';
+        s.textContent = sub;
+        b.lastElementChild.appendChild(s);
+      });
+    });
+  },
+
+  // Wie ein Strich aussieht: Breite, ob er auf der laufenden Ebene entsteht (live: überall gleich deckend),
+  // Deckkraft, Körnung, wechselnde Breite (vary = kleinster/größter Faktor)
+  _strokeSpec() {
+    const s = this.size;
+    if (this.tool === 'eraser') return { width: s * 5 };
+    if (this.tool === 'marker') return { width: Math.max(14, s * 4), live: true, alpha: 0.42 };
+    if (this.tool === 'pen') {
+      if (this.penKind === 'fountain') return { width: s * 1.5 + 0.5, vary: [0.35, 1.25] };
+      if (this.penKind === 'brush')    return { width: s * 3.2 + 2, vary: [0.3, 1.2] };
+      if (this.penKind === 'pencil')   return { width: Math.max(1.6, s * 0.7), live: true, alpha: 0.85, grain: 'fine' };
+      if (this.penKind === 'chalk')    return { width: s * 2 + 4, live: true, alpha: 0.95, grain: 'rough' };
+    }
+    return { width: s };
+  },
+
+  // Laufende Ebene: Textmarker, Bleistift und Kreide werden erst voll deckend auf eine eigene Fläche gezeichnet,
+  // die als Ganzes durchscheint – und beim Loslassen in EINEM Schritt auf die Zeichnung gelegt. So deckt ein Strich
+  // überall gleich, auch wo er sich selbst kreuzt (vorher: mal durchsichtig, mal fast deckend).
+  _initLive() {
+    const cv = document.createElement('canvas');
+    cv.id = 'draw-live';
+    cv.setAttribute('data-kb-keep', '');
+    document.body.appendChild(cv);
+    this._liveCv = cv;
+  },
+  _liveBegin(spec) {
+    const cv = this._liveCv, o = this._scrollOffset();
+    if (cv.width !== window.innerWidth || cv.height !== window.innerHeight) { cv.width = window.innerWidth; cv.height = window.innerHeight; }
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    this._liveOff = { x: Math.round(o.x), y: Math.round(o.y) };
+    ctx.setTransform(1, 0, 0, 1, -this._liveOff.x, -this._liveOff.y);   // gleiche Koordinaten wie die Zeichenebene
+    cv.style.opacity = spec.alpha;
+    return ctx;
+  },
+  _liveCommit(spec) {
+    const cv = this._liveCv, ctx = this.ctx;
+    ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = spec.alpha;
+    ctx.drawImage(cv, this._liveOff.x, this._liveOff.y);
+    ctx.globalAlpha = 1;
+    const l = cv.getContext('2d');
+    l.setTransform(1, 0, 0, 1, 0, 0);
+    l.clearRect(0, 0, cv.width, cv.height);
+  },
+  // Körnung: ein festes Punktmuster wird aus dem Strich „herausgekratzt". Weil das Muster fest liegt und nur ganz
+  // oder gar nicht deckt, darf es beliebig oft auf dieselbe Stelle angewendet werden.
+  _grainPats: {},
+  _grainPattern(ctx, kind) {
+    if (this._grainPats[kind]) return this._grainPats[kind];
+    const N = 128, tile = document.createElement('canvas');
+    tile.width = tile.height = N;
+    const t = tile.getContext('2d'), img = t.createImageData(N, N), d = img.data;
+    const hole = i => { d[i * 4 + 3] = 255; };
+    for (let i = 0; i < N * N; i++) {
+      const r = Math.random();
+      if (kind === 'rough') {
+        if (r < 0.15) hole(i);
+        if (r < 0.05) { hole((i + 1) % (N * N)); hole((i + N) % (N * N)); }   // kleine Klümpchen → raue Kreide
+      } else if (r < 0.1) hole(i);
+    }
+    t.putImageData(img, 0, 0);
+    return (this._grainPats[kind] = ctx.createPattern(tile, 'repeat'));
+  },
+  _grain(ctx, spec, x0, y0, x1, y1) {
+    const pad = spec.width;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = this._grainPattern(ctx, spec.grain);
+    ctx.fillRect(Math.floor(Math.min(x0, x1) - pad), Math.floor(Math.min(y0, y1) - pad),
+      Math.ceil(Math.abs(x1 - x0) + pad * 2) + 1, Math.ceil(Math.abs(y1 - y0) + pad * 2) + 1);
+    ctx.restore();
   },
 
   // ── Messwerkzeuge (Lineal, Geodreieck, Winkelmesser): verschieben, drehen, an Kanten entlang zeichnen ──
@@ -11143,6 +11433,7 @@ const DRAW = {
     let p = this._getPos(e);
     this.drawing = true;
     this._rafPending = false;
+    this._stroke = null;
     // Formen: Startpunkt merken; die Vorschau wird über dem Undo-Schnappschuss gezeichnet
     this._shape = DRAW_SHAPES.includes(this.tool)
       ? { x0: p.x, y0: p.y, snap: this.history[this.history.length - 1] || null } : null;
@@ -11154,16 +11445,19 @@ const DRAW = {
     }
     this._rulerLine = this._shape ? null : guide;
     if (this._rulerLine) p = this._project(p);
+    p.t = e.timeStamp;
     this._pts = [p];
     if (this._shape) return;
 
-    // Draw initial dot
-    this._applyStyle();
-    const lw = this._lineWidth();
-    this.ctx.beginPath();
-    this.ctx.arc(p.x, p.y, lw / 2, 0, Math.PI * 2);
-    this.ctx.fill();
-    this.ctx.shadowBlur = 0;
+    // Strich anlegen: Aussehen festhalten, Anfangspunkt setzen
+    const spec = this._strokeSpec();
+    const ctx = spec.live ? this._liveBegin(spec) : this.ctx;
+    const st = this._stroke = { spec, ctx, w: spec.width * (spec.vary ? 0.55 : 1), begun: false };
+    this._applyStyle(ctx, spec);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, st.w / 2, 0, Math.PI * 2);
+    ctx.fill();
+    if (spec.grain) this._grain(ctx, spec, p.x, p.y, p.x, p.y);
   },
 
   _move(e) {
@@ -11198,7 +11492,11 @@ const DRAW = {
     }
     for (const ev of events) {
       const q = { x: ev.clientX + off.x, y: ev.clientY + off.y };
-      this._pts.push(this._rulerLine ? this._project(q) : q);
+      const pt = this._rulerLine ? this._project(q) : q;
+      pt.t = ev.timeStamp;
+      // Echter Stift mit Drucksensor: Druck statt Tempo bestimmt die Breite (0.5 = „kein Sensor")
+      if (ev.pointerType === 'pen' && ev.pressure > 0 && ev.pressure !== 0.5) pt.p = ev.pressure;
+      this._pts.push(pt);
     }
 
     if (!this._rafPending) {
@@ -11210,13 +11508,17 @@ const DRAW = {
     }
   },
 
-  _flushPoints() {
+  _flushPoints(final) {
     const pts = this._pts;
     if (pts.length < 2) return;
-    this._applyStyle();
-    const ctx = this.ctx;
+    const st = this._stroke || (this._stroke = { spec: this._strokeSpec(), ctx: this.ctx, w: this.size, begun: false });
+    const ctx = st.ctx, spec = st.spec;
+    this._applyStyle(ctx, spec);
+    if (spec.vary) { this._flushVary(st, final); return; }
+
     ctx.beginPath();
     ctx.moveTo(pts[0].x, pts[0].y);
+    let x0 = pts[0].x, y0 = pts[0].y, x1 = x0, y1 = y0;
 
     // Quadratic bezier through midpoints — smooth, precise
     for (let i = 1; i < pts.length - 1; i++) {
@@ -11228,10 +11530,55 @@ const DRAW = {
     const last = pts[pts.length - 1];
     ctx.lineTo(last.x, last.y);
     ctx.stroke();
-    ctx.shadowBlur = 0;
+    if (spec.grain) {
+      for (const q of pts) { x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y); }
+      this._grain(ctx, spec, x0, y0, x1, y1);
+    }
 
     // Keep only the last point as the new start
     this._pts = [last];
+  },
+
+  // Füller und Pinsel: die Breite folgt dem Tempo (langsam = breit, schnell = dünn) bzw. dem Druck eines Stifts.
+  // Gezeichnet wird in kurzen Stücken durch die Mittelpunkte, jedes mit seiner eigenen Breite.
+  _flushVary(st, final) {
+    const ctx = st.ctx, spec = st.spec, pts = this._pts;
+    const piece = (ax, ay, cx, cy, bx, by, w0, w1) => {
+      const len = Math.hypot(cx - ax, cy - ay) + Math.hypot(bx - cx, by - cy);
+      const n = Math.max(1, Math.ceil(len / 3));
+      let px = ax, py = ay;
+      for (let k = 1; k <= n; k++) {
+        const t = k / n, u = 1 - t;
+        const x = u * u * ax + 2 * u * t * cx + t * t * bx, y = u * u * ay + 2 * u * t * cy + t * t * by;
+        ctx.lineWidth = w0 + (w1 - w0) * t;
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(x, y); ctx.stroke();
+        px = x; py = y;
+      }
+    };
+    const nextWidth = (a, b) => {
+      const d = Math.hypot(b.x - a.x, b.y - a.y), dt = Math.max(1, (b.t || 0) - (a.t || 0));
+      let f = b.p ? 0.35 + b.p * 1.2 : 1.45 / (1 + (d / dt) * 1.1);
+      f = Math.max(spec.vary[0], Math.min(spec.vary[1], f));
+      return st.w + (spec.width * f - st.w) * 0.35;   // weich nachziehen statt springen
+    };
+    if (!st.begun) {
+      st.begun = true;
+      const a = pts[0], b = pts[1], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, w1 = nextWidth(a, b);
+      piece(a.x, a.y, a.x, a.y, mx, my, st.w, w1);
+      st.w = w1;
+    }
+    while (pts.length >= 3) {
+      const p0 = pts[0], p1 = pts[1], p2 = pts[2], w1 = nextWidth(p0, p2);
+      piece((p0.x + p1.x) / 2, (p0.y + p1.y) / 2, p1.x, p1.y, (p1.x + p2.x) / 2, (p1.y + p2.y) / 2, st.w, w1);
+      st.w = w1;
+      pts.shift();
+    }
+    if (final && pts.length === 2) {
+      // Auslauf: der Strich wird zum Ende hin dünner
+      const a = pts[0], b = pts[1], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      piece(mx, my, mx, my, b.x, b.y, st.w, st.w * 0.5);
+      this._pts = [b];
+    }
   },
 
   _end(e) {
@@ -11241,7 +11588,10 @@ const DRAW = {
     if (this.tool === 'select') { this._selEnd(); try { this.canvas.releasePointerCapture(e.pointerId); } catch(_) {} return; }
     if (this._shape) { this._previewShape(true); this._shape = null; }
     // Flush remaining points
-    else if (this._pts && this._pts.length > 1) this._flushPoints();
+    else if (this._pts && this._pts.length > 1) this._flushPoints(true);
+    // Textmarker/Bleistift/Kreide: den fertigen Strich in einem Schritt auf die Zeichnung legen
+    if (this._stroke && this._stroke.spec.live) this._liveCommit(this._stroke.spec);
+    this._stroke = null;
     this._rulerLine = null;
     try { this.canvas.releasePointerCapture(e.pointerId); } catch(_) {}
     // Debounced save — don't call toDataURL on every stroke end
@@ -11249,50 +11599,29 @@ const DRAW = {
     this._scheduleSave(800);
   },
 
-  _applyStyle() {
-    const ctx = this.ctx;
+  // Stil für einen Strich setzen. Ohne Angaben: Zeichenebene und aktuelles Werkzeug (Formen nutzen das so).
+  _applyStyle(ctx, spec) {
+    ctx = ctx || this.ctx;
+    spec = spec || this._strokeSpec();
     ctx.setLineDash([]);
     ctx.lineCap  = 'round';
     ctx.lineJoin = 'round';
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
+    ctx.lineWidth = spec.width;
     if (this.tool === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
       ctx.strokeStyle = 'rgba(0,0,0,1)';
       ctx.fillStyle   = 'rgba(0,0,0,1)';
-      ctx.lineWidth   = this.size * 5;
-    } else if (this.tool === 'marker') {
-      // Highlighter: thick + semi-transparent
-      ctx.strokeStyle = this.color + 'aa';
-      ctx.fillStyle   = this.color + 'aa';
-      ctx.lineWidth   = this.size * 4;
-      ctx.lineCap     = 'square';
-    } else if (this.tool === 'pen-thick') {
-      ctx.strokeStyle = this.color;
-      ctx.fillStyle   = this.color;
-      ctx.lineWidth   = this.size * 2.5;
-    } else if (this.tool === 'brush') {
-      ctx.strokeStyle = this.color + 'cc';
-      ctx.fillStyle   = this.color + 'cc';
-      ctx.lineWidth   = this.size * 3;
-      ctx.lineCap     = 'round';
-      ctx.shadowColor = this.color;
-      ctx.shadowBlur  = this.size * 2;
     } else {
-      // pen (default)
+      // Immer voll deckend zeichnen – durchscheinende Werkzeuge bekommen ihre Deckkraft über die laufende Ebene
       ctx.strokeStyle = this.color;
       ctx.fillStyle   = this.color;
-      ctx.lineWidth   = this.size;
-      ctx.shadowBlur  = 0;
     }
   },
 
-  _lineWidth() {
-    if (this.tool === 'eraser')   return this.size * 5;
-    if (this.tool === 'marker')   return this.size * 4;
-    if (this.tool === 'pen-thick') return this.size * 2.5;
-    if (this.tool === 'brush')    return this.size * 3;
-    return this.size;
-  },
+  _lineWidth() { return this._strokeSpec().width; },
 
   _undo() {
     if (this._sel) { this._sel.el.remove(); this._sel = null; }

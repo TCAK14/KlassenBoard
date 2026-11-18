@@ -70,6 +70,13 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
 - Zeichnen (`DRAW`): Werkzeuge über `data-tool` (pen, marker, laser, eraser, select, text); Formen über das Menü
   `#dt-shapes` (`DRAW_SHAPE_LIST`: line, arrow, rect, ellipse, compass, axes; Schalter `fill`/`dash`). Formen zeichnen ihre
   Vorschau über dem Undo-Schnappschuss (`_previewShape(final)`, Länge/Radius als Beschriftung nur in der Vorschau)
+- Stiftarten `DRAW_PENS` (fine, fountain, pencil, chalk, brush) in `DRAW.penKind`; Menü öffnet sich beim zweiten Antippen des Stifts.
+  `_strokeSpec()` beschreibt jeden Strich (Breite, `live`, `alpha`, `grain`, `vary`). Durchscheinende/körnige Striche (Textmarker,
+  Bleistift, Kreide) entstehen voll deckend auf der Ebene `#draw-live` und werden beim Loslassen in EINEM Schritt mit `alpha`
+  übertragen (`_liveCommit`) — nie wieder mit halbtransparenter Farbe direkt zeichnen (überlagert sich selbst → fleckig).
+  Füller/Pinsel: Breite nach Tempo bzw. Stiftdruck (`_flushVary`). Körnung = festes Punktmuster per `destination-out` (`_grain`)
+- Farben: `openColorPop(anchor, current, onPick)` (Raster + Farbton/Helligkeit) statt `<input type="color">` — das Farb-Fenster
+  des Browsers gibt es in der Android-App nicht; dort fängt ein Klick-Wächter alle übrigen Farbfelder ab und zeigt unser Fenster
 - Messwerkzeuge `DRAW_INSTR` (ruler, setsquare, protractor) über `#dt-measure`: SVG an `<body>`, Kanten in `edges`
   (lokal zum Drehpunkt). `_instrSnap` projiziert Striche, die dicht an einer Kante beginnen, auf die Kante.
   1 Einheit = `DRAW_UNIT` (50 px), keine echten Zentimeter. Auf schmalen Bildschirmen `ins.scale` < 1
