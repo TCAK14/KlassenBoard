@@ -68,6 +68,7 @@ h1 { font-size:clamp(40px, 6vw, 68px); line-height:1.05; letter-spacing:-1.5px; 
 .shot::before { content:''; position:absolute; inset:-40px; border-radius:60px; background:var(--grad); filter:blur(70px); opacity:.28; z-index:-1; }
 .shot-in { border-radius:24px; overflow:hidden; background:#050136; }
 .shot-bar { display:flex; gap:7px; padding:11px 14px; background:#0A0747; }
+.shot-hint { display:none; position:relative; z-index:1; text-align:center; font-size:14.5px; color:var(--muted); margin:12px 0 0; }
 .shot-bar span { width:11px; height:11px; border-radius:50%; background:#3A35A0; }
 
 section { position:relative; padding:84px 0; overflow:hidden; }
@@ -152,7 +153,10 @@ footer { border-top:1px solid var(--line); padding:30px 0 44px; font-size:15.5px
   .btn-lg { width:100%; }
   .price-in { padding:30px 20px; }
   /* Am Handy nur den linken Teil des Bildschirmfotos zeigen – sonst wird alles unlesbar klein */
-  .shot-in > img { width:185%; max-width:none; }
+  .shot-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .shot-scroll::-webkit-scrollbar { display:none; }
+  .shot-scroll img { width:230%; max-width:none; }
+  .shot-hint { display:block; }
   .stat b { font-size:30px; }
   .foot .sp { margin-left:0; }
 }
@@ -196,9 +200,10 @@ footer { border-top:1px solid var(--line); padding:30px 0 44px; font-size:15.5px
     <div class="shot">
       <div class="shot-in">
         <div class="shot-bar"><span></span><span></span><span></span></div>
-        <img src="img/board.png" alt="Bildschirmfoto: Scolavis-Tafel mit Uhr, Stundenziel, Ampel, Agenda und Hausaufgaben" width="1440" height="810" loading="lazy">
+        <div class="shot-scroll" tabindex="0" aria-label="Bildschirmfoto der Tafel, seitlich verschiebbar"><img src="img/board.png" alt="Bildschirmfoto: Scolavis-Tafel mit Uhr, Stundenziel, Ampel, Agenda und Hausaufgaben" width="1440" height="810" loading="lazy"></div>
       </div>
     </div>
+    <p class="shot-hint">← Bild seitlich wischen →</p>
 
     <div class="stats">
       <div class="stat"><b class="grad-text">39</b><span>Elemente für die Tafel</span></div>
