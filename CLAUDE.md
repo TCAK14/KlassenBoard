@@ -34,9 +34,12 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
 - **Toolbar (oben):** `z-index:99999`, `pointer-events:all` — darf nie blockiert werden
 
 ## Oberfläche (seit Nov 2026, „Etappe 1")
-- **Obere Leiste `#toolbar`:** nur Navigation (Klasse, Tafel-Reiter, Zeichnen, Bearbeiten, Vollbild, `⋯`, Anmelden)
+- **Obere Leiste `#toolbar`:** nur Navigation (Klasse, Tafel-Reiter, Schalter „Ansicht | Bearbeiten", Vollbild, `⋯`, Anmelden).
+  Der Schalter `#edit-mode-btn` zeigt BEIDE Zustände (`.em-opt`, aktiver hell) — nie wieder ein einzelner Knopf, der nur den
+  aktuellen Zustand nennt (Nutzer tippte „Bearbeiten" an und schaltete es damit aus). `setEditMode(on, explain)` zeigt einen Hinweis
 - **Untere Leiste `#dock`:** Elemente mit einem Klick hinzufügen — `renderDock()`, Auswahl in `kb_dock_items`
-  (`openDockCustomizer()`); „Mehr" (`#btn-add-widget`) öffnet `openWidgetMenu()`
+  (`openDockCustomizer()`); rechts fest: „Zeichnen" (`#dock-draw`, auf Wunsch des Nutzers unten), „KI", „Mehr" (`#btn-add-widget`
+  öffnet `openWidgetMenu()`). Größen-Griff und Kopf-Knöpfe der Elemente sind im Bearbeiten-Modus immer sichtbar (Touch hat kein Hover)
 - **Menü `⋯`:** `openMoreMenu()` — Vorlagen, Hintergrund, Stundenplan, Sprache, Export, Karten hell/dunkel (`kb_cards`),
   Leisten ausblenden (`kb_autohide`), Zurücksetzen. Auf schmalen Bildschirmen wandern versteckte Leisten-Knöpfe hierher
 - **Symbole:** `ICONS` + `icon(name, size)` (Inline-SVG, Schlüssel = Widget-Typ). Keine Emojis für Bedienelemente

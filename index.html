@@ -783,13 +783,18 @@ body { background:var(--board); color:var(--on-board); }
 .tb-icon-btn { width:40px; height:40px; border-radius:12px; background:rgba(255,255,255,0.12); color:var(--on-board); font-size:0; }
 .tb-icon-btn:hover { background:rgba(255,255,255,0.22); color:#fff; }
 .tb-icon-btn.active { background:var(--card); color:var(--ink); }
+/* Schalter „Ansicht | Bearbeiten": beide Möglichkeiten stehen da, die aktive ist hell hinterlegt */
 #edit-mode-btn {
-  width:auto; height:40px; padding:0 13px; gap:7px; border-radius:12px;
-  display:flex; align-items:center; background:rgba(255,255,255,0.12); color:var(--on-board);
-  font-size:14px; font-weight:700; letter-spacing:0;
+  flex:none; width:auto; height:40px; padding:3px; gap:2px; border-radius:12px;
+  display:flex; align-items:center; background:rgba(255,255,255,0.12); letter-spacing:0;
 }
-#edit-mode-btn:hover { background:rgba(255,255,255,0.22); }
-#edit-mode-btn.active { background:var(--card); color:var(--ink); }
+.em-opt {
+  height:34px; padding:0 11px; gap:6px; border:none; border-radius:9px; cursor:pointer;
+  display:flex; align-items:center; background:transparent; color:var(--on-board);
+  font:inherit; font-size:14px; font-weight:700; opacity:.82; transition:background .15s, color .15s;
+}
+.em-opt:hover { background:rgba(255,255,255,0.14); opacity:1; }
+.em-opt.on { background:var(--card); color:var(--ink); opacity:1; }
 #auth-area { margin-left:2px; }
 #auth-login-btn { height:40px; padding:0 14px; border-radius:12px; border:none; background:var(--card); color:var(--ink); font-size:14px; font-weight:700; }
 #auth-login-btn:hover { background:#fff; color:var(--ink); }
@@ -870,13 +875,27 @@ body[data-cards="dark"] .widget {
 /* Im Bearbeiten-Modus ist der Griff immer sichtbar — auch am Smartboard ohne Maus */
 .widget-header { height:34px; background:var(--w-bar); padding:0 5px 0 12px; opacity:1; }
 .widget-title { color:var(--w-muted); font-size:11.5px; letter-spacing:.06em; }
-.w-btn { width:26px; height:26px; border-radius:8px; background:transparent; color:var(--w-muted); font-size:0; }
+.w-btn { position:relative; width:30px; height:30px; border-radius:8px; background:transparent; color:var(--w-muted); font-size:0; }
+.w-btn svg { width:18px; height:18px; }
 .w-btn:hover { background:var(--w-fill-2); color:var(--w-ink); }
 .w-btn.del:hover { background:rgba(180,35,24,0.14); color:var(--w-danger); }
 .widget-body.with-header { top:34px; }
 /* Schrift im Element wächst mit dem Element mit (cqw = Prozent der Element-Breite) */
 .widget-body { container-type:size; }
-.resize-handle::after { border-right-color:var(--w-line-strong); border-bottom-color:var(--w-line-strong); }
+/* Größen-Griff: im Bearbeiten-Modus immer sichtbar (am Smartboard gibt es kein „mit der Maus darüberfahren") */
+.resize-handle { width:26px; height:26px; opacity:1; }
+.resize-handle::after {
+  right:5px; bottom:5px; width:12px; height:12px; border-radius:0 0 5px 0;
+  border-right:3px solid var(--accent); border-bottom:3px solid var(--accent); opacity:.7;
+}
+.resize-handle:hover::after { opacity:1; }
+@media (pointer: coarse) {
+  /* Finger statt Maus: größere Trefferflächen, ohne die Kopfzeile höher zu machen */
+  .w-btn::after { content:''; position:absolute; inset:-6px -2px; }
+  .widget-actions { gap:6px; }
+  .resize-handle { width:34px; height:34px; }
+  .resize-handle::after { width:15px; height:15px; }
+}
 .widget ::-webkit-scrollbar-thumb { background:var(--w-line-strong); }
 .widget input[type=text], .widget input[type=url], .widget input[type=number], .widget textarea, .widget select {
   color:var(--w-ink); background:var(--w-fill); border-color:var(--w-line-strong);
@@ -1576,7 +1595,7 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
 @media (max-width: 1100px) {
   #toolbar { gap:6px; padding:0 10px; }
   #logo-text { display:none; }
-  #edit-mode-btn { width:40px; padding:0; justify-content:center; }
+  .em-opt { padding:0 9px; }
   #edit-mode-btn .lbl { display:none; }
   #class-btn { max-width:150px; }
   #class-btn .class-name { max-width:96px; }
@@ -1591,7 +1610,8 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
   #board-tabs { flex:1 1 auto; min-width:90px; }
   .tab-btn { height:38px; padding:0 11px; font-size:13px; }
   #add-board-btn, .tb-icon-btn { width:38px; height:38px; }
-  #edit-mode-btn { width:38px; height:38px; }
+  #edit-mode-btn { height:38px; }
+  .em-opt { height:32px; padding:0 8px; }
   #btn-fullscreen { display:none; }
   #auth-area { display:none; }   /* Anmelden steckt hier im Menü ⋯ */
 
@@ -1631,7 +1651,7 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
 @media (max-width: 480px) {
   :root { --toolbar-h:50px; }
   /* Zeichnen und Bearbeiten wandern auf dem Handy ins Menü ⋯ */
-  #btn-draw, #edit-mode-btn { display:none !important; }
+  #dock-draw, #edit-mode-btn { display:none !important; }
   #class-btn { max-width:96px; }
   #ki-panel, #ki-panel.big { height:min(76vh, 640px) !important; }
 }
@@ -1676,8 +1696,7 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
   <div id="board-tabs"></div>
   <button id="add-board-btn" title="Neue Tafel" aria-label="Neue Tafel"></button>
   <div class="tb-spacer"></div>
-  <button class="tb-icon-btn" id="btn-draw" title="Zeichnen / Schreiben" aria-label="Zeichnen"></button>
-  <button id="edit-mode-btn" title="Bearbeiten/Ansicht (E)"></button>
+  <div id="edit-mode-btn" role="group" aria-label="Ansicht oder Bearbeiten"></div>
   <button class="tb-icon-btn" id="btn-fullscreen" title="Vollbild (F)" aria-label="Vollbild"></button>
   <button class="tb-icon-btn" id="btn-more" title="Mehr: Vorlagen, Hintergrund, Einstellungen" aria-label="Mehr"></button>
   <div id="auth-area">
@@ -9238,7 +9257,7 @@ document.addEventListener('keydown', e => {
   // Buchstaben-Kürzel nur ohne Strg/Alt/Cmd — sonst schaltete z.B. Strg+F (Suchen) den Vollbildmodus um
   const plain = !e.ctrlKey && !e.metaKey && !e.altKey;
   if (plain && (e.key === 'f' || e.key === 'F')) toggleFullscreen();
-  if (plain && (e.key === 'e' || e.key === 'E')) toggleEditMode();
+  if (plain && (e.key === 'e' || e.key === 'E')) toggleEditMode(true);
   if (plain && (e.key === 'w' || e.key === 'W')) openWidgetMenu();
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
     e.preventDefault();
@@ -9299,12 +9318,22 @@ document.getElementById('fs-exit')?.addEventListener('click', toggleFullscreen);
   updateFullscreenBtn();
 }));
 
-function toggleEditMode() {
-  APP.state.editMode = !APP.state.editMode;
-  updateEditModeBtn();
-  APP.selectedId = null;
-  renderWidgets();
+// Ansicht: Elemente sind fest (nichts verrutscht beim Antippen). Bearbeiten: verschieben, Größe, Einstellungen, löschen.
+// explain = kurzer Hinweis, was der gewählte Modus bedeutet (nur wenn die Lehrkraft selbst umschaltet)
+function setEditMode(on, explain) {
+  on = !!on;
+  if (APP.state.editMode !== on) {
+    APP.state.editMode = on;
+    updateEditModeBtn();
+    APP.selectedId = null;
+    renderWidgets();
+  }
+  if (explain) {
+    toast(on ? 'Bearbeiten: Elemente verschieben, Größe ändern, einstellen (Zahnrad) oder löschen (✕)'
+             : 'Ansicht: Elemente sind fest – beim Antippen verrutscht nichts');
+  }
 }
+function toggleEditMode(explain) { setEditMode(!APP.state.editMode, explain === true); }
 
 // ══════════════════════════════════════════════════════════════
 // AUTH UI
@@ -9754,7 +9783,10 @@ function openAiBoardGenerator(prefillTopic) {
 // TOOLBAR WIRING
 // ══════════════════════════════════════════════════════════════
 document.getElementById('add-board-btn').addEventListener('click', () => openStartDialog('new'));
-document.getElementById('edit-mode-btn').addEventListener('click', toggleEditMode);
+document.getElementById('edit-mode-btn').addEventListener('click', e => {
+  const opt = e.target.closest('.em-opt');
+  if (opt) setEditMode(opt.dataset.mode === 'edit', true);
+});
 document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
 document.getElementById('btn-more').addEventListener('click', e => { e.stopPropagation(); openMoreMenu(); });
 document.getElementById('auth-login-btn').addEventListener('click', openLoginModal);
@@ -10373,7 +10405,6 @@ const DRAW = {
     const btn = id => document.getElementById(id);
 
     // Toolbar toggle (draw button in main toolbar)
-    btn('btn-draw')?.addEventListener('click', () => this.toggle());
 
     // Werkzeuge (Symbole statt Emojis, damit sie auf jedem Gerät gleich aussehen)
     document.querySelectorAll('#draw-toolbar [data-tool]').forEach(b => {
@@ -10479,10 +10510,6 @@ const DRAW = {
     document.body.classList.toggle('draw-mode', this.active);
     const toolbar = document.getElementById('draw-toolbar');
     toolbar?.classList.toggle('visible', this.active);
-    const drawBtn = document.getElementById('btn-draw');
-    if (drawBtn) {
-      drawBtn.classList.toggle('active', this.active);
-    }
     if (this.active) {
       // Turning ON — restore drawing for this board
       this.loadBoard(APP.state.activeBoardId);
@@ -11894,6 +11921,7 @@ function renderDock() {
   const sep = document.createElement('div');
   sep.className = 'dock-sep';
   dock.appendChild(sep);
+  add(dock, 'accent', 'brush', 'Zeichnen', 'Auf der Tafel zeichnen und schreiben', () => DRAW.toggle(), 'dock-draw');
   add(dock, 'accent', 'ai', 'KI', 'KI-Assistent: Fragen stellen', () => { if (window.toggleKiPanel) window.toggleKiPanel(); }, 'dock-ki');
   add(dock, 'accent', 'grid', 'Mehr', 'Alle Elemente anzeigen (W)', () => openWidgetMenu(), 'btn-add-widget');
 }
@@ -11902,10 +11930,12 @@ function updateEditModeBtn() {
   const btn = document.getElementById('edit-mode-btn');
   if (!btn) return;
   const on = APP.state.editMode;
-  btn.innerHTML = icon(on ? 'edit' : 'eye', 18) + '<span class="lbl">' + (on ? 'Bearbeiten' : 'Ansicht') + '</span>';
-  btn.classList.toggle('active', on);
-  btn.setAttribute('aria-pressed', String(on));
-  btn.title = on ? 'Bearbeiten ist an — zur Ansicht wechseln (E)' : 'Ansicht — zum Bearbeiten wechseln (E)';
+  const opt = (mode, active, iconName, label, title) =>
+    '<button class="em-opt' + (active ? ' on' : '') + '" data-mode="' + mode + '" aria-pressed="' + active + '" title="' + title + '">'
+    + icon(iconName, 18) + '<span class="lbl">' + label + '</span></button>';
+  btn.innerHTML =
+    opt('view', !on, 'eye', 'Ansicht', 'Ansicht: Elemente sind fest, beim Antippen verrutscht nichts (E)') +
+    opt('edit', on, 'edit', 'Bearbeiten', 'Bearbeiten: Elemente verschieben, Größe ändern, einstellen, löschen (E)');
 }
 
 function updateFullscreenBtn() {
@@ -11916,7 +11946,6 @@ function updateFullscreenBtn() {
 function initChromeIcons() {
   const set = (id, name, size) => { const e = document.getElementById(id); if (e) e.innerHTML = icon(name, size || 20); };
   set('add-board-btn', 'plus', 20);
-  set('btn-draw', 'brush', 20);
   set('btn-more', 'dots', 22);
   set('auth-logout-btn', 'logout', 16);
   updateFullscreenBtn();
@@ -11995,9 +12024,9 @@ function openMoreMenu() {
 
   // Auf kleinen Bildschirmen wandern diese Knöpfe aus der Leiste hierher
   let moved = false;
-  if (hidden('btn-draw')) { item('brush', 'Zeichnen', () => DRAW.toggle()); moved = true; }
+  if (hidden('dock-draw')) { item('brush', 'Zeichnen', () => DRAW.toggle()); moved = true; }
   if (hidden('edit-mode-btn')) {
-    item(APP.state.editMode ? 'eye' : 'edit', APP.state.editMode ? 'Zur Ansicht wechseln' : 'Tafel bearbeiten', toggleEditMode);
+    item(APP.state.editMode ? 'eye' : 'edit', APP.state.editMode ? 'Zur Ansicht wechseln' : 'Tafel bearbeiten', () => toggleEditMode(true));
     moved = true;
   }
   if (hidden('btn-fullscreen')) { item('maximize', 'Vollbild', toggleFullscreen); moved = true; }
