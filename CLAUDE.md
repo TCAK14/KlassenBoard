@@ -121,6 +121,25 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
   Blätter-Anzeige `#board-pager` (erst ab 1280 px oder im Vollbild), Bild-auf/ab-Tasten = Präsentations-Fernbedienung (`stepBoard`)
 - `createBoard` sichert die Zeichnung der alten Tafel und lädt die (leere) der neuen; `fitLayout` behält bei Breite 0 die Vorlagenmaße
 
+## Handy-Verbindung (`PHONE` in index.html + eigene Seite `handy.html`, seit 18.11.2026)
+- Knopf „Handy" in der unteren Leiste (`#dock-phone`) → `PHONE.toggle()` zeigt den QR-Code `…/handy.html#t.<kanal>.<schlüssel>`.
+  Kopplung bleibt (Tafel: `kb_phone_link`, Handy: `kb_link`); Tafel lauscht nach dem Start nur, wenn in den letzten 12 h benutzt
+- Transport: Supabase Realtime **Broadcast** (`kbl-<kanal>`, Ereignis `m`), jede Nachricht AES-GCM-verschlüsselt (`kbSeal/kbUnseal`),
+  nichts wird gespeichert, keine Tabellen. Nachrichten: `hello`/`state`, `ph`+`pc` (Foto in 40-KB-Stücken, Antwort `ph-ok`), `text`,
+  `nav`, `act`, `full`, `laser`, `live-start`/`rtc`/`lf`/`live-stop`, `drop-*`
+- Fotos landen als Bild-Element mit `config.fileId` in IndexedDB (`PDFSTORE`, `addPhotoWidget`, `localImageUrl`) — nicht in
+  localStorage/Cloud (Platz + Datenschutz); `_slimConfig` lässt `fileId` weg
+- Fernbedienung ist bewusst allgemein: `PHONE.controls()` liest die sichtbaren Knöpfe eines Elements aus dem DOM und „tippt" sie
+  an (`act` mit `b:<index>`); nur die Ampel hat eigene Befehle. Neue Elemente sind damit automatisch fernbedienbar —
+  Knöpfe brauchen dafür einen lesbaren Text oder `aria-label`/`title`
+- Live-Kamera: erst WebRTC direkt (STUN `stun.cloudflare.com`, Signale über den Kanal), nach 7 s ohne Verbindung Einzelbilder
+  über den Kanal (`lf`, ~1,5 Bilder/s). Fenster `#phone-live` ist nicht Teil der Tafel-Daten
+- Schüler-Abgabe: eigener Kanal `kbd-<kanal>`, QR enthält den öffentlichen ECDH-Schlüssel der Tafel → nur die Tafel kann Fotos
+  lesen (auch Mitschüler im selben Kanal nicht). Eingang zeigt zuerst nur Namen (die Klasse schaut mit); Freigabe an der Tafel
+  oder am Lehrer-Handy. Grenzen: 5 Fotos pro Gerät, 40 im Eingang. Namen/Texte von außen nur über `textContent`
+- Lokal testbar ohne Supabase: `AUTH.client` (Tafel) bzw. `sb` (handy.html) durch einen `BroadcastChannel`-Nachbau ersetzen
+- Supabase-Grenzen im Blick behalten: Gratis-Tarif 200 gleichzeitige Verbindungen, Projekt pausiert nach 7 Tagen ohne Nutzung
+
 ## PDF-Element (`pdf`)
 - Dateien liegen in IndexedDB (`PDFSTORE`, DB `classpuls_files`, bis 60 MB) — NICHT in localStorage/Cloud. Auf einem
   anderen Gerät zeigt das Element „liegt nicht auf diesem Gerät" und lässt die Datei neu wählen

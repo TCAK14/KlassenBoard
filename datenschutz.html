@@ -216,6 +216,7 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
     <li><strong>Klassenliste:</strong> Gemerkte Namenslisten liegen nur in deinem Browser auf diesem Gerät und werden nicht in die Cloud synchronisiert.</li>
     <li><strong>Tafel teilen:</strong> Beim Teilen per Link steckt der Inhalt der Tafel vollständig im Link selbst; wir speichern dafür nichts auf einem Server. Wer den Link hat, sieht die Inhalte der Tafel (z. B. Namen in Namensrad oder Gruppen).</li>
     <li><strong>Android-App:</strong> Die App-Datei für Smartboards und Android-Geräte wird über GitHub (GitHub Inc., Microsoft) zum Herunterladen bereitgestellt; dabei erfährt GitHub technisch bedingt deine IP-Adresse. Die App öffnet ausschließlich ClassPuls und verwendet dafür die Browser-Technik GeckoView von Mozilla direkt auf dem Gerät. Mikrofon und Kamera werden erst angefragt, wenn du das Lautstärke- oder Kamera-Element benutzt.</li>
+    <li><strong>Handy-Verbindung (Fotos, Live-Kamera, Fernbedienung, Schüler-Abgabe):</strong> Verbindest du ein Handy per QR-Code mit der Tafel, werden Fotos, Kamerabilder und Steuerbefehle Ende-zu-Ende verschlüsselt über einen Durchreiche-Kanal unseres Datenbank-Dienstes (Supabase) übertragen und dort nicht gespeichert; der Schlüssel steckt im QR-Code und ist nur der Tafel und dem Handy bekannt. Die Fotos liegen danach ausschließlich im Browser-Speicher des Tafel-Geräts, nicht in der Cloud. Für die Live-Kamera versuchen Handy und Tafel eine direkte Verbindung; dabei hilft ein Vermittlungsserver von Cloudflare, der die Internet-Adressen beider Geräte erfährt, aber keine Bilder. Bei der Schüler-Abgabe wird ein eingegebener Name zusammen mit dem Foto nur an die Tafel übertragen; nicht gezeigte Abgaben werden beim Beenden verworfen.</li>
     <li><strong>App-Installation und Offline-Betrieb:</strong> Damit ClassPuls sofort vom Gerät startet und auch bei schlechtem oder fehlendem WLAN läuft, legt dein Browser eine Kopie der Seite, der Schrift, der App-Symbole und der Programmbibliotheken in seinem Zwischenspeicher ab und erneuert sie im Hintergrund, sobald es eine neue Version gibt. Darin sind keine persönlichen Daten enthalten; Anmeldung, Cloud und Server-Funktionen laufen immer direkt über das Netz.</li>
   </ul>
 
@@ -246,14 +247,14 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
     </thead>
     <tbody>
       <tr><td>Netlify</td><td>Hosting, Server-Funktionen</td><td>Global CDN (DPF-zertifiziert)</td></tr>
-      <tr><td>Supabase</td><td>Anmeldung, Datenbank, Live-Umfragen</td><td>EU (Frankfurt)</td></tr>
+      <tr><td>Supabase</td><td>Anmeldung, Datenbank, Live-Umfragen, verschlüsselter Durchreiche-Kanal der Handy-Verbindung</td><td>EU (Frankfurt)</td></tr>
       <tr><td>Stripe</td><td>Zahlungen</td><td>USA (DPF-zertifiziert)</td></tr>
       <tr><td>Google (Gemini API)</td><td>KI-Assistent – nur bei Nutzung</td><td>EU/USA (DPF-zertifiziert)</td></tr>
       <tr><td>Groq</td><td>KI-Tafel-Generator, Sprachbefehle – nur bei Nutzung</td><td>USA</td></tr>
       <tr><td>Pixabay, Wikimedia Commons</td><td>Bildersuche im KI-Assistenten – nur bei Nutzung, Abruf über unseren Server</td><td>EU/USA</td></tr>
       <tr><td>Pollinations.ai</td><td>KI-Bilder im Element „Frag die KI“ – nur bei Nutzung</td><td>EU/USA</td></tr>
       <tr><td>Google (YouTube, Favicons)</td><td>Videos und Webseiten-Symbole – nur mit entsprechendem Element</td><td>EU/USA (DPF-zertifiziert)</td></tr>
-      <tr><td>Cloudflare (cdnjs)</td><td>Bibliothek zur PDF-Anzeige – nur beim Öffnen eines PDFs</td><td>Global CDN</td></tr>
+      <tr><td>Cloudflare (cdnjs, STUN)</td><td>Bibliothek zur PDF-Anzeige – nur beim Öffnen eines PDFs; Verbindungsaufbau der Live-Kamera vom Handy – nur bei Nutzung</td><td>Global CDN</td></tr>
     </tbody>
   </table>
 

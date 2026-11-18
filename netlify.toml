@@ -104,6 +104,12 @@
   to = "/app.html"
   status = 200
 
+# Handy-Seite (Foto, Live-Kamera, Fernbedienung, Schüler-Abgabe) – wird über den QR-Code an der Tafel geöffnet
+[[redirects]]
+  from = "/handy"
+  to = "/handy.html"
+  status = 200
+
 [[redirects]]
   from = "/landing"
   to = "/landing.html"

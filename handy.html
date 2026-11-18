@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ClassPuls – Handy</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1F3531">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ClassPuls Handy">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+@font-face { font-family:'Atkinson Hyperlegible Next'; src:url('fonts/atkinson-hyperlegible-next-latin.woff2') format('woff2'); font-weight:200 800; font-display:swap; }
+:root { --board:#1F3531; --card:#FBFAF6; --ink:#1B2422; --muted:#5B6763; --line:rgba(27,36,34,0.12); --accent:#0B7A74; --accent-d:#075E59; --tint:#E3F3F0; --danger:#B42318; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; }
+body { margin:0; background:var(--board); color:var(--ink); font-family:'Atkinson Hyperlegible Next', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; font-size:16px; line-height:1.45; overscroll-behavior:none; }
+button, input, textarea { font:inherit; color:inherit; }
+button { cursor:pointer; touch-action:manipulation; }
+#app { display:flex; flex-direction:column; height:100%; max-width:640px; margin:0 auto; }
+header { flex:none; display:flex; align-items:center; gap:10px; padding:calc(10px + env(safe-area-inset-top)) 16px 10px; color:#fff; }
+header img { width:32px; height:32px; border-radius:9px; }
+header b { font-size:18px; }
+#status { margin-left:auto; display:flex; align-items:center; gap:7px; font-size:13.5px; color:#C9E9E4; }
+#status i { width:10px; height:10px; border-radius:50%; background:#F0B429; }
+#status.on i { background:#3DDC97; box-shadow:0 0 0 4px rgba(61,220,151,0.2); }
+#status.off i { background:#F87171; }
+main { flex:1 1 auto; overflow:auto; padding:4px 14px 14px; -webkit-overflow-scrolling:touch; }
+nav { flex:none; display:flex; background:#16302C; padding:6px 8px calc(6px + env(safe-area-inset-bottom)); gap:4px; }
+nav button { flex:1; position:relative; display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 2px; border:0; border-radius:12px; background:transparent; color:#9FB5B0; font-size:12px; font-weight:700; }
+nav button svg { width:24px; height:24px; }
+nav button.on { background:rgba(255,255,255,0.12); color:#fff; }
+nav .badge { position:absolute; top:3px; left:calc(50% + 8px); min-width:19px; height:19px; padding:0 5px; border-radius:10px; background:#F0B429; color:#1B2422; font-size:12px; line-height:19px; }
+.card { background:var(--card); border-radius:20px; padding:18px; margin-bottom:12px; box-shadow:0 8px 24px rgba(0,0,0,0.22); }
+h1 { font-size:22px; line-height:1.2; margin:0 0 6px; }
+h2 { font-size:13px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:0 0 10px; }
+p { margin:0 0 10px; }
+.muted { color:var(--muted); font-size:14.5px; }
+.big-btn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:62px; padding:12px 16px; border:0; border-radius:16px; background:var(--accent); color:#fff; font-size:19px; font-weight:800; margin-bottom:10px; }
+.big-btn:active { background:var(--accent-d); }
+.big-btn.sec { background:var(--tint); color:var(--accent-d); }
+.big-btn.danger { background:#FDECEA; color:var(--danger); }
+.big-btn[disabled] { opacity:.5; }
+.big-btn svg { width:26px; height:26px; flex:none; }
+.row { display:flex; gap:8px; flex-wrap:wrap; }
+.chip { flex:1 1 auto; min-height:46px; padding:8px 14px; border:1.5px solid var(--line); border-radius:13px; background:#fff; font-size:15.5px; font-weight:700; }
+.chip:active, .chip.on { background:var(--tint); border-color:var(--accent); color:var(--accent-d); }
+.chip.go { background:var(--accent); border-color:var(--accent); color:#fff; }
+.chip.small { flex:none; min-height:40px; padding:6px 12px; font-size:14.5px; }
+.center { text-align:center; }
+.ok-mark { width:84px; height:84px; margin:6px auto 12px; border-radius:50%; background:#DFF5EC; color:#0B7A4B; display:flex; align-items:center; justify-content:center; animation:pop .35s ease; }
+.ok-mark svg { width:46px; height:46px; }
+@keyframes pop { from { transform:scale(.4); opacity:0; } to { transform:scale(1); opacity:1; } }
+.bar { height:10px; border-radius:5px; background:var(--line); overflow:hidden; margin:14px 0 6px; }
+.bar i { display:block; height:100%; width:0; background:var(--accent); transition:width .2s; }
+/* Foto bearbeiten */
+.stage { position:relative; margin:0 auto 12px; background:#0F1F1C; border-radius:14px; overflow:hidden; touch-action:none; }
+.stage canvas { display:block; width:100%; height:100%; }
+.crop { position:absolute; border:2px solid #fff; box-shadow:0 0 0 2000px rgba(0,0,0,0.5); touch-action:none; }
+.crop b { position:absolute; width:34px; height:34px; margin:-17px; touch-action:none; }
+.crop b::after { content:''; position:absolute; inset:9px; border-radius:50%; background:#fff; box-shadow:0 1px 5px rgba(0,0,0,0.5); }
+.crop .tl { left:0; top:0; } .crop .tr { left:100%; top:0; } .crop .bl { left:0; top:100%; } .crop .br { left:100%; top:100%; }
+/* Live */
+.live-box { position:relative; background:#0F1F1C; border-radius:16px; overflow:hidden; aspect-ratio:4/3; margin-bottom:12px; }
+.live-box video { width:100%; height:100%; object-fit:cover; display:block; }
+.live-tag { position:absolute; left:10px; top:10px; padding:4px 10px; border-radius:20px; background:rgba(0,0,0,0.6); color:#fff; font-size:13px; font-weight:700; }
+.live-tag::before { content:''; display:inline-block; width:9px; height:9px; margin-right:6px; border-radius:50%; background:#F87171; }
+/* Steuern */
+.board-nav { display:flex; align-items:center; gap:8px; }
+.board-nav button { flex:none; width:58px; height:58px; border:0; border-radius:16px; background:var(--accent); color:#fff; font-size:28px; font-weight:800; }
+.board-nav .name { flex:1; min-width:0; text-align:center; font-size:18px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.board-nav .name small { display:block; font-size:13px; font-weight:400; color:var(--muted); }
+.wcard { border-top:1px solid var(--line); padding:12px 0 4px; }
+.wcard:first-of-type { border-top:0; padding-top:0; }
+.wcard .wt { display:flex; align-items:center; gap:8px; font-weight:800; margin-bottom:8px; }
+.wcard .wt button { margin-left:auto; }
+#laser { height:170px; border-radius:16px; background:#12231F; color:#9FB5B0; display:flex; align-items:center; justify-content:center; text-align:center; font-size:14.5px; touch-action:none; user-select:none; -webkit-user-select:none; position:relative; overflow:hidden; }
+#laser i { position:absolute; width:22px; height:22px; margin:-11px; border-radius:50%; background:#ff3b30; box-shadow:0 0 18px 6px rgba(255,59,48,0.6); display:none; pointer-events:none; }
+textarea, input[type=text] { width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:13px; background:#fff; font-size:17px; margin-bottom:10px; }
+textarea { min-height:92px; resize:vertical; }
+/* Abgaben */
+.sub { display:flex; gap:12px; align-items:center; padding:10px 0; border-top:1px solid var(--line); }
+.sub:first-of-type { border-top:0; }
+.sub img { flex:none; width:92px; height:92px; object-fit:cover; border-radius:12px; background:#ddd; }
+.sub .who { font-weight:800; margin-bottom:6px; overflow-wrap:anywhere; }
+.hide { display:none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header><img src="icons/icon-192.png" alt=""><b>ClassPuls</b><div id="status"><i></i><span>verbinde …</span></div></header>
+  <main id="view"></main>
+  <nav id="tabs" class="hide"></nav>
+</div>
+<script src="/vendor/supabase-2.119.0.js"></script>
+<script>
+'use strict';
+// ClassPuls – Handy-Seite. Verbindet ein Handy/Tablet mit einer Tafel:
+//   #t.<kanal>.<schlüssel>  Lehrkraft: Foto, Live-Kamera, Fernbedienung, Abgaben freigeben
+//   #s.<kanal>.<öffentlicher Schlüssel der Tafel>  Schüler: ein Foto abgeben
+// Alles läuft Ende-zu-Ende verschlüsselt über einen Durchreiche-Kanal (Supabase Realtime) – gespeichert wird dort nichts.
+const SUPABASE_URL = 'https://ubroujkwoizghiiustri.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_WbCKbSDkacYqUHxi0E6Qhg_-Lkau-i9';
+const ICE = [{ urls: 'stun:stun.cloudflare.com:3478' }];
+
+const $ = id => document.getElementById(id);
+const view = $('view');
+function h(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  Object.keys(attrs || {}).forEach(k => {
+    const v = attrs[k];
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k === 'html') e.innerHTML = v;            // nur für feste Symbole, nie für fremde Texte
+    else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v);
+  });
+  kids.flat().forEach(c => { if (c != null && c !== false) e.append(c); });
+  return e;
+}
+const SVG = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
+const IC = {
+  camera: SVG('M4 8h3l2-3h6l2 3h3v11H4zM12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z'),
+  image: SVG('M4 5h16v14H4zM4 16l4.5-4.5 4 4 2.5-2.5 5 5M9 9.5h.01'),
+  live: SVG('M4 7h11v10H4zM15 10l5-3v10l-5-3'),
+  remote: SVG('M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM12 8.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM10 13h.01M14 13h.01M10 17h.01M14 17h.01'),
+  inbox: SVG('M4 13l3-8h10l3 8v6H4zM4 13h5l1 2.5h4l1-2.5h5'),
+  check: SVG('M5 12l5 5L20 7'),
+  send: SVG('M4 12l16-8-6 16-3-6.5z'),
+  rotate: SVG('M20 12a8 8 0 1 1-2.6-5.9M20 4v4.5h-4.5'),
+  crop: SVG('M7 3v14h14M3 7h14v14'),
+  doc: SVG('M7 3h7l4 4v14H7zM14 3v4h4M10 12h5M10 16h5'),
+};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const rid = n => { const a = crypto.getRandomValues(new Uint8Array(n || 9)); return B64.url(a); };
+
+// ── Kodieren und Verschlüsseln ──
+const B64 = {
+  enc(buf) { const u = buf instanceof Uint8Array ? buf : new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); },
+  dec(str) { const s = atob(str), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; },
+  url(buf) { return this.enc(buf).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); },
+  unurl(str) { str = str.replace(/-/g, '+').replace(/_/g, '/'); while (str.length % 4) str += '='; return this.dec(str); },
+};
+async function seal(key, obj) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(JSON.stringify(obj)));
+  return { iv: B64.enc(iv), d: B64.enc(ct) };
+}
+async function unseal(key, p) {
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: B64.dec(p.iv) }, key, B64.dec(p.d));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
+function setStatus(kind, text) { const s = $('status'); s.className = kind; s.lastElementChild.textContent = text; }
+function fatal(title, text) {
+  setStatus('off', 'nicht verbunden');
+  $('tabs').classList.add('hide');
+  view.replaceChildren(h('div', { class: 'card' }, h('h1', { text: title }), h('p', { class: 'muted', text })));
+}
+
+let sb = null;
+function client() {
+  if (!sb) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    realtime: { params: { eventsPerSecond: 40 } },
+  });
+  return sb;
+}
+
+// ══════════════════════════ Foto: wählen, bearbeiten, senden ══════════════════════════
+function loadImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 2200 / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('img')); };
+    img.src = url;
+  });
+}
+function rotated(src, rot) {
+  if (!rot) return src;
+  const c = document.createElement('canvas'), swap = rot % 2 === 1;
+  c.width = swap ? src.height : src.width; c.height = swap ? src.width : src.height;
+  const x = c.getContext('2d');
+  x.translate(c.width / 2, c.height / 2); x.rotate(rot * Math.PI / 2);
+  x.drawImage(src, -src.width / 2, -src.height / 2);
+  return c;
+}
+// Dokument-Modus: Papier wird weiß, Schrift kräftig – Farben (z. B. roter Stift) bleiben erhalten
+function docFilter(c) {
+  const x = c.getContext('2d'), img = x.getImageData(0, 0, c.width, c.height), d = img.data, hist = new Uint32Array(256);
+  let n = 0;
+  for (let i = 0; i < d.length; i += 16) { hist[(d[i] * 3 + d[i + 1] * 6 + d[i + 2]) / 10 | 0]++; n++; }
+  const pct = p => { let s = 0; for (let v = 0; v < 256; v++) { s += hist[v]; if (s >= n * p) return v; } return 255; };
+  const lo = pct(0.04), hi = Math.max(lo + 40, pct(0.7)), lut = new Uint8ClampedArray(256);
+  for (let v = 0; v < 256; v++) lut[v] = Math.pow(Math.max(0, Math.min(1, (v - lo) / (hi - lo))), 1.15) * 255;
+  for (let i = 0; i < d.length; i += 4) { d[i] = lut[d[i]]; d[i + 1] = lut[d[i + 1]]; d[i + 2] = lut[d[i + 2]]; }
+  x.putImageData(img, 0, 0);
+  return c;
+}
+function renderOut(st, max) {
+  const r = rotated(st.src, st.rot), cr = st.crop;
+  const sx = Math.round(cr.x * r.width), sy = Math.round(cr.y * r.height);
+  const sw = Math.max(8, Math.round(cr.w * r.width)), sh = Math.max(8, Math.round(cr.h * r.height));
+  const k = Math.min(1, max / Math.max(sw, sh)), c = document.createElement('canvas');
+  c.width = Math.round(sw * k); c.height = Math.round(sh * k);
+  c.getContext('2d').drawImage(r, sx, sy, sw, sh, 0, 0, c.width, c.height);
+  return st.doc ? docFilter(c) : c;
+}
+const toBlob = (c, q) => new Promise(res => c.toBlob(res, 'image/jpeg', q || 0.82));
+
+// Bearbeiten-Ansicht. onSend(blob, canvas) → Promise; onCancel()
+function openEditor(src, sendLabel, onSend, onCancel) {
+  const st = { src, rot: 0, doc: false, cropping: false, crop: { x: 0, y: 0, w: 1, h: 1 } };
+  const stage = h('div', { class: 'stage' }), cv = h('canvas'), box = h('div', { class: 'crop hide' },
+    h('b', { class: 'tl' }), h('b', { class: 'tr' }), h('b', { class: 'bl' }), h('b', { class: 'br' }));
+  stage.append(cv, box);
+  const paint = () => {
+    const full = { ...st, crop: st.cropping ? { x: 0, y: 0, w: 1, h: 1 } : st.crop };
+    const out = renderOut(full, 1100);
+    const maxW = Math.min(view.clientWidth - 64, 560), maxH = Math.max(220, window.innerHeight - 380);
+    const k = Math.min(maxW / out.width, maxH / out.height);
+    stage.style.width = Math.round(out.width * k) + 'px'; stage.style.height = Math.round(out.height * k) + 'px';
+    cv.width = out.width; cv.height = out.height;
+    cv.getContext('2d').drawImage(out, 0, 0);
+    box.classList.toggle('hide', !st.cropping);
+    if (st.cropping) {
+      box.style.left = st.crop.x * 100 + '%'; box.style.top = st.crop.y * 100 + '%';
+      box.style.width = st.crop.w * 100 + '%'; box.style.height = st.crop.h * 100 + '%';
+    }
+  };
+  // Zuschneiden: Ecken ziehen, Rahmen verschieben
+  let drag = null;
+  box.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    box.setPointerCapture(e.pointerId);
+    const cls = e.target.tagName === 'B' ? e.target.className : 'move';
+    drag = { cls, x: e.clientX, y: e.clientY, c: { ...st.crop }, r: stage.getBoundingClientRect() };
+  });
+  box.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const dx = (e.clientX - drag.x) / drag.r.width, dy = (e.clientY - drag.y) / drag.r.height, c = drag.c, m = 0.08;
+    let x0 = c.x, y0 = c.y, x1 = c.x + c.w, y1 = c.y + c.h;
+    if (drag.cls === 'move') {
+      const nx = Math.max(0, Math.min(1 - c.w, c.x + dx)), ny = Math.max(0, Math.min(1 - c.h, c.y + dy));
+      x0 = nx; y0 = ny; x1 = nx + c.w; y1 = ny + c.h;
+    } else {
+      if (drag.cls.includes('l')) x0 = Math.max(0, Math.min(x1 - m, c.x + dx));
+      if (drag.cls.includes('r')) x1 = Math.min(1, Math.max(x0 + m, c.x + c.w + dx));
+      if (drag.cls[0] === 't') y0 = Math.max(0, Math.min(y1 - m, c.y + dy));
+      if (drag.cls[0] === 'b') y1 = Math.min(1, Math.max(y0 + m, c.y + c.h + dy));
+    }
+    st.crop = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+    box.style.left = x0 * 100 + '%'; box.style.top = y0 * 100 + '%'; box.style.width = (x1 - x0) * 100 + '%'; box.style.height = (y1 - y0) * 100 + '%';
+  });
+  const endDrag = () => { drag = null; };
+  box.addEventListener('pointerup', endDrag); box.addEventListener('pointercancel', endDrag);
+
+  const bCrop = h('button', { class: 'chip', html: IC.crop.replace('<svg', '<svg width="20" height="20" style="vertical-align:-4px;margin-right:6px"') + 'Zuschneiden', onclick: () => {
+    st.cropping = !st.cropping;
+    if (st.cropping && st.crop.w === 1 && st.crop.h === 1) st.crop = { x: 0.06, y: 0.06, w: 0.88, h: 0.88 };
+    bCrop.classList.toggle('on', st.cropping); paint();
+  } });
+  const bDoc = h('button', { class: 'chip', html: IC.doc.replace('<svg', '<svg width="20" height="20" style="vertical-align:-4px;margin-right:6px"') + 'Dokument', onclick: () => { st.doc = !st.doc; bDoc.classList.toggle('on', st.doc); paint(); } });
+  const bRot = h('button', { class: 'chip', html: IC.rotate.replace('<svg', '<svg width="20" height="20" style="vertical-align:-4px;margin-right:6px"') + 'Drehen', onclick: () => {
+    st.rot = (st.rot + 1) % 4; st.crop = { x: 0, y: 0, w: 1, h: 1 }; st.cropping = false; bCrop.classList.remove('on'); paint();
+  } });
+  const send = h('button', { class: 'big-btn', html: IC.send + '<span></span>', onclick: async () => {
+    send.disabled = true;
+    st.cropping = false;
+    const out = renderOut(st, 1800);
+    await onSend(await toBlob(out), out);
+  } });
+  send.lastElementChild.textContent = sendLabel;
+  view.replaceChildren(h('div', { class: 'card' }, stage, h('div', { class: 'row', style: 'margin-bottom:12px' }, bRot, bCrop, bDoc),
+    send, h('button', { class: 'big-btn sec', text: 'Verwerfen', onclick: onCancel })));
+  paint();
+}
+
+function pickFile(capture, multiple) {
+  return new Promise(resolve => {
+    const inp = h('input', { type: 'file', accept: 'image/*', capture: capture ? 'environment' : false, multiple: !!multiple, style: 'display:none' });
+    inp.addEventListener('change', () => { resolve([...inp.files]); inp.remove(); });
+    document.body.append(inp);
+    inp.click();
+  });
+}
+// Ein Foto in Stücken verschicken. sendFn(msg) verschlüsselt und sendet; onProg(0..1)
+async function sendPhoto(sendFn, blob, extra, onProg, id) {
+  id = id || rid(6);
+  const b = B64.enc(await blob.arrayBuffer()), SIZE = 40000, n = Math.ceil(b.length / SIZE);
+  await sendFn({ t: 'ph', id, n, ...extra });
+  for (let i = 0; i < n; i++) {
+    if (i) await sleep(60);
+    await sendFn({ t: 'pc', id, i, d: b.slice(i * SIZE, (i + 1) * SIZE) });
+    if (onProg) onProg((i + 1) / n);
+  }
+  return id;
+}
+function progressCard(title) {
+  const bar = h('i'), note = h('p', { class: 'muted center', text: 'wird übertragen …' });
+  view.replaceChildren(h('div', { class: 'card' }, h('h1', { class: 'center', text: title }), h('div', { class: 'bar' }, bar), note));
+  return { set: p => { bar.style.width = Math.round(p * 100) + '%'; }, note };
+}
+function doneCard(title, text, again, againLabel) {
+  view.replaceChildren(h('div', { class: 'card center' }, h('div', { class: 'ok-mark', html: IC.check }), h('h1', { text: title }),
+    h('p', { class: 'muted', text }), h('button', { class: 'big-btn', style: 'margin-top:8px', text: againLabel, onclick: again })));
+  if (navigator.vibrate) navigator.vibrate(30);
+}
+
+// ══════════════════════════ Lehrkraft ══════════════════════════
+const T = {
+  ch: null, key: null, online: false, lastState: 0, state: { boards: [], widgets: [], drop: { open: false, n: 0 } },
+  tab: 'foto', busy: false, acks: {}, subs: [],
+  async start(chan, keyB64) {
+    this.key = await crypto.subtle.importKey('raw', B64.unurl(keyB64), 'AES-GCM', false, ['encrypt', 'decrypt']);
+    this.ch = client().channel('kbl-' + chan, { config: { broadcast: { self: false } } });
+    this.ch.on('broadcast', { event: 'm' }, async ({ payload }) => {
+      if (!payload || payload.f !== 'b') return;
+      let m; try { m = await unseal(this.key, payload); } catch (e) { return; }
+      this.onMsg(m);
+    });
+    this.ch.subscribe(status => {
+      if (status === 'SUBSCRIBED') this.send({ t: 'hello' });
+      else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') this.setOnline(false);
+    });
+    setInterval(() => {
+      if (document.hidden) return;
+      this.send({ t: 'hello' });
+      if (this.online && Date.now() - this.lastState > 40000) this.setOnline(false);
+    }, 12000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) this.send({ t: 'hello' }); });
+    this.tabs();
+    this.show('foto');
+    setTimeout(() => { if (!this.online) this.setOnline(false); }, 6000);
+  },
+  async send(m) {
+    try { await this.ch.send({ type: 'broadcast', event: 'm', payload: { f: 'p', ...(await seal(this.key, m)) } }); } catch (e) {}
+  },
+  setOnline(on) {
+    const was = this.online;
+    this.online = on;
+    setStatus(on ? 'on' : 'off', on ? 'mit der Tafel verbunden' : 'Tafel nicht erreichbar');
+    if (was !== on && !this.busy) this.show(this.tab);
+  },
+  onMsg(m) {
+    if (m.t === 'state') {
+      this.lastState = Date.now();
+      const before = JSON.stringify(this.state);
+      this.state = m.s;
+      if (!this.online) this.setOnline(true);
+      else if (before !== JSON.stringify(m.s) && this.tab === 'steuern' && !this.busy) this.paintRemote();
+      this.badge();
+    } else if (m.t === 'ph-ok' || m.t === 'ph-err') {
+      const a = this.acks[m.id]; if (a) { delete this.acks[m.id]; a(m.t === 'ph-ok'); }
+    } else if (m.t === 'drop-item') {
+      if (!this.subs.find(s => s.id === m.id)) this.subs.push({ id: m.id, name: m.name, thumb: m.thumb });
+      this.badge(); if (this.tab === 'abgaben') this.show('abgaben');
+    } else if (m.t === 'drop-gone') {
+      this.subs = this.subs.filter(s => s.id !== m.id);
+      this.badge(); if (this.tab === 'abgaben') this.show('abgaben');
+    } else if (m.t === 'drop-reset') {
+      this.subs = []; this.badge(); if (this.tab === 'abgaben') this.show('abgaben');
+    } else if (m.t === 'rtc') LIVE.onSignal(m);
+    else if (m.t === 'live-closed') LIVE.stop(true);
+  },
+  tabs() {
+    const nav = $('tabs');
+    nav.classList.remove('hide');
+    nav.replaceChildren(...[['foto', 'Foto', IC.camera], ['live', 'Live', IC.live], ['steuern', 'Steuern', IC.remote], ['abgaben', 'Abgaben', IC.inbox]]
+      .map(([k, label, ic]) => h('button', { 'data-tab': k, html: ic + '<span>' + label + '</span>', onclick: () => this.show(k) })));
+  },
+  badge() {
+    const b = document.querySelector('nav [data-tab="abgaben"]');
+    if (!b) return;
+    const old = b.querySelector('.badge'); if (old) old.remove();
+    if (this.subs.length) b.append(h('span', { class: 'badge', text: String(this.subs.length) }));
+  },
+  show(tab) {
+    if (this.tab === 'live' && tab !== 'live') LIVE.stop();
+    this.tab = tab; this.busy = false;
+    document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+    if (!this.online) {
+      view.replaceChildren(h('div', { class: 'card' }, h('h1', { text: 'Tafel nicht erreichbar' }),
+        h('p', { class: 'muted', text: 'Öffne ClassPuls an der Tafel und tippe unten auf „Handy". Die Verbindung kommt dann von selbst zurück – du musst den Code nicht neu scannen.' }),
+        h('button', { class: 'big-btn sec', text: 'Diese Verbindung vergessen', onclick: () => { try { localStorage.removeItem('kb_link'); } catch (e) {} location.replace(location.pathname); } })));
+      return;
+    }
+    this['v_' + tab]();
+  },
+
+  // ── Foto ──
+  v_foto() {
+    view.replaceChildren(h('div', { class: 'card' },
+      h('h1', { text: 'Foto an die Tafel' }),
+      h('p', { class: 'muted', text: 'Heft, Arbeitsblatt oder Buchseite fotografieren – das Bild liegt Sekunden später auf der Tafel.' }),
+      h('button', { class: 'big-btn', html: IC.camera + '<span>Foto aufnehmen</span>', onclick: () => this.pick(true) }),
+      h('button', { class: 'big-btn sec', html: IC.image + '<span>Aus meinen Fotos wählen</span>', onclick: () => this.pick(false) })));
+  },
+  async pick(capture) {
+    const files = await pickFile(capture, !capture);
+    if (!files.length) return;
+    this.busy = true;
+    try {
+      if (files.length > 1) {
+        // mehrere Bilder: ohne Bearbeiten nacheinander schicken
+        const pc = progressCard(files.length + ' Fotos');
+        for (let i = 0; i < files.length; i++) {
+          const c = await loadImage(files[i]);
+          const blob = await toBlob(renderOut({ src: c, rot: 0, doc: false, crop: { x: 0, y: 0, w: 1, h: 1 } }, 1800));
+          const ok = await this.deliver(blob, p => pc.set((i + p) / files.length));
+          if (!ok) throw new Error('nack');
+        }
+        doneCard('Auf der Tafel', files.length + ' Fotos sind angekommen.', () => this.show('foto'), 'Weitere Fotos');
+        return;
+      }
+      const src = await loadImage(files[0]);
+      openEditor(src, 'An die Tafel senden', async blob => {
+        const pc = progressCard('Foto');
+        const ok = await this.deliver(blob, p => pc.set(p));
+        if (ok) doneCard('Auf der Tafel', 'Das Foto ist angekommen. Dort kannst du es vergrößern und darauf schreiben.', () => this.show('foto'), 'Noch ein Foto');
+        else this.failed();
+      }, () => this.show('foto'));
+    } catch (e) { this.failed(); }
+  },
+  failed() {
+    view.replaceChildren(h('div', { class: 'card' }, h('h1', { text: 'Das hat nicht geklappt' }),
+      h('p', { class: 'muted', text: 'Die Tafel hat das Foto nicht bestätigt. Ist ClassPuls an der Tafel noch offen und das Internet da?' }),
+      h('button', { class: 'big-btn', text: 'Nochmal versuchen', onclick: () => this.show('foto') })));
+  },
+  async deliver(blob, onProg, extra) {
+    // Erst auf die Bestätigung lauschen, dann senden – die Tafel antwortet manchmal schneller, als wir fertig sind
+    const id = rid(6);
+    const answer = new Promise(res => { this.acks[id] = res; });
+    await sendPhoto(m => this.send(m), blob, extra || {}, onProg, id);
+    setTimeout(() => { const a = this.acks[id]; if (a) { delete this.acks[id]; a(false); } }, 15000);
+    return answer;
+  },
+
+  // ── Live ──
+  v_live() { LIVE.view(); },
+
+  // ── Steuern ──
+  v_steuern() {
+    view.replaceChildren(h('div', { id: 'remote' }));
+    this.paintRemote();
+  },
+  paintRemote() {
+    const root = $('remote'); if (!root) return;
+    const keep = document.activeElement && document.activeElement.id === 'txt' ? document.activeElement.value : ($('txt') ? $('txt').value : '');
+    const s = this.state, idx = s.boards.findIndex(b => b.id === s.active), cur = s.boards[idx] || { name: 'Tafel' };
+    const act = m => { this.send(m); if (navigator.vibrate) navigator.vibrate(12); };
+    const boardCard = h('div', { class: 'card' }, h('h2', { text: 'Tafel' }),
+      h('div', { class: 'board-nav' },
+        h('button', { text: '‹', 'aria-label': 'Vorherige Tafel', onclick: () => act({ t: 'nav', to: 'prev' }) }),
+        h('div', { class: 'name' }, cur.name, h('small', { text: (idx + 1) + ' von ' + s.boards.length })),
+        h('button', { text: '›', 'aria-label': 'Nächste Tafel', onclick: () => act({ t: 'nav', to: 'next' }) })),
+      s.boards.length > 2 ? h('div', { class: 'row', style: 'margin-top:10px' }, s.boards.map(b =>
+        h('button', { class: 'chip small' + (b.id === s.active ? ' on' : ''), text: b.name, onclick: () => act({ t: 'nav', to: b.id }) }))) : null);
+    const wCard = h('div', { class: 'card' }, h('h2', { text: 'Elemente auf dieser Tafel' }),
+      s.widgets.length ? s.widgets.map(w => h('div', { class: 'wcard' },
+        h('div', { class: 'wt' }, w.label, h('button', { class: 'chip small' + (w.full ? ' on' : ''), text: w.full ? 'Vollbild aus' : 'Vollbild', onclick: () => act({ t: 'full', wid: w.id }) })),
+        w.controls.length ? h('div', { class: 'row' }, w.controls.map(c =>
+          h('button', { class: 'chip' + (c.on ? ' on' : '') + (c.go ? ' go' : ''), text: c.label, onclick: () => act({ t: 'act', wid: w.id, k: c.k }) }))) : null))
+      : h('p', { class: 'muted', text: 'Auf dieser Tafel liegt noch nichts.' }));
+    const dot = h('i'), pad = h('div', { id: 'laser' }, 'Laserpointer: Finger hier bewegen', dot);
+    let lastSent = 0;
+    const move = e => {
+      const r = pad.getBoundingClientRect(), x = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), y = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+      dot.style.display = 'block'; dot.style.left = x * 100 + '%'; dot.style.top = y * 100 + '%';
+      if (Date.now() - lastSent > 80) { lastSent = Date.now(); this.send({ t: 'laser', x, y }); }
+    };
+    pad.addEventListener('pointerdown', e => { pad.setPointerCapture(e.pointerId); this.busy = true; move(e); });
+    pad.addEventListener('pointermove', e => { if (e.buttons || e.pointerType === 'touch') move(e); });
+    const up = () => { dot.style.display = 'none'; this.busy = false; this.send({ t: 'laser', off: true }); };
+    pad.addEventListener('pointerup', up); pad.addEventListener('pointercancel', up);
+    const txt = h('textarea', { id: 'txt', placeholder: 'Text für die Tafel – tippen oder diktieren …' });
+    txt.value = keep;
+    const textCard = h('div', { class: 'card' }, h('h2', { text: 'Text an die Tafel' }), txt,
+      h('button', { class: 'big-btn', html: IC.send + '<span>Auf die Tafel</span>', onclick: () => {
+        const v = txt.value.trim(); if (!v) return;
+        act({ t: 'text', v: v.slice(0, 2000) }); txt.value = '';
+      } }));
+    root.replaceChildren(boardCard, wCard, h('div', { class: 'card' }, h('h2', { text: 'Zeigen' }), pad), textCard);
+  },
+
+  // ── Abgaben ──
+  v_abgaben() {
+    const open = this.state.drop && this.state.drop.open;
+    const list = this.subs.map(s => h('div', { class: 'sub' },
+      h('img', { src: 'data:image/jpeg;base64,' + s.thumb, alt: '' }),
+      h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'who', text: s.name || 'Ohne Namen' }),
+        h('div', { class: 'row' },
+          h('button', { class: 'chip small go', text: 'Zeigen', onclick: () => { this.send({ t: 'drop-approve', id: s.id }); this.subs = this.subs.filter(x => x.id !== s.id); this.badge(); this.show('abgaben'); } }),
+          h('button', { class: 'chip small', text: 'Löschen', onclick: () => { this.send({ t: 'drop-delete', id: s.id }); this.subs = this.subs.filter(x => x.id !== s.id); this.badge(); this.show('abgaben'); } })))));
+    view.replaceChildren(
+      h('div', { class: 'card' }, h('h1', { text: 'Schüler-Abgabe' }),
+        h('p', { class: 'muted', text: open ? 'Die Tafel zeigt einen QR-Code. Schülerinnen und Schüler scannen ihn und schicken ein Foto. Gezeigt wird nur, was du freigibst.'
+          : 'Die Klasse schickt Fotos ihrer Ergebnisse – du entscheidest hier, was an der Tafel erscheint.' }),
+        h('button', { class: 'big-btn' + (open ? ' danger' : ''), text: open ? 'Abgabe beenden' : 'Abgabe starten', onclick: () => {
+          this.send({ t: open ? 'drop-close' : 'drop-open' });
+          this.state.drop = { open: !open, n: 0 }; if (open) this.subs = [];
+          this.badge(); this.show('abgaben');
+        } })),
+      open || list.length ? h('div', { class: 'card' }, h('h2', { text: 'Eingang' }),
+        list.length ? list : h('p', { class: 'muted', text: 'Noch nichts angekommen.' })) : null);
+  },
+};
+
+// ── Live-Kamera: erst direkt von Gerät zu Gerät (WebRTC), sonst Einzelbilder über den Kanal ──
+const LIVE = {
+  stream: null, pc: null, mode: '', timer: null, facing: 'environment', lock: null, tag: null, video: null,
+  view() {
+    if (this.stream) { this.paint(); return; }
+    view.replaceChildren(h('div', { class: 'card' }, h('h1', { text: 'Live-Kamera' }),
+      h('p', { class: 'muted', text: 'Dein Handy wird zur Dokumentenkamera: halte es über ein Heft oder ein Experiment – die Klasse sieht live mit.' }),
+      h('button', { class: 'big-btn', html: IC.live + '<span>Kamera starten</span>', onclick: () => this.start() })));
+  },
+  async start() {
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: this.facing }, width: { ideal: 1280 }, height: { ideal: 720 } } });
+    } catch (e) {
+      view.replaceChildren(h('div', { class: 'card' }, h('h1', { text: 'Kamera nicht freigegeben' }),
+        h('p', { class: 'muted', text: 'Bitte erlaube den Zugriff auf die Kamera (in Safari: „aA" in der Adresszeile → Website-Einstellungen → Kamera) und versuche es noch einmal.' }),
+        h('button', { class: 'big-btn', text: 'Nochmal versuchen', onclick: () => this.start() })));
+      return;
+    }
+    try { this.lock = await navigator.wakeLock.request('screen'); } catch (e) {}
+    this.paint();
+    this.connect();
+  },
+  paint() {
+    this.video = h('video', { autoplay: true, playsinline: true, muted: true });
+    this.video.muted = true;
+    this.video.srcObject = this.stream;
+    this.tag =h('div', { class: 'live-tag', text: 'verbinde …' });
+    view.replaceChildren(h('div', { class: 'card' }, h('div', { class: 'live-box' }, this.video, this.tag),
+      h('button', { class: 'big-btn', html: IC.camera + '<span>Standbild auf die Tafel</span>', onclick: e => this.still(e.currentTarget) }),
+      h('div', { class: 'row' },
+        h('button', { class: 'chip', text: 'Kamera wechseln', onclick: () => this.flip() }),
+        h('button', { class: 'chip', text: 'Stopp', onclick: () => { this.stop(); this.view(); } }))));
+    this.label();
+  },
+  label() { if (this.tag) this.tag.textContent = this.mode === 'rtc' ? 'live' : this.mode === 'frames' ? 'live · Einzelbilder' : 'verbinde …'; },
+  async connect() {
+    this.closePc(); clearInterval(this.timer); this.mode = ''; this.label();
+    T.send({ t: 'live-start' });
+    try {
+      const pc = this.pc = new RTCPeerConnection({ iceServers: ICE });
+      this.stream.getTracks().forEach(tr => pc.addTrack(tr, this.stream));
+      pc.onicecandidate = e => { if (e.candidate) T.send({ t: 'rtc', k: 'ice', v: e.candidate.toJSON() }); };
+      pc.onconnectionstatechange = () => {
+        if (pc !== this.pc) return;
+        if (pc.connectionState === 'connected') { clearInterval(this.timer); this.mode = 'rtc'; this.label(); }
+        else if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') this.frames();
+      };
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      T.send({ t: 'rtc', k: 'offer', v: { type: offer.type, sdp: offer.sdp } });
+    } catch (e) {}
+    // Kommt die direkte Verbindung nicht zustande (Schul-WLAN sperrt das oft), gehen Einzelbilder über den Kanal
+    setTimeout(() => { if (this.stream && this.mode !== 'rtc') this.frames(); }, 7000);
+  },
+  async onSignal(m) {
+    const pc = this.pc; if (!pc) return;
+    try {
+      if (m.k === 'answer') await pc.setRemoteDescription(m.v);
+      else if (m.k === 'ice') await pc.addIceCandidate(m.v);
+    } catch (e) {}
+  },
+  frames() {
+    if (!this.stream || this.mode === 'frames') return;
+    this.mode = 'frames'; this.label();
+    const c = document.createElement('canvas');
+    clearInterval(this.timer);
+    this.timer = setInterval(async () => {
+      const v = this.video; if (!v || !v.videoWidth || document.hidden || this.sending) return;
+      const k = Math.min(1, 800 / Math.max(v.videoWidth, v.videoHeight));
+      c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
+      c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+      this.sending = true;
+      try { const b = await toBlob(c, 0.5); await T.send({ t: 'lf', d: B64.enc(await b.arrayBuffer()) }); } catch (e) {}
+      this.sending = false;
+    }, 650);
+  },
+  async still(btn) {
+    const v = this.video; if (!v || !v.videoWidth) return;
+    btn.disabled = true;
+    const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight;
+    c.getContext('2d').drawImage(v, 0, 0);
+    const ok = await T.deliver(await toBlob(c, 0.86), null);
+    btn.disabled = false;
+    btn.lastElementChild.textContent = ok ? '✓ Standbild liegt auf der Tafel' : 'Nicht angekommen – nochmal tippen';
+    setTimeout(() => { if (btn.isConnected) btn.lastElementChild.textContent = 'Standbild auf die Tafel'; }, 2500);
+  },
+  async flip() {
+    this.facing = this.facing === 'environment' ? 'user' : 'environment';
+    this.stop(true); await this.start();
+  },
+  closePc() { if (this.pc) { try { this.pc.close(); } catch (e) {} this.pc = null; } },
+  stop(silent) {
+    clearInterval(this.timer); this.closePc(); this.mode = '';
+    if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); this.stream = null; if (!silent) T.send({ t: 'live-stop' }); }
+    if (this.lock) { try { this.lock.release(); } catch (e) {} this.lock = null; }
+    if (silent === true && T.tab === 'live' && !this.stream) this.view();
+  },
+};
+
+// ══════════════════════════ Schüler: ein Foto abgeben ══════════════════════════
+const S = {
+  chan: '', pub: null, name: '',
+  start(chan, pubB64) {
+    this.chan = chan; this.pubRaw = B64.unurl(pubB64);
+    try { this.name = sessionStorage.getItem('kb_name') || ''; } catch (e) {}
+    setStatus('on', 'Foto abgeben');
+    this.home();
+  },
+  home() {
+    const name = h('input', { type: 'text', maxlength: '30', placeholder: 'Dein Name (oder Gruppe)', autocomplete: 'off' });
+    name.value = this.name;
+    name.addEventListener('input', () => { this.name = name.value; try { sessionStorage.setItem('kb_name', this.name); } catch (e) {} });
+    view.replaceChildren(h('div', { class: 'card' }, h('h1', { text: 'Foto abgeben' }),
+      h('p', { class: 'muted', text: 'Fotografiere dein Ergebnis. Deine Lehrerin oder dein Lehrer entscheidet, ob es an der Tafel gezeigt wird.' }),
+      name,
+      h('button', { class: 'big-btn', html: IC.camera + '<span>Foto aufnehmen</span>', onclick: () => this.pick(true) }),
+      h('button', { class: 'big-btn sec', html: IC.image + '<span>Aus meinen Fotos wählen</span>', onclick: () => this.pick(false) })));
+  },
+  async pick(capture) {
+    const files = await pickFile(capture, false);
+    if (!files.length) return;
+    let src; try { src = await loadImage(files[0]); } catch (e) { return; }
+    openEditor(src, 'Abgeben', blob => this.submit(blob), () => this.home());
+  },
+  async submit(blob) {
+    const pc = progressCard('Foto');
+    let ch = null;
+    const fail = text => view.replaceChildren(h('div', { class: 'card' }, h('h1', { text: 'Nicht abgegeben' }), h('p', { class: 'muted', text }),
+      h('button', { class: 'big-btn', text: 'Zurück', onclick: () => this.home() })));
+    try {
+      // Eigenes Schlüsselpaar nur für diese Abgabe; nur die Tafel kann das Foto entschlüsseln
+      const pair = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey']);
+      const boardPub = await crypto.subtle.importKey('raw', this.pubRaw, { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+      const key = await crypto.subtle.deriveKey({ name: 'ECDH', public: boardPub }, pair.privateKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+      const me = rid(8), epk = B64.enc(await crypto.subtle.exportKey('raw', pair.publicKey));
+      ch = client().channel('kbd-' + this.chan, { config: { broadcast: { self: false } } });
+      let done = null;
+      const answer = new Promise(res => { done = res; });
+      ch.on('broadcast', { event: 'm' }, async ({ payload }) => {
+        if (!payload || payload.to !== me) return;
+        try { done(await unseal(key, payload)); } catch (e) {}
+      });
+      await new Promise((res, rej) => {
+        const t = setTimeout(() => rej(new Error('timeout')), 10000);
+        ch.subscribe(st => { if (st === 'SUBSCRIBED') { clearTimeout(t); res(); } else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') { clearTimeout(t); rej(new Error(st)); } });
+      });
+      const send = async m => ch.send({ type: 'broadcast', event: 'm', payload: { s: me, ...(await seal(key, m)) } });
+      await ch.send({ type: 'broadcast', event: 'm', payload: { s: me, epk } });
+      await sleep(150);
+      await sendPhoto(send, blob, { name: this.name.trim().slice(0, 30) }, p => pc.set(p));
+      const r = await Promise.race([answer, sleep(12000).then(() => null)]);
+      if (r && r.t === 'ok') doneCard('Abgegeben', 'Dein Foto ist bei deiner Lehrkraft angekommen.', () => this.home(), 'Noch ein Foto');
+      else if (r && r.t === 'full') fail('Du hast schon genug Fotos geschickt – oder der Eingang ist gerade voll.');
+      else fail('Die Tafel hat nicht geantwortet. Vielleicht ist die Abgabe schon beendet.');
+    } catch (e) {
+      fail('Keine Verbindung. Prüfe das Internet und versuche es noch einmal.');
+    }
+    // Verbindung gleich wieder schließen – so belegen 30 Handys nicht dauerhaft 30 Leitungen
+    try { if (ch) await client().removeChannel(ch); } catch (e) {}
+  },
+};
+
+// ══════════════════════════ Start ══════════════════════════
+(function boot() {
+  if (!window.crypto || !crypto.subtle || !window.supabase) {
+    fatal('Dieser Browser ist zu alt', 'Bitte öffne die Seite mit Safari (iPhone/iPad) oder Chrome.');
+    return;
+  }
+  const hash = location.hash.slice(1).split('.');
+  if (hash[0] === 's' && hash[1] && hash[2]) { S.start(hash[1], hash[2]); return; }
+  let link = null;
+  if (hash[0] === 't' && hash[1] && hash[2]) {
+    link = { chan: hash[1], key: hash[2] };
+    try { localStorage.setItem('kb_link', JSON.stringify(link)); } catch (e) {}
+    // Der Schlüssel soll nicht in der Adresszeile stehen bleiben
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  } else {
+    try { link = JSON.parse(localStorage.getItem('kb_link') || 'null'); } catch (e) {}
+  }
+  if (!link || !link.chan || !link.key) {
+    fatal('Noch nicht verbunden', 'Öffne ClassPuls an der Tafel, tippe unten auf „Handy" und scanne den QR-Code mit der Kamera dieses Geräts.');
+    return;
+  }
+  T.start(link.chan, link.key).catch(() => fatal('Verbindung nicht möglich', 'Bitte scanne den QR-Code an der Tafel noch einmal.'));
+})();
+</script>
+</body>
+</html>
