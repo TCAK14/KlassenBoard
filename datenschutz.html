@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Datenschutzerklärung – ClassPuls</title>
-<meta name="description" content="Datenschutzerklärung von ClassPuls – Die digitale Tafel für Lehrkräfte.">
+<title>Datenschutzerklärung – Scolavis</title>
+<meta name="description" content="Datenschutzerklärung von Scolavis – Die digitale Tafel für Lehrkräfte.">
 <link rel="icon" type="image/png" href="favicon.png">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -119,7 +119,7 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
 
   <h2>2. Überblick der Datenverarbeitung</h2>
   <p>
-    ClassPuls verarbeitet personenbezogene Daten nur, soweit dies zur Bereitstellung
+    Scolavis verarbeitet personenbezogene Daten nur, soweit dies zur Bereitstellung
     der App und ihrer Funktionen erforderlich ist. Wir verkaufen keine Daten an Dritte
     und verwenden keine Tracking-Cookies oder Werbung.
   </p>
@@ -154,7 +154,7 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
   <p>
     Wenn du dich anmeldest, werden deine Tafeln, Klassen und Einstellungen in einer
     Supabase-Datenbank (EU-Server) gespeichert, um sie geräteübergreifend verfügbar
-    zu machen. Es werden keine Schülerdaten erhoben — ClassPuls speichert nur die
+    zu machen. Es werden keine Schülerdaten erhoben — Scolavis speichert nur die
     von der Lehrkraft eingegebenen Board-Inhalte.
   </p>
   <p>Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).</p>
@@ -178,7 +178,7 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
 
   <h2>7. Lokale Datenspeicherung</h2>
   <p>
-    ClassPuls speichert Board-Daten im Local Storage deines Browsers. Diese Daten
+    Scolavis speichert Board-Daten im Local Storage deines Browsers. Diese Daten
     verlassen dein Gerät nicht, solange du nicht angemeldet bist. Es werden keine Cookies
     für Tracking oder Werbezwecke gesetzt.
   </p>
@@ -211,13 +211,13 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
     <li><strong>Stundenplan (iCal):</strong> Dein Kalender-Link wird über unsere Server-Funktion (Netlify) beim Kalender-Server deiner Schule abgerufen und zusammen mit deinen Tafeln gespeichert.</li>
     <li><strong>Live-Umfrage:</strong> Stimmen werden ohne Namen in unserer Datenbank (Supabase) gespeichert.</li>
     <li><strong>Lautstärke-Element:</strong> Das Mikrofonsignal wird ausschließlich in deinem Browser ausgewertet – es wird nichts aufgezeichnet oder übertragen.</li>
-    <li><strong>Programmbibliotheken:</strong> Die technischen Bibliotheken liefert ClassPuls selbst aus. Einzige Ausnahme: Die Bibliothek zur PDF-Anzeige wird vom Verteilnetz cdnjs (Cloudflare) geladen – erst dann, wenn du ein PDF öffnest. PDF- und Videodateien werden nur lokal in deinem Browser gespeichert und nicht an uns oder Dritte übertragen.</li>
+    <li><strong>Programmbibliotheken:</strong> Die technischen Bibliotheken liefert Scolavis selbst aus. Einzige Ausnahme: Die Bibliothek zur PDF-Anzeige wird vom Verteilnetz cdnjs (Cloudflare) geladen – erst dann, wenn du ein PDF öffnest. PDF- und Videodateien werden nur lokal in deinem Browser gespeichert und nicht an uns oder Dritte übertragen.</li>
     <li><strong>Kamera-Element:</strong> Das Kamerabild wird nur auf deinem Bildschirm angezeigt, weder gespeichert noch übertragen. Der Zugriff startet erst, wenn du „Kamera einschalten“ wählst.</li>
     <li><strong>Klassenliste:</strong> Gemerkte Namenslisten liegen nur in deinem Browser auf diesem Gerät und werden nicht in die Cloud synchronisiert.</li>
     <li><strong>Tafel teilen:</strong> Beim Teilen per Link steckt der Inhalt der Tafel vollständig im Link selbst; wir speichern dafür nichts auf einem Server. Wer den Link hat, sieht die Inhalte der Tafel (z. B. Namen in Namensrad oder Gruppen).</li>
-    <li><strong>Android-App:</strong> Die App-Datei für Smartboards und Android-Geräte wird über GitHub (GitHub Inc., Microsoft) zum Herunterladen bereitgestellt; dabei erfährt GitHub technisch bedingt deine IP-Adresse. Die App öffnet ausschließlich ClassPuls und verwendet dafür die Browser-Technik GeckoView von Mozilla direkt auf dem Gerät. Mikrofon und Kamera werden erst angefragt, wenn du das Lautstärke- oder Kamera-Element benutzt.</li>
+    <li><strong>Android-App:</strong> Die App-Datei für Smartboards und Android-Geräte wird über GitHub (GitHub Inc., Microsoft) zum Herunterladen bereitgestellt; dabei erfährt GitHub technisch bedingt deine IP-Adresse. Die App öffnet ausschließlich Scolavis und verwendet dafür die Browser-Technik GeckoView von Mozilla direkt auf dem Gerät. Mikrofon und Kamera werden erst angefragt, wenn du das Lautstärke- oder Kamera-Element benutzt.</li>
     <li><strong>Handy-Verbindung (Fotos, Live-Kamera, Fernbedienung, Schüler-Abgabe):</strong> Verbindest du ein Handy per QR-Code mit der Tafel, werden Fotos, Kamerabilder und Steuerbefehle Ende-zu-Ende verschlüsselt über einen Durchreiche-Kanal unseres Datenbank-Dienstes (Supabase) übertragen und dort nicht gespeichert; der Schlüssel steckt im QR-Code und ist nur der Tafel und dem Handy bekannt. Die Fotos liegen danach ausschließlich im Browser-Speicher des Tafel-Geräts, nicht in der Cloud. Für die Live-Kamera versuchen Handy und Tafel eine direkte Verbindung; dabei hilft ein Vermittlungsserver von Cloudflare, der die Internet-Adressen beider Geräte erfährt, aber keine Bilder. Bei der Schüler-Abgabe wird ein eingegebener Name zusammen mit dem Foto nur an die Tafel übertragen; nicht gezeigte Abgaben werden beim Beenden verworfen.</li>
-    <li><strong>App-Installation und Offline-Betrieb:</strong> Damit ClassPuls sofort vom Gerät startet und auch bei schlechtem oder fehlendem WLAN läuft, legt dein Browser eine Kopie der Seite, der Schrift, der App-Symbole und der Programmbibliotheken in seinem Zwischenspeicher ab und erneuert sie im Hintergrund, sobald es eine neue Version gibt. Darin sind keine persönlichen Daten enthalten; Anmeldung, Cloud und Server-Funktionen laufen immer direkt über das Netz.</li>
+    <li><strong>App-Installation und Offline-Betrieb:</strong> Damit Scolavis sofort vom Gerät startet und auch bei schlechtem oder fehlendem WLAN läuft, legt dein Browser eine Kopie der Seite, der Schrift, der App-Symbole und der Programmbibliotheken in seinem Zwischenspeicher ab und erneuert sie im Hintergrund, sobald es eine neue Version gibt. Darin sind keine persönlichen Daten enthalten; Anmeldung, Cloud und Server-Funktionen laufen immer direkt über das Netz.</li>
   </ul>
 
   <h2>9. Deine Rechte</h2>
@@ -268,7 +268,7 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
 
 <footer>
   <div class="footer-inner">
-    <p>© 2025–2026 ClassPuls · Made in Germany 🇩🇪</p>
+    <p>© 2025–2026 Scolavis · Made in Germany 🇩🇪</p>
     <div class="footer-links">
       <a href="impressum.html">Impressum</a>
       <a href="datenschutz.html">Datenschutz</a>

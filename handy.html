@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ClassPuls – Handy</title>
+<title>Scolavis – Handy</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#1F3531">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="ClassPuls Handy">
+<meta name="apple-mobile-web-app-title" content="Scolavis Handy">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
@@ -89,14 +89,14 @@ textarea { min-height:92px; resize:vertical; }
 </head>
 <body>
 <div id="app">
-  <header><img src="icons/icon-192.png" alt=""><b>ClassPuls</b><div id="status"><i></i><span>verbinde …</span></div></header>
+  <header><img src="icons/icon-192.png" alt=""><b>Scolavis</b><div id="status"><i></i><span>verbinde …</span></div></header>
   <main id="view"></main>
   <nav id="tabs" class="hide"></nav>
 </div>
 <script src="/vendor/supabase-2.119.0.js"></script>
 <script>
 'use strict';
-// ClassPuls – Handy-Seite. Verbindet ein Handy/Tablet mit einer Tafel:
+// Scolavis – Handy-Seite. Verbindet ein Handy/Tablet mit einer Tafel:
 //   #t.<kanal>.<schlüssel>  Lehrkraft: Foto, Live-Kamera, Fernbedienung, Abgaben freigeben
 //   #s.<kanal>.<öffentlicher Schlüssel der Tafel>  Schüler: ein Foto abgeben
 // Alles läuft Ende-zu-Ende verschlüsselt über einen Durchreiche-Kanal (Supabase Realtime) – gespeichert wird dort nichts.
@@ -389,7 +389,7 @@ const T = {
     document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
     if (!this.online) {
       view.replaceChildren(h('div', { class: 'card' }, h('h1', { text: 'Tafel nicht erreichbar' }),
-        h('p', { class: 'muted', text: 'Öffne ClassPuls an der Tafel und tippe unten auf „Handy". Die Verbindung kommt dann von selbst zurück – du musst den Code nicht neu scannen.' }),
+        h('p', { class: 'muted', text: 'Öffne Scolavis an der Tafel und tippe unten auf „Handy". Die Verbindung kommt dann von selbst zurück – du musst den Code nicht neu scannen.' }),
         h('button', { class: 'big-btn sec', text: 'Diese Verbindung vergessen', onclick: () => { try { localStorage.removeItem('kb_link'); } catch (e) {} location.replace(location.pathname); } })));
       return;
     }
@@ -432,7 +432,7 @@ const T = {
   },
   failed() {
     view.replaceChildren(h('div', { class: 'card' }, h('h1', { text: 'Das hat nicht geklappt' }),
-      h('p', { class: 'muted', text: 'Die Tafel hat das Foto nicht bestätigt. Ist ClassPuls an der Tafel noch offen und das Internet da?' }),
+      h('p', { class: 'muted', text: 'Die Tafel hat das Foto nicht bestätigt. Ist Scolavis an der Tafel noch offen und das Internet da?' }),
       h('button', { class: 'big-btn', text: 'Nochmal versuchen', onclick: () => this.show('foto') })));
   },
   async deliver(blob, onProg, extra) {
@@ -694,7 +694,7 @@ const S = {
     try { link = JSON.parse(localStorage.getItem('kb_link') || 'null'); } catch (e) {}
   }
   if (!link || !link.chan || !link.key) {
-    fatal('Noch nicht verbunden', 'Öffne ClassPuls an der Tafel, tippe unten auf „Handy" und scanne den QR-Code mit der Kamera dieses Geräts.');
+    fatal('Noch nicht verbunden', 'Öffne Scolavis an der Tafel, tippe unten auf „Handy" und scanne den QR-Code mit der Kamera dieses Geräts.');
     return;
   }
   T.start(link.chan, link.key).catch(() => fatal('Verbindung nicht möglich', 'Bitte scanne den QR-Code an der Tafel noch einmal.'));

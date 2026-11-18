@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>ClassPuls – Das digitale Klassenzimmer</title>
-<meta name="description" content="ClassPuls ist das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer. Widgets, KI-Assistent, Live-Umfragen, Sprachsteuerung und mehr.">
+<title>Scolavis – Das digitale Klassenzimmer</title>
+<meta name="description" content="Scolavis ist das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer. Widgets, KI-Assistent, Live-Umfragen, Sprachsteuerung und mehr.">
 <meta name="theme-color" content="#1F3531">
 <link rel="preload" href="fonts/atkinson-hyperlegible-next-latin.woff2" as="font" type="font/woff2" crossorigin>
-<meta property="og:title" content="ClassPuls">
+<meta property="og:title" content="Scolavis">
 <meta property="og:description" content="Das smarte digitale Klassenzimmer für Lehrerinnen und Lehrer">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://klassenboard.netlify.app/og-image.png">
@@ -18,7 +18,7 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="ClassPuls">
+<meta name="apple-mobile-web-app-title" content="Scolavis">
 <style>
 :root {
   --brand: #0B7A74;
@@ -1771,7 +1771,7 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
 <div id="toolbar">
   <a id="logo" href="landing.html" title="Zur Startseite" style="text-decoration:none">
     <span class="logo-mark"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-10.6A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8 2.9c0 5.7-8 10.6-8 10.6z"/><path d="M7 12.5h2.2l1.2-2.2 1.7 4.2 1.2-2h3.7"/></svg></span>
-    <span id="logo-text">ClassPuls</span>
+    <span id="logo-text">Scolavis</span>
   </a>
   <!-- Klassen-Wechsler -->
   <div id="class-switcher">
@@ -1897,15 +1897,15 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
   d.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483647;background:#1F3531;color:#fff;overflow:auto;font-family:system-ui,sans-serif;';
   d.innerHTML = '<div style="max-width:620px;margin:0 auto;padding:40px 24px;line-height:1.5">'
     + '<div style="font-size:44px;line-height:1">&#9888;</div>'
-    + '<h1 style="font-size:28px;margin:12px 0 10px">Dieser Browser ist zu alt f\u00fcr ClassPuls</h1>'
-    + '<p style="font-size:17px;opacity:.9;margin:0 0 18px">ClassPuls braucht einen aktuellen Browser: Chrome oder Edge ab Version 105, Safari ab 16 oder Firefox ab 110.</p>'
+    + '<h1 style="font-size:28px;margin:12px 0 10px">Dieser Browser ist zu alt f\u00fcr Scolavis</h1>'
+    + '<p style="font-size:17px;opacity:.9;margin:0 0 18px">Scolavis braucht einen aktuellen Browser: Chrome oder Edge ab Version 105, Safari ab 16 oder Firefox ab 110.</p>'
     + '<p style="font-size:17px;margin:0 0 6px"><b>So geht es weiter:</b></p>'
     + '<ul style="font-size:16px;margin:0 0 18px 20px;padding:0">'
     + '<li style="margin-bottom:6px">Am PC oder Laptop: Chrome oder Edge \u00f6ffnen und <b>klassenboard.netlify.app</b> aufrufen.</li>'
-    + '<li style="margin-bottom:6px">Auf einem Smartboard oder Tablet mit Android: die <b>ClassPuls-App</b> installieren \u2013 sie bringt einen modernen Browser mit (Anleitung: <b>klassenboard.netlify.app/app</b>).</li>'
+    + '<li style="margin-bottom:6px">Auf einem Smartboard oder Tablet mit Android: die <b>Scolavis-App</b> installieren \u2013 sie bringt einen modernen Browser mit (Anleitung: <b>klassenboard.netlify.app/app</b>).</li>'
     + '<li>Sonst: das Smartboard mit einem Laptop verbinden oder die Schul-IT um ein Browser-Update bitten.</li></ul>'
     + '<p style="font-size:14px;opacity:.75;margin:0 0 22px">Erkannt: ' + info + '</p>'
-    + (a ? '<a href="/app" style="display:inline-block;font-size:18px;font-weight:700;padding:14px 22px;border-radius:12px;background:#0B7A74;color:#fff;text-decoration:none;margin:0 12px 12px 0">ClassPuls-App f\u00fcr Android laden</a>' : '')
+    + (a ? '<a href="/app" style="display:inline-block;font-size:18px;font-weight:700;padding:14px 22px;border-radius:12px;background:#0B7A74;color:#fff;text-decoration:none;margin:0 12px 12px 0">Scolavis-App f\u00fcr Android laden</a>' : '')
     + '<button id="kb-old-go" style="font:inherit;font-size:16px;padding:12px 18px;border-radius:12px;border:' + (a ? '2px solid rgba(255,255,255,.4);background:transparent' : '0;background:#0B7A74') + ';color:#fff;cursor:pointer">Trotzdem \u00f6ffnen</button></div>';
   function show() {
     document.body.appendChild(d);
@@ -2076,7 +2076,7 @@ const AUTH = {
 
   init() {
     if (!window.supabase || SUPABASE_URL.includes('DEINE')) {
-      console.info('ClassPuls: Supabase nicht konfiguriert — lokaler Modus aktiv.');
+      console.info('Scolavis: Supabase nicht konfiguriert — lokaler Modus aktiv.');
       return;
     }
     try {
@@ -3005,7 +3005,7 @@ function resetLocalData() {
   DRAW.loadBoard(APP.state.activeBoardId);
 }
 
-// ── Alles zurücksetzen: ClassPuls wieder in den Zustand des allerersten Besuchs bringen ──
+// ── Alles zurücksetzen: Scolavis wieder in den Zustand des allerersten Besuchs bringen ──
 function openResetDialog() {
   const loggedIn = !!AUTH.user;
   const { overlay } = openModal(`
@@ -3013,7 +3013,7 @@ function openResetDialog() {
       <button class="modal-close" data-close>✕</button>
       <h2 style="margin-bottom:8px">↺ Alles zurücksetzen</h2>
       <p style="font-size:13.5px;color:rgba(255,255,255,0.75);line-height:1.6;margin-bottom:10px">
-        ClassPuls startet danach wieder wie beim allerersten Öffnen — mit der Demo-Klasse.
+        Scolavis startet danach wieder wie beim allerersten Öffnen — mit der Demo-Klasse.
       </p>
       <ul style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.7;margin:0 0 12px 18px">
         <li>alle Tafeln, Klassen und Zeichnungen werden gelöscht</li>
@@ -9120,7 +9120,7 @@ function openStartDialog(mode) {
         ? 'Beschreibe deine Stunde oder wähle eine Vorlage. Alles lässt sich danach frei anpassen.'
         : 'Die Elemente der aktuellen Tafel werden durch die Vorlage ersetzt (mit Strg+Z rückgängig).'}</p>
       ${isNew ? `<div class="start-ai">
-        <label for="start-topic">${icon('ai', 20)}<span>Stunde beschreiben – ClassPuls baut die Tafel</span></label>
+        <label for="start-topic">${icon('ai', 20)}<span>Stunde beschreiben – Scolavis baut die Tafel</span></label>
         <div class="start-ai-row">
           <input id="start-topic" type="text" maxlength="120" placeholder="z. B. Photosynthese, Klasse 7, Einführung">
           <button id="start-ai-go">Tafel erstellen</button>
@@ -9463,7 +9463,7 @@ function openLoginModal() {
   const { overlay } = openModal(`
     <div class="modal auth-modal">
       <button class="modal-close" data-close>✕</button>
-      <h2 style="margin-bottom:16px">ClassPuls</h2>
+      <h2 style="margin-bottom:16px">Scolavis</h2>
       <div class="auth-tabs">
         <button class="auth-tab active" id="tab-login"     onclick="switchAuthTab('login')">Anmelden</button>
         <button class="auth-tab"        id="tab-register"  onclick="switchAuthTab('register')">Registrieren</button>
@@ -12190,7 +12190,7 @@ const DRAW = {
 
     const count = parseInt(localStorage.getItem(TEXT_AI_KEY) || '0', 10) || 0;
     if (!isPro() && count >= MAX_FREE_TEXT) {
-      const b = addBubble('ai', 'Die ' + MAX_FREE_TEXT + ' kostenlosen Fragen sind aufgebraucht. Mit ClassPuls Pro kannst du unbegrenzt weiterfragen.');
+      const b = addBubble('ai', 'Die ' + MAX_FREE_TEXT + ' kostenlosen Fragen sind aufgebraucht. Mit Scolavis Pro kannst du unbegrenzt weiterfragen.');
       const acts = document.createElement('div'); acts.className = 'ki-actions';
       acts.appendChild(actBtn('ai', 'Pro ansehen', () => openUpgradeModal('ki'), true));
       b.appendChild(acts);
@@ -12496,7 +12496,7 @@ window.addEventListener('appinstalled', () => {
   _installEvt = null;
   document.getElementById('install-hint')?.remove();
   try { localStorage.setItem('kb_install_hint', 'done'); } catch (e) {}
-  toast('✅ ClassPuls ist jetzt als App installiert');
+  toast('✅ Scolavis ist jetzt als App installiert');
 });
 function deviceLine() {
   const ua = navigator.userAgent || '';
@@ -12522,28 +12522,28 @@ function openInstallHelp() {
   const chromeLike = /Chrome\//.test(ua) && !/SamsungBrowser|OPR\//.test(ua);
   let steps, note = '';
   if (isStandaloneApp()) {
-    steps = ['ClassPuls läuft hier bereits als App. 🎉'];
+    steps = ['Scolavis läuft hier bereits als App. 🎉'];
   } else if (ios) {
     steps = ['Oben bzw. unten auf das <b>Teilen-Symbol</b> tippen (Quadrat mit Pfeil nach oben).', 'Nach unten wischen und <b>„Zum Home-Bildschirm“</b> wählen.', 'Oben rechts auf <b>„Hinzufügen“</b> tippen – fertig.'];
   } else if (android && chromeLike) {
-    steps = ['Oben rechts auf <b>⋮</b> (drei Punkte) tippen.', '<b>„App installieren“</b> bzw. <b>„Zum Startbildschirm hinzufügen“</b> wählen.', 'Bestätigen – ClassPuls liegt jetzt als Symbol auf dem Startbildschirm.'];
+    steps = ['Oben rechts auf <b>⋮</b> (drei Punkte) tippen.', '<b>„App installieren“</b> bzw. <b>„Zum Startbildschirm hinzufügen“</b> wählen.', 'Bestätigen – Scolavis liegt jetzt als Symbol auf dem Startbildschirm.'];
   } else if (android) {
-    steps = ['Am einfachsten: die <b>ClassPuls-App für Android</b> laden – sie läuft auch auf Smartboards mit älterem Browser. <a href="/app" class="inst-link">Zur App-Seite</a>', 'Oder im Menü dieses Browsers <b>„Zum Startbildschirm hinzufügen“</b> wählen, falls vorhanden.'];
+    steps = ['Am einfachsten: die <b>Scolavis-App für Android</b> laden – sie läuft auch auf Smartboards mit älterem Browser. <a href="/app" class="inst-link">Zur App-Seite</a>', 'Oder im Menü dieses Browsers <b>„Zum Startbildschirm hinzufügen“</b> wählen, falls vorhanden.'];
   } else if (firefox) {
     steps = ['Firefox kann Web-Apps leider nicht installieren.', 'Öffne <b>klassenboard.netlify.app</b> in <b>Chrome</b> oder <b>Edge</b> – dort geht es mit einem Klick.'];
   } else if (edge) {
-    steps = ['Oben rechts auf <b>…</b> klicken.', '<b>„Apps“ → „ClassPuls installieren“</b> wählen.'];
-    note = 'Siehst du das nicht, ist ClassPuls vielleicht schon installiert – schau im Startmenü nach.';
+    steps = ['Oben rechts auf <b>…</b> klicken.', '<b>„Apps“ → „Scolavis installieren“</b> wählen.'];
+    note = 'Siehst du das nicht, ist Scolavis vielleicht schon installiert – schau im Startmenü nach.';
   } else if (chromeLike) {
-    steps = ['In der Adressleiste rechts auf das Symbol <b>„Installieren“</b> klicken (Bildschirm mit Pfeil).', 'Oder: Menü <b>⋮</b> → <b>„Streamen, speichern und teilen“ → „ClassPuls installieren“</b>.'];
-    note = 'Siehst du das nicht, ist ClassPuls vielleicht schon installiert – schau im Startmenü bzw. bei den Apps nach.';
+    steps = ['In der Adressleiste rechts auf das Symbol <b>„Installieren“</b> klicken (Bildschirm mit Pfeil).', 'Oder: Menü <b>⋮</b> → <b>„Streamen, speichern und teilen“ → „Scolavis installieren“</b>.'];
+    note = 'Siehst du das nicht, ist Scolavis vielleicht schon installiert – schau im Startmenü bzw. bei den Apps nach.';
   } else {
-    steps = ['Safari am Mac: Menü <b>„Ablage“ → „Zum Dock hinzufügen“</b>.', 'Andere Browser: ClassPuls in <b>Chrome</b> oder <b>Edge</b> öffnen, dort geht es mit einem Klick.'];
+    steps = ['Safari am Mac: Menü <b>„Ablage“ → „Zum Dock hinzufügen“</b>.', 'Andere Browser: Scolavis in <b>Chrome</b> oder <b>Edge</b> öffnen, dort geht es mit einem Klick.'];
   }
   openModal(`
     <div class="modal inst-modal">
       <button class="modal-close" data-close>✕</button>
-      <div class="inst-head"><img src="/icons/icon-192.png" alt="" width="56" height="56"><div><h2>ClassPuls als App</h2>
+      <div class="inst-head"><img src="/icons/icon-192.png" alt="" width="56" height="56"><div><h2>Scolavis als App</h2>
         <p>Eigenes Symbol, startet im Vollbild ohne Adressleiste und läuft auch weiter, wenn das WLAN kurz weg ist.</p></div></div>
       <ol class="inst-steps">${steps.map(s => '<li>' + s + '</li>').join('')}</ol>
       ${note ? '<p class="inst-note">' + note + '</p>' : ''}
@@ -12559,7 +12559,7 @@ function maybeShowInstallHint() {
   const h = document.createElement('div');
   h.id = 'install-hint';
   h.setAttribute('data-kb-keep', '');
-  h.innerHTML = '<img src="/icons/icon-192.png" alt="" width="44" height="44"><div class="ih-txt"><b>ClassPuls als App installieren?</b><span>Eigenes Symbol, startet im Vollbild</span></div>'
+  h.innerHTML = '<img src="/icons/icon-192.png" alt="" width="44" height="44"><div class="ih-txt"><b>Scolavis als App installieren?</b><span>Eigenes Symbol, startet im Vollbild</span></div>'
     + '<button class="ih-go">Installieren</button><button class="ih-x" aria-label="Nicht mehr anzeigen">' + icon('x', 18) + '</button>';
   const done = () => { try { localStorage.setItem('kb_install_hint', '1'); } catch (e) {} h.remove(); };
   h.querySelector('.ih-go').addEventListener('click', () => { done(); installApp(); });
