@@ -15,7 +15,12 @@ netlify/functions/ai-chat.js        ← KI-Assistent (Gemini 2.5 Flash; Web-Such
 netlify/functions/image-search.js   ← Bildersuche des KI-Assistenten (Pixabay/Wikimedia, liefert data:-URL)
 netlify/functions/ical.js           ← Stundenplan-Abruf (iCal/WebUntis), ersetzt fremden CORS-Proxy
 fonts/                              ← Atkinson Hyperlegible Next (lokal gehostet, OFL) — nie von Google-Servern laden
-manifest.webmanifest, sw.js, icons/ ← installierbare App (PWA). sw.js: Seite immer Netz zuerst (8 s), Speicher nur als Ersatz;
+vendor/                             ← QRCode.js + supabase-js (Version im Dateinamen) — keine fremden Server beim Start
+manifest.webmanifest, sw.js, icons/ ← installierbare App (PWA). sw.js „lokal zuerst": Tafel-Seite höchstens 1,2 s aufs Netz warten,
+                                      sonst gespeicherte Version; neue Version wird immer vollständig geladen und gespeichert.
+                                      sw.js stempelt `<html data-kb-ver>` (Prüfsumme) → `KB_VER`; die Seite fragt per `kb-check` nach
+                                      und lädt sich still neu (`maybeApplyUpdate`: frisch gestartet / 1 min unsichtbar / 20 min unberührt,
+                                      nie bei laufendem Timer, Dialog, Zeichnen, Mikro/Kamera, Video, Vollbild — `canSilentReload`).
                                       /.netlify/ und fremde Adressen nie anfassen. Bei Änderungen an sw.js CACHE-Version erhöhen
                                       Symbole erzeugt per Python/PIL (Herz + Puls auf Petrol), auch favicon.png/apple-touch-icon.png
 supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq) — separat via Supabase deployen

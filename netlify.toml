@@ -9,6 +9,12 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Bibliotheken mit Version im Dateinamen: ändern sich nie
+[[headers]]
+  for = "/vendor/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
 # App (PWA): Service Worker immer frisch prüfen, Manifest kurz, Symbole eine Woche
 [[headers]]
   for = "/sw.js"

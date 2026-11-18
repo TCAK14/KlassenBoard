@@ -1,0 +1,10 @@
+Programmbibliotheken, die ClassPuls selbst ausliefert (keine fremden Server beim Start):
+
+- qrcode-1.0.0.min.js   QRCode.js 1.0.0 (davidshimjs), MIT-Lizenz
+                        Quelle: https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js
+- supabase-2.119.0.js   @supabase/supabase-js 2.119.0 (UMD), MIT-Lizenz
+                        Quelle: https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js
+
+Aktualisieren: neue Datei mit neuer Versionsnummer im Namen ablegen, den <script>-Verweis in index.html
+und die Liste CORE in sw.js anpassen, CACHE-Version in sw.js erhöhen. Dateien nie unter gleichem Namen ersetzen –
+sie werden auf den Geräten dauerhaft gespeichert.

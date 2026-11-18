@@ -1802,8 +1802,8 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
   if (document.body) show(); else document.addEventListener('DOMContentLoaded', show);
 })();
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/vendor/qrcode-1.0.0.min.js"></script>
+<script src="/vendor/supabase-2.119.0.js"></script>
 <script>
 'use strict';
 
@@ -12243,6 +12243,69 @@ setInterval(() => {
 }, 1500);
 
 // ══════════════════════════════════════════════════════════════
+// AKTUALISIERUNG IM HINTERGRUND
+// Der Service Worker (sw.js) startet die Tafel vom Gerät und lädt neue Versionen nebenbei. Hier wird nur
+// entschieden, WANN die neue Version eingesetzt wird: in einem Moment, in dem es niemand merkt und nichts verloren geht.
+// ══════════════════════════════════════════════════════════════
+const KB_VER = document.documentElement.getAttribute('data-kb-ver') || '';   // Kennung dieser Version, setzt der Service Worker
+const UPDATE = { ready: false, loadedAt: Date.now(), lastInput: 0, hiddenAt: 0 };
+
+// Neu laden nur, wenn gerade nichts läuft, das dabei abbrechen würde
+function canSilentReload() {
+  if (APP._resetting || APP._booting) return false;
+  if (document.fullscreenElement || document.webkitFullscreenElement) return false;   // Browser-Vollbild ginge verloren
+  if (_wfull || DRAW.active) return false;
+  if (document.querySelector('.modal-overlay, #widget-menu, #more-menu, #ki-panel.open, #voting-page, .draw-float')) return false;
+  if (Object.keys(AUDIO_STREAMS).length || CAM_ON.size) return false;                 // Mikrofon/Kamera an
+  if (document.querySelector('#widgets-layer iframe, #widgets-layer video, #widgets-layer audio')) return false;   // evtl. läuft Musik/ein Film
+  if (APP.state.boards.some(b => (b.widgets || []).some(w => w._timerRunning || w._swRunning))) return false;
+  const a = document.activeElement;
+  if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable)) return false;
+  return true;
+}
+
+function maybeApplyUpdate() {
+  if (!UPDATE.ready || !canSilentReload()) return;
+  const now = Date.now();
+  const fresh = !UPDATE.lastInput && now - UPDATE.loadedAt < 20000;         // gerade gestartet, noch nichts angefasst
+  const away = UPDATE.hiddenAt && now - UPDATE.hiddenAt > 60000;            // seit einer Minute nicht sichtbar
+  const idle = now - (UPDATE.lastInput || UPDATE.loadedAt) > 20 * 60000;    // 20 Minuten nichts angefasst
+  if (!fresh && !away && !idle) return;
+  try {
+    if (now - (+sessionStorage.getItem('kb_upd_at') || 0) < 120000) return; // nie in eine Neulade-Schleife geraten
+    sessionStorage.setItem('kb_upd_at', String(now));
+  } catch (e) { return; }
+  flushPendingSaves();
+  location.reload();
+}
+
+function checkForUpdate() {
+  const sw = navigator.serviceWorker && navigator.serviceWorker.controller;
+  if (sw && KB_VER) sw.postMessage({ type: 'kb-check' });
+}
+
+function initBackgroundUpdate() {
+  navigator.serviceWorker.addEventListener('message', e => {
+    const d = e.data || {};
+    if (d.type !== 'kb-ver' || !KB_VER || !d.ver) return;
+    UPDATE.ready = d.ver !== KB_VER;
+    maybeApplyUpdate();
+  });
+  ['pointerdown', 'keydown', 'wheel'].forEach(t =>
+    window.addEventListener(t, () => { UPDATE.lastInput = Date.now(); }, { capture: true, passive: true }));
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { UPDATE.hiddenAt = Date.now(); return; }
+    maybeApplyUpdate();
+    UPDATE.hiddenAt = 0;
+    checkForUpdate();
+  });
+  window.addEventListener('online', checkForUpdate);
+  setTimeout(checkForUpdate, 3000);
+  setInterval(checkForUpdate, 30 * 60000);
+  setInterval(maybeApplyUpdate, 60000);
+}
+
+// ══════════════════════════════════════════════════════════════
 // STARTUP
 // ══════════════════════════════════════════════════════════════
 const _pollParam = new URLSearchParams(window.location.search).get('poll');
@@ -12266,6 +12329,7 @@ if (_pollParam) {
   checkSharedBoard();
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+    initBackgroundUpdate();
   }
 }
 </script>
