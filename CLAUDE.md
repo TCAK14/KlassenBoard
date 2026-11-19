@@ -14,9 +14,15 @@ Classroom-Board-App für Lehrkräfte. Single-File HTML App, Auto-Deploy bei jede
 - **Marke:** Logo `img/logo-scolavis.jpg` (vom Nutzer geliefert), Farben `--accent:#6D4BFF`, `--brand-grad`
   (#C04BFF → #6D4BFF → #22D3F5), Hintergrund #050136. Geschmack des Nutzers: futuristisch, leuchtend, nicht schlicht
 
-## Hosting (Umzug Netlify → Cloudflare, begonnen 19.11.2026)
+## Hosting: Cloudflare (seit 19.11.2026; vorher Netlify)
 - **Warum:** Netlify rechnet seit 2025 in „Credits" (jede Veröffentlichung kostet welche); das Konto lief deshalb
   auf Pro (20 $/Monat). Cloudflare Workers ist für diese Seite kostenlos
+- **Stand:** scolavis.de + scolavis.com laufen über Cloudflare (Konto scolavis@gmail.com, Gratis-Tarif; NICHT das
+  Cloudflare-Konto des anderen Projekts des Nutzers). Nameserver bei INWX: burt/emily.ns.cloudflare.com. DNS liegt bei
+  Cloudflare: MX/SPF/DMARC für die Mail-Weiterleitung NIE löschen. www → ohne www per Redirect Rule (www-Eintrag =
+  Platzhalter 192.0.2.1, proxied). Jeder Push auf `main` veröffentlicht automatisch („Workers Builds", GitHub-App nur
+  für dieses Repo). Test-Adresse: scolavis.scolavis.workers.dev. Netlify (klassenboard.netlify.app) läuft nur noch für
+  die Android-App
 - **Cloudflare:** Worker „scolavis" (`wrangler.jsonc`). Dateien werden direkt ausgeliefert („static assets"), das Skript
   `cloudflare/worker.js` läuft nur, wenn keine Datei passt: „/" → landing.html, `/app`, `/handy`, `/api/*`, sonst 404-Seite.
   `html_handling: "none"` ist Pflicht — sonst leitet Cloudflare `/index.html` auf „/" um und die Tafel wäre weg
@@ -262,8 +268,7 @@ Zusätzlich die Seite laden und die Konsole auf Fehler prüfen.
 
 ## Offene Aufgaben
 - [ ] Impressum: Platzhalter durch echte Angaben ersetzen (rechtlich nötig vor Live-Payments); AGB fehlen
-- [ ] Umzug zu Cloudflare abschließen: Worker verbinden + Schlüssel eintragen, Domains (Nameserver bei INWX) umstellen,
-      danach Netlify auf Gratis stellen. Android-App startet noch auf klassenboard.netlify.app → auf
+- [ ] Nach dem Cloudflare-Umzug: Netlify auf Gratis + Auto-Deploy aus (macht der Nutzer). Android-App startet noch auf klassenboard.netlify.app → auf
       `https://scolavis.de/index.html` umstellen (gespeicherte Tafeln liegen pro Adresse getrennt → Umzugsweg nötig);
       erst danach `netlify/`, `netlify.toml`, `package.json` entfernen
 - [ ] Stripe auf Live-Mode umschalten + Webhook, der nach Zahlung `app_metadata.plan` setzt
