@@ -42,8 +42,11 @@ public abstract class BaseActivity extends Activity implements
         GeckoSession.ContentDelegate, GeckoSession.NavigationDelegate,
         GeckoSession.PermissionDelegate, GeckoSession.PromptDelegate {
 
-    static final String HOST = "klassenboard.netlify.app";
-    static final String HOME = "https://" + HOST + "/";
+    // Seit 19.11.2026 läuft Scolavis unter scolavis.de (Cloudflare). Die alte Adresse wird nur noch für den einmaligen
+    // Umzug der dort gespeicherten Tafeln geöffnet (siehe MainActivity).
+    static final String HOST = "scolavis.de";
+    static final String OLD_HOST = "klassenboard.netlify.app";
+    static final String HOME = "https://" + HOST + "/index.html";
 
     private static final int REQ_PERMS = 11, REQ_FILE = 12, REQ_STORAGE = 13;
     private static GeckoRuntime sRuntime;
@@ -270,7 +273,7 @@ public abstract class BaseActivity extends Activity implements
     private static boolean ours(String uri) {
         if (uri == null) return false;
         String h = Uri.parse(uri).getHost();
-        return h != null && (h.equals(HOST) || h.endsWith("." + HOST));
+        return h != null && (h.equals(HOST) || h.endsWith("." + HOST) || h.equals("scolavis.com") || h.equals(OLD_HOST));
     }
 
     @Override

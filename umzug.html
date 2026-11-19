@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Tafeln mitnehmen – Scolavis</title>
+<style>
+  html, body { margin:0; min-height:100%; background:#050136; color:#F4F3FF;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width:560px; margin:0 auto; padding:48px 20px; text-align:center; line-height:1.55; }
+  h1 { font-size:26px; margin:0 0 12px; }
+  p { color:#C9C6EE; margin:0 0 18px; }
+  .btn { display:inline-block; margin:6px; padding:14px 24px; border-radius:999px; border:0; cursor:pointer;
+    font-family:inherit; font-size:16px; font-weight:700; line-height:1; text-decoration:none; color:#fff;
+    background:linear-gradient(120deg,#C04BFF,#6D4BFF 45%,#22D3F5); }
+  .btn.ghost { background:none; border:1.5px solid rgba(255,255,255,.35); }
+  .small { font-size:14px; color:#9C98CC; }
+  #status { min-height:1.5em; font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Scolavis ist umgezogen</h1>
+  <p>Die neue Adresse ist <b>scolavis.de</b>. Deine Tafeln, Klassen, Zeichnungen und Dateien liegen aber noch hier
+    im Browser – sie werden pro Adresse getrennt gespeichert. Diese Seite packt sie in eine Datei, die du auf
+    scolavis.de wieder öffnest.</p>
+  <p id="status">Einen Moment …</p>
+  <div id="actions" hidden>
+    <button class="btn" id="dl" type="button">Datei herunterladen</button>
+    <a class="btn ghost" href="https://scolavis.de/index.html#umzug">Weiter zu scolavis.de</a>
+    <p class="small">Auf scolavis.de öffnet sich ein Fenster „Tafeln übernehmen“ – dort die Datei
+      <b>scolavis-umzug.json</b> aus „Downloads“ wählen.</p>
+  </div>
+</main>
+<script>
+// Packt alles, was Scolavis (früher ClassPuls) unter dieser Adresse gespeichert hat, in eine JSON-Datei:
+// localStorage-Einträge classpuls_* / kb_* und die Dateien aus IndexedDB „classpuls_files" (PDFs, Fotos, Videos).
+// Anmeldedaten (sb-…) werden bewusst NICHT mitgenommen. Gegenstück: UMZUG in index.html.
+// In der Android-App fängt MainActivity den Download ab und reicht die Datei an scolavis.de weiter.
+(function () {
+  // Nur die neue App (öffnet ?app=1) fängt den Download ab; ältere App-Versionen nehmen den Weg wie im Browser
+  var IN_APP = /[?&]app=1\b/.test(location.search) && /ClassPulsApp\//.test(navigator.userAgent || '');
+  var KEYS = /^(classpuls_|kb_)/;
+  var statusEl = document.getElementById('status');
+  var say = function (t) { statusEl.textContent = t; };
+
+  function b64(buf) {
+    var u = new Uint8Array(buf), s = '';
+    for (var i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+    return btoa(s);
+  }
+
+  function readFiles() {
+    return new Promise(function (resolve) {
+      var out = [];
+      var req;
+      try { req = indexedDB.open('classpuls_files', 1); } catch (e) { resolve(out); return; }
+      req.onupgradeneeded = function () { req.result.createObjectStore('pdf'); };
+      req.onerror = function () { resolve(out); };
+      req.onsuccess = function () {
+        var db = req.result, pending = [];
+        try {
+          var cur = db.transaction('pdf').objectStore('pdf').openCursor();
+          cur.onerror = function () { resolve(out); };
+          cur.onsuccess = function () {
+            var c = cur.result;
+            if (!c) { Promise.all(pending).then(function () { resolve(out); }); return; }
+            var id = String(c.key), v = c.value;
+            if (v instanceof Blob) {
+              pending.push(v.arrayBuffer().then(function (ab) { out.push({ id: id, t: 'blob', mime: v.type || '', d: b64(ab) }); }));
+            } else if (v instanceof ArrayBuffer || ArrayBuffer.isView(v)) {
+              out.push({ id: id, t: 'ab', d: b64(v instanceof ArrayBuffer ? v : v.buffer) });
+            }
+            c.continue();
+          };
+        } catch (e) { resolve(out); }
+      };
+    });
+  }
+
+  var blob = null;
+  function download() {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'scolavis-umzug.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+  document.getElementById('dl').addEventListener('click', download);
+
+  (async function () {
+    var ls = {}, n = 0;
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && KEYS.test(k)) { ls[k] = localStorage.getItem(k); n++; }
+    }
+    var hasBoards = !!(ls.classpuls_v2 || ls.classpuls_classes);
+    if (!hasBoards) {
+      if (IN_APP) { location.replace('https://scolavis.de/index.html?umzug=leer'); return; }
+      say('Hier sind keine Tafeln gespeichert – es gibt nichts mitzunehmen.');
+      document.getElementById('actions').hidden = false;
+      document.getElementById('dl').hidden = true;
+      return;
+    }
+    say('Packe Tafeln und Dateien ein …');
+    var files = await readFiles();
+    var data = { kind: 'scolavis-umzug', v: 1, from: location.host, at: new Date().toISOString(), ls: ls, files: files };
+    blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    var mb = (blob.size / 1048576).toFixed(1).replace('.', ',');
+    if (IN_APP) {
+      say('Übertrage ' + mb + ' MB an die neue Adresse …');
+      download();          // die App fängt die Datei ab und öffnet danach scolavis.de
+      return;
+    }
+    say('Fertig eingepackt: ' + n + ' Einträge, ' + files.length + ' Dateien (' + mb + ' MB).');
+    document.getElementById('actions').hidden = false;
+    download();
+  })().catch(function () { say('Das Einpacken hat nicht geklappt. Bitte Seite neu laden.'); });
+})();
+</script>
+</body>
+</html>

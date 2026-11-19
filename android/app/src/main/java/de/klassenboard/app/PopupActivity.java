@@ -36,7 +36,7 @@ public class PopupActivity extends BaseActivity {
         bar.setPadding(dp(8), dp(4), dp(12), dp(4));
 
         Button close = new Button(this);
-        close.setText("✕  Zurück zu ClassPuls");
+        close.setText("✕  Zurück zu Scolavis");
         close.setAllCaps(false);
         close.setTextColor(Color.WHITE);
         close.setBackgroundColor(Color.parseColor("#0B7A74"));

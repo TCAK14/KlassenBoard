@@ -1766,6 +1766,12 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
   input[type="text"], input[type="url"], input[type="email"], input[type="password"],
   input[type="number"], input[type="search"], textarea, select { font-size:16px !important; }
 }
+/* Umzugs-Hinweis auf der alten Adresse */
+.umzug-bar { position:fixed; left:50%; bottom:86px; transform:translateX(-50%); z-index:100000; display:flex; align-items:center;
+  gap:12px; max-width:calc(100vw - 24px); padding:10px 12px 10px 16px; border-radius:14px; background:#1A1060; color:#F4F3FF;
+  box-shadow:0 10px 30px rgba(0,0,0,.45); border:1px solid rgba(159,232,255,.35); font-size:14px; line-height:1.35; }
+.umzug-go { flex:none; padding:8px 14px; border-radius:999px; background:var(--brand-grad); color:#fff; font-weight:700; text-decoration:none; }
+.umzug-x { flex:none; background:none; border:0; color:inherit; font-size:22px; line-height:1; cursor:pointer; opacity:.7; padding:2px 4px; }
 </style>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -12485,6 +12491,102 @@ function openMoreMenu() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// UMZUG — Tafeln von der alten Adresse klassenboard.netlify.app nach scolavis.de mitnehmen.
+// Browser speichern pro Adresse getrennt. umzug.html (alte Adresse) packt localStorage classpuls_*/kb_* und die Dateien
+// aus IndexedDB in „scolavis-umzug.json"; hier wird sie wieder ausgepackt. Die Android-App (MainActivity) holt die Datei
+// selbst ab und reicht sie beim Antippen von „Übernehmen" über die Dateiauswahl durch (accept enthält „json").
+// ══════════════════════════════════════════════════════════════
+const OLD_HOST = 'klassenboard.netlify.app';
+const UMZUG = {
+  KEYS: /^(classpuls_|kb_)/,
+  init() {
+    if (location.hostname === OLD_HOST) { this.banner(); return; }
+    if (location.hash === '#umzug') {
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+      setTimeout(() => this.offer(), 600);
+    }
+  },
+  // Alte Adresse: Hinweis-Leiste mit Weg zum Mitnehmen (nicht in der App — die zieht selbst um)
+  banner() {
+    try { if (sessionStorage.getItem('kb_umzug_banner') === 'x') return; } catch (e) {}
+    const bar = el('div', 'umzug-bar');
+    bar.setAttribute('data-kb-keep', '');
+    bar.setAttribute('role', 'status');
+    const txt = el('span');
+    txt.textContent = 'Scolavis ist umgezogen: scolavis.de. Nimm deine Tafeln mit – dauert eine Minute.';
+    const go = el('a', 'umzug-go', { href: '/umzug.html' });
+    go.textContent = 'Tafeln mitnehmen';
+    const x = el('button', 'umzug-x', { type: 'button', 'aria-label': 'Hinweis ausblenden' });
+    x.textContent = '×';
+    x.addEventListener('click', () => { bar.remove(); try { sessionStorage.setItem('kb_umzug_banner', 'x'); } catch (e) {} });
+    bar.append(txt, go, x);
+    document.body.appendChild(bar);
+  },
+  offer() {
+    const app = typeof IN_ANDROID_APP !== 'undefined' && IN_ANDROID_APP;
+    const m = openModal(`<div class="modal" style="max-width:460px">
+      <button class="modal-close" data-close>✕</button>
+      <h2 style="margin-bottom:8px">Tafeln übernehmen</h2>
+      <p style="font-size:14px;line-height:1.6;margin:0 0 12px">${app
+        ? 'Deine Tafeln, Klassen, Zeichnungen und Dateien von der alten Adresse sind bereit. Tippe auf „Übernehmen“ – die App reicht sie direkt weiter.'
+        : 'Wähle die Datei <b>scolavis-umzug.json</b> (meist im Ordner „Downloads“). Sie kommt von der alten Adresse klassenboard.netlify.app.'}</p>
+      <p style="font-size:12.5px;opacity:.7;line-height:1.5;margin:0 0 16px">Was auf diesem Gerät unter scolavis.de schon gespeichert ist, wird dabei ersetzt. Anmelden musst du dich danach neu.</p>
+      <input type="file" accept=".json,application/json" hidden>
+      <div style="display:flex;gap:10px">
+        <button class="btn-secondary" style="flex:1" data-close type="button">Später</button>
+        <button class="btn-primary" style="flex:1" data-go type="button">${app ? 'Übernehmen' : 'Datei wählen'}</button>
+      </div></div>`);
+    const input = m.overlay.querySelector('input[type=file]');
+    m.overlay.querySelector('[data-go]').addEventListener('click', () => input.click());
+    input.addEventListener('change', async () => {
+      const f = input.files && input.files[0];
+      if (!f) return;
+      const btn = m.overlay.querySelector('[data-go]');
+      btn.disabled = true; btn.textContent = 'Übernehme …';
+      try {
+        const n = await this.apply(await f.text());
+        m.close();
+        toast('✅ Übernommen: ' + n + ' Tafel(n) – lade neu …', 4000);
+        setTimeout(() => location.replace(location.pathname), 900);
+      } catch (e) {
+        btn.disabled = false; btn.textContent = app ? 'Übernehmen' : 'Datei wählen';
+        toast('❌ ' + (e && e.message ? e.message : 'Übernehmen hat nicht geklappt'), 5000);
+      }
+    });
+  },
+  // Schreibt den Inhalt der Umzugsdatei in diesen Browser. Gibt die Zahl der Tafeln zurück.
+  async apply(json) {
+    let data;
+    try { data = JSON.parse(json); } catch (e) { throw new Error('Das ist keine Umzugsdatei'); }
+    if (!data || data.kind !== 'scolavis-umzug' || !data.ls || typeof data.ls !== 'object') throw new Error('Das ist keine Umzugsdatei');
+    let boards = 0;
+    try { boards = (JSON.parse(data.ls.classpuls_v2 || '{}').boards || []).length; } catch (e) {}
+    // Ab hier nichts mehr aus dem Speicher der laufenden Seite zurückschreiben lassen (Demo-Tafeln usw.)
+    APP._resetting = true;
+    clearTimeout(APP.saveTimer); APP.saveTimer = null;
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && this.KEYS.test(k)) localStorage.removeItem(k);
+      }
+      for (const [k, v] of Object.entries(data.ls)) {
+        if (this.KEYS.test(k) && typeof v === 'string') localStorage.setItem(k, v);
+      }
+      localStorage.setItem('classpuls_moved_from', String(data.from || OLD_HOST).slice(0, 80));
+      for (const f of (Array.isArray(data.files) ? data.files : [])) {
+        if (!f || typeof f.id !== 'string' || typeof f.d !== 'string') continue;
+        const bytes = KB64.dec(f.d);
+        await PDFSTORE.put(f.id, f.t === 'blob' ? new Blob([bytes], { type: String(f.mime || '') }) : bytes.buffer);
+      }
+    } catch (e) {
+      APP._resetting = false;
+      throw new Error(e && e.name === 'QuotaExceededError' ? 'Zu wenig Speicherplatz im Browser' : 'Übernehmen hat nicht geklappt');
+    }
+    return boards;
+  },
+};
+
+// ══════════════════════════════════════════════════════════════
 // ALS APP INSTALLIEREN — ein Klick, wo der Browser es anbietet; sonst eine kurze Anleitung für genau dieses Gerät
 // ══════════════════════════════════════════════════════════════
 let _installEvt = null;
@@ -13288,6 +13390,7 @@ if (_pollParam) {
   }
   if (new URLSearchParams(window.location.search).has('reset')) openResetDialog();
   checkSharedBoard();
+  UMZUG.init();
   PHONE.init();
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));

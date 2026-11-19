@@ -117,9 +117,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: app-v1.0.${{ github.run_number }}
-          name: ClassPuls-App 1.0.${{ github.run_number }}
+          name: Scolavis-App 1.0.${{ github.run_number }}
           make_latest: true
           body: |
-            ClassPuls für Smartboards und Android-Geräte (ab Android 8).
-            Anleitung: https://klassenboard.netlify.app/app
+            Scolavis für Smartboards und Android-Geräte (ab Android 8).
+            Anleitung: https://scolavis.de/app
           files: ClassPuls.apk

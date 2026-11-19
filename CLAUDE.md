@@ -7,7 +7,11 @@ Classroom-Board-App für Lehrkräfte. Single-File HTML App, Auto-Deploy bei jede
   Cache `classpuls-v*`, Paket `de.klassenboard.app`, `ClassPulsApp/` im User-Agent, `ClassPuls.apk`)
 - **Live:** https://scolavis.de und https://scolavis.com — „/" ist die Verkaufsseite (`landing.html`), die Tafel liegt
   unter `/index.html`. Beide Adressen zeigen die Seite selbst (keine Umleitung .com → .de, Wunsch des Nutzers)
-- **Alte Adresse:** https://klassenboard.netlify.app (dort ist „/" die Tafel) — die Android-App startet noch dort
+- **Alte Adresse:** https://klassenboard.netlify.app (dort ist „/" die Tafel) — zeigt nur noch den Umzugs-Hinweis
+- **Umzug der gespeicherten Tafeln** (Browser speichern pro Adresse getrennt): `umzug.html` (nur auf der alten Adresse
+  sinnvoll) packt localStorage `classpuls_*`/`kb_*` + IndexedDB-Dateien in `scolavis-umzug.json` (ohne Anmeldedaten);
+  `UMZUG` in index.html packt sie auf scolavis.de aus (`#umzug` öffnet den Dialog, ersetzt die lokalen Daten, lädt neu).
+  Auf der alten Adresse zeigt `UMZUG.banner()` eine Hinweis-Leiste. Android-App macht das beim ersten Start selbst
 - **Repo:** https://github.com/TCAK14/KlassenBoard
 - **Domains/E-Mail:** bei INWX; `info@scolavis.de` ist eine Weiterleitung (INWX „Mail Easy") — MX/SPF-Einträge der
   Domain nie verlieren
@@ -237,6 +241,10 @@ Zusätzlich die Seite laden und die Konsole auf Fehler prüfen.
 - Zielgeräte des Nutzers: CTOUCH Riva (1) mit Android 8 und Riva D2. Nutzer will es OHNE CTOUCH (kein CTOUCH-Store)
 
 ## Android-App (`android/`, seit 17.11.2026)
+- Start: `https://scolavis.de/index.html` (seit 19.11.2026). Beim ersten Start nach dem Update öffnet `MainActivity` einmal
+  `klassenboard.netlify.app/umzug.html?app=1`, fängt den Download ab (`onExternalResponse`), öffnet `…/index.html#umzug`
+  und reicht die Datei beim Antippen von „Übernehmen" über `onFilePrompt` durch (nur bei accept mit „json").
+  SharedPreferences `scolavis`: `umzug_done`, `umzug_tries` (nach 3 Versuchen gibt sie auf)
 - Schlanke Java-App mit **GeckoView** (Mozilla, Maven `maven.mozilla.org`), weil die System-Browser/WebViews alter
   Smartboards zu alt sind. minSdk 26 (= GeckoView-Minimum, Android 8), targetSdk 34 (damit `onBackPressed` noch kommt),
   Paket `de.klassenboard.app` (NIE ändern – sonst keine Updates), Name „ClassPuls" nur als Beschriftung
