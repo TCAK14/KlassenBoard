@@ -57,6 +57,14 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
+# Die Seite ruft die Server-Funktionen unter /api/… auf (bei Cloudflare beantwortet das cloudflare/worker.js,
+# hier bei Netlify dieselben Funktionen aus netlify/functions/)
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
 # ── Interne Dateien niemals ausliefern (publish = "." veröffentlicht sonst alles) ──
 [[redirects]]
   from = "/CLAUDE.md"
@@ -108,6 +116,24 @@
 
 [[redirects]]
   from = "/.gitignore"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/wrangler.jsonc"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/cloudflare/*"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.assetsignore"
   to = "/index.html"
   status = 404
   force = true

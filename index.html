@@ -8287,14 +8287,14 @@ async function fetchIcal(url, boardId, opts = {}) {
     let text;
     // Eigener Abruf-Endpunkt: der Kalender-Link (enthält einen persönlichen Schlüssel)
     // geht nicht mehr über einen fremden öffentlichen Proxy.
-    const resp = await fetch('/.netlify/functions/ical', {
+    const resp = await fetch('/api/ical', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url }),
       signal: ctl.signal,
     });
     if ([404, 405, 501].includes(resp.status)) {
-      // Endpunkt nicht vorhanden (lokale Entwicklung ohne Netlify) → öffentlicher Proxy als Ersatz
+      // Endpunkt nicht vorhanden (lokale Entwicklung ohne Server-Funktionen) → öffentlicher Proxy als Ersatz
       const alt = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), { signal: ctl.signal });
       if (!alt.ok) throw new Error('HTTP ' + alt.status);
       text = await alt.text();
@@ -9308,7 +9308,7 @@ function openBgModal() {
     photoBusy = true; photoBtn.disabled = true;
     photoMsg.textContent = 'Suche ein Foto …';
     try {
-      const res = await fetch('/.netlify/functions/image-search', {
+      const res = await fetch('/api/image-search', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: q, type: 'photo', index: photoIndex, inline: true, size: 'large' }),
       });
@@ -12131,7 +12131,7 @@ const DRAW = {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 25000);
     try {
-      const res = await fetch('/.netlify/functions/image-search', {
+      const res = await fetch('/api/image-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: subject, type, index, inline: true }),
@@ -12213,7 +12213,7 @@ const DRAW = {
       const timer = setTimeout(() => controller.abort(), 30000);
       let res;
       try {
-        res = await fetch('/.netlify/functions/ai-chat', {
+        res = await fetch('/api/ai-chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question: q, history: chatHistory.slice(-6), web: !!opts.web }),

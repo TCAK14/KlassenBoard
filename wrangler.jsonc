@@ -1,0 +1,21 @@
+// Scolavis auf Cloudflare Workers. Cloudflare baut bei jedem Push auf „main" automatisch („Workers Builds",
+// Befehl: npx wrangler deploy). Es gibt keinen Build-Schritt – die Dateien werden so ausgeliefert, wie sie hier liegen.
+{
+  "name": "scolavis",
+  "main": "cloudflare/worker.js",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Welche Dateien veröffentlicht werden, steht in .assetsignore (Erlaubnisliste!).
+  // html_handling "none": jede Datei liegt genau unter ihrem Namen – /index.html ist die Tafel und wird NICHT auf „/"
+  // umgeleitet. Alles, wozu es keine Datei gibt („/", /app, /handy, /api/…), beantwortet cloudflare/worker.js.
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "html_handling": "none",
+    "not_found_handling": "none"
+  },
+
+  // Fehlermeldungen der Server-Funktionen im Cloudflare-Protokoll (Worker → Logs)
+  "observability": { "enabled": true }
+}

@@ -5,11 +5,12 @@
 //   in einem ruhigen Moment selbst neu (siehe index.html, „Aktualisierung im Hintergrund").
 // - Schrift, Symbole, Bibliotheken (/vendor/): aus dem Speicher.
 // - Server-Funktionen, Anmeldung, Cloud und fremde Seiten werden nie angefasst.
-const CACHE = 'classpuls-v4';
+const CACHE = 'classpuls-v5';
 const PAGE = '/';
 // Unter scolavis.de/.com ist die Startadresse die Verkaufsseite – die Tafel liegt dort unter /index.html.
 // Unter klassenboard.netlify.app (Android-App, bestehende Nutzer) bleibt die Tafel die Startadresse.
-const LANDING_HOST = /(^|\.)scolavis\.(de|com)$/.test(self.location.hostname);
+// (…workers.dev ist die Test-Adresse bei Cloudflare und verhält sich wie scolavis.de.)
+const LANDING_HOST = /(^|\.)scolavis\.(de|com)$|\.workers\.dev$/.test(self.location.hostname);
 const APP_URL = '/index.html';
 const isAppPath = p => p === '/index.html' || (p === '/' && !LANDING_HOST);
 const CORE = [
@@ -111,7 +112,7 @@ self.addEventListener('fetch', event => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;            // Supabase, Bilder, PDF.js … unverändert
-  if (url.pathname.startsWith('/.netlify/')) return;           // Server-Funktionen nie aus dem Speicher
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/.netlify/')) return;   // Server-Funktionen nie aus dem Speicher
 
   if (req.mode === 'navigate') {
     // Die Tafel: vom Gerät starten, im Hintergrund aktualisieren

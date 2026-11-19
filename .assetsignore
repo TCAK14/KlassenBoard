@@ -1,0 +1,24 @@
+# Cloudflare: welche Dateien aus diesem Ordner veröffentlicht werden.
+# ERLAUBNISLISTE – erst alles sperren, dann einzeln freigeben. Neue öffentliche Dateien/Ordner hier eintragen,
+# sonst sind sie unter scolavis.de nicht erreichbar. (Schreibweise wie .gitignore.)
+/*
+
+!/index.html
+!/landing.html
+!/handy.html
+!/app.html
+!/impressum.html
+!/datenschutz.html
+
+!/sw.js
+!/manifest.webmanifest
+!/favicon.png
+!/apple-touch-icon.png
+!/og-image.png
+
+!/fonts
+!/icons
+!/img
+!/vendor
+
+# _headers (Kopfzeilen-Regeln) liest Cloudflare selbst ein – nicht freigeben, sonst wäre die Datei abrufbar.

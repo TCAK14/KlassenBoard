@@ -12,3 +12,7 @@ node_modules/
 
 # Arbeitsordner mit Logo-Entwürfen (nicht veröffentlichen)
 entwuerfe/
+
+# Cloudflare: lokaler Arbeitsordner von wrangler
+.wrangler/
+.dev.vars

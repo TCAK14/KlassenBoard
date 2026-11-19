@@ -1,19 +1,47 @@
-# KlassenBoard – Projektkontext für Claude Code
+# Scolavis (früher ClassPuls / KlassenBoard) – Projektkontext für Claude Code
 
 ## Überblick
-Classroom-Board-App für Lehrkräfte. Single-File HTML App deployed auf Netlify via GitHub Auto-Deploy.
-- **Live:** https://klassenboard.netlify.app
+Classroom-Board-App für Lehrkräfte. Single-File HTML App, Auto-Deploy bei jedem Push auf `main`.
+- **Name:** seit 18.11.2026 „Scolavis". Sichtbare Texte heißen Scolavis; technische Kennungen bleiben beim alten Namen,
+  damit vorhandene Daten/Installationen weiterlaufen (`classpuls_*` in localStorage, IndexedDB `classpuls_files`,
+  Cache `classpuls-v*`, Paket `de.klassenboard.app`, `ClassPulsApp/` im User-Agent, `ClassPuls.apk`)
+- **Live:** https://scolavis.de und https://scolavis.com — „/" ist die Verkaufsseite (`landing.html`), die Tafel liegt
+  unter `/index.html`. Beide Adressen zeigen die Seite selbst (keine Umleitung .com → .de, Wunsch des Nutzers)
+- **Alte Adresse:** https://klassenboard.netlify.app (dort ist „/" die Tafel) — die Android-App startet noch dort
 - **Repo:** https://github.com/TCAK14/KlassenBoard
+- **Domains/E-Mail:** bei INWX; `info@scolavis.de` ist eine Weiterleitung (INWX „Mail Easy") — MX/SPF-Einträge der
+  Domain nie verlieren
+- **Marke:** Logo `img/logo-scolavis.jpg` (vom Nutzer geliefert), Farben `--accent:#6D4BFF`, `--brand-grad`
+  (#C04BFF → #6D4BFF → #22D3F5), Hintergrund #050136. Geschmack des Nutzers: futuristisch, leuchtend, nicht schlicht
+
+## Hosting (Umzug Netlify → Cloudflare, begonnen 19.11.2026)
+- **Warum:** Netlify rechnet seit 2025 in „Credits" (jede Veröffentlichung kostet welche); das Konto lief deshalb
+  auf Pro (20 $/Monat). Cloudflare Workers ist für diese Seite kostenlos
+- **Cloudflare:** Worker „scolavis" (`wrangler.jsonc`). Dateien werden direkt ausgeliefert („static assets"), das Skript
+  `cloudflare/worker.js` läuft nur, wenn keine Datei passt: „/" → landing.html, `/app`, `/handy`, `/api/*`, sonst 404-Seite.
+  `html_handling: "none"` ist Pflicht — sonst leitet Cloudflare `/index.html` auf „/" um und die Tafel wäre weg
+- **`.assetsignore` ist eine Erlaubnisliste:** neue öffentliche Dateien/Ordner dort freigeben, sonst 404
+- **`_headers`:** Cache-Regeln für Cloudflare (dieselben stehen für Netlify in `netlify.toml`)
+- **Server-Funktionen gibt es doppelt**, solange Netlify noch läuft: `cloudflare/worker.js` (Cloudflare) und
+  `netlify/functions/*.js` (alte Adresse). Die Seite ruft `/api/<name>` auf; Netlify schreibt das per `netlify.toml`
+  auf `/.netlify/functions/<name>` um. Änderungen am Verhalten immer an beiden Stellen
+- **Geheime Schlüssel** (`GEMINI_API_KEY`, `PIXABAY_API_KEY`, `STRIPE_SECRET_KEY`): nur als Secrets bei Cloudflare
+  (Worker → Settings → Variables and Secrets) bzw. als Netlify-Umgebungsvariablen — nie in Dateien
+- **Lokal testen:** `npx wrangler dev` (braucht Node; ohne Schlüssel antwortet die KI mit 503, Stundenplan und
+  Bildersuche über Wikimedia laufen trotzdem). `npx wrangler deploy --dry-run` prüft Konfiguration und Skript
 
 ## Dateistruktur
 ```
 index.html                          ← Haupt-App (gesamte Logik + UI)
 landing.html                        ← Landing Page (Pricing, FAQ, Checkout)
 impressum.html / datenschutz.html   ← Rechtsseiten (Impressum hat noch Platzhalter!)
-netlify/functions/create-checkout.js ← Stripe Backend (Serverless Function)
+cloudflare/worker.js                ← Cloudflare: Kurzadressen + alle Server-Funktionen (/api/ai-chat, image-search, ical, create-checkout)
+wrangler.jsonc, .assetsignore, _headers ← Cloudflare-Einstellungen (siehe „Hosting")
+netlify/functions/create-checkout.js ← dieselben Funktionen für die alte Netlify-Adresse: Stripe
 netlify/functions/ai-chat.js        ← KI-Assistent (Gemini 2.5 Flash; Web-Suche nur bei Bedarf)
 netlify/functions/image-search.js   ← Bildersuche des KI-Assistenten (Pixabay/Wikimedia, liefert data:-URL)
 netlify/functions/ical.js           ← Stundenplan-Abruf (iCal/WebUntis), ersetzt fremden CORS-Proxy
+handy.html                          ← Seite fürs Handy/Dienstgerät (Foto, Live-Kamera, Fernbedienung, Schüler-Abgabe)
 fonts/                              ← Atkinson Hyperlegible Next (lokal gehostet, OFL) — nie von Google-Servern laden
 vendor/                             ← QRCode.js + supabase-js (Version im Dateinamen) — keine fremden Server beim Start
 manifest.webmanifest, sw.js, icons/ ← installierbare App (PWA). sw.js „lokal zuerst": Tafel-Seite höchstens 1,2 s aufs Netz warten,
@@ -21,7 +49,7 @@ manifest.webmanifest, sw.js, icons/ ← installierbare App (PWA). sw.js „lokal
                                       sw.js stempelt `<html data-kb-ver>` (Prüfsumme) → `KB_VER`; die Seite fragt per `kb-check` nach
                                       und lädt sich still neu (`maybeApplyUpdate`: frisch gestartet / 1 min unsichtbar / 20 min unberührt,
                                       nie bei laufendem Timer, Dialog, Zeichnen, Mikro/Kamera, Video, Vollbild — `canSilentReload`).
-                                      /.netlify/ und fremde Adressen nie anfassen. Bei Änderungen an sw.js CACHE-Version erhöhen
+                                      /api/, /.netlify/ und fremde Adressen nie anfassen. Bei Änderungen an sw.js CACHE-Version erhöhen
                                       Symbole erzeugt per Python/PIL (Herz + Puls auf Petrol), auch favicon.png/apple-touch-icon.png
 supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq) — separat via Supabase deployen
 ```
@@ -155,15 +183,18 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
   bekommen deshalb kein „Auf die Tafel" — Vorgabe aus Googles Gemini-API-Bedingungen, nicht entfernen
 - **Bilder:** „Zeige/Male …" → `image-search` (Pixabay mit safesearch, Jugendschutz-Prüfung über Gemini). Der Server
   lädt das Bild und liefert eine data:-URL, damit kein Schul-Browser Drittanbieter aufruft und das Bild dauerhaft bleibt
-- **Server-Schutz:** beide Funktionen verlangen `Origin: https://klassenboard.netlify.app` (auch fehlender Origin → 403)
-  und haben eine einfache Bremse pro IP (nur pro Instanz!). Lokal (python http.server) laufen die Funktionen nicht —
-  zum Testen `fetch` nachstellen oder auf der Live-Seite testen. Fehler gehen als Kürzel (`busy`, `rate`, `timeout`)
-  an den Browser, Details nur ins Netlify-Protokoll
+- **Server-Schutz:** beide Funktionen verlangen einen `Origin` aus `ALLOWED_ORIGINS` (scolavis.de/.com, www, alte
+  Netlify-Adresse; bei Cloudflare zusätzlich die Adresse, unter der die Anfrage ankam; fehlender Origin → 403)
+  und haben eine einfache Bremse pro IP (nur pro Instanz!). Lokal mit python http.server laufen die Funktionen nicht —
+  dafür `npx wrangler dev`. Fehler gehen als Kürzel (`busy`, `rate`, `timeout`) an den Browser, Details nur ins
+  Server-Protokoll (Cloudflare: Worker → Logs)
 
 ## Stripe / Payments
 - **Publishable Key** (im Code erlaubt): `pk_test_51TibNc9fJyerANl5...`
-- **Secret Key:** NUR als Netlify Env-Variable `STRIPE_SECRET_KEY` — NIEMALS in Dateien schreiben
-- Checkout-Funktion: `netlify/functions/create-checkout.js`
+- **Secret Key:** NUR als Secret `STRIPE_SECRET_KEY` beim Hoster (Cloudflare/Netlify) — NIEMALS in Dateien schreiben
+- Checkout-Funktion: `/api/create-checkout` (`cloudflare/worker.js`, ruft Stripe direkt per `fetch` auf — ohne npm-Paket;
+  alt: `netlify/functions/create-checkout.js`). Derzeit ruft keine Seite sie auf: die Verkaufsseite sagt
+  „In der Startphase kostenlos", die Kaufknöpfe sind entfernt
 - Pläne: pro-monthly (250ct/Mo), pro-yearly (2200ct/Jahr), school (dynamisch)
 
 ## Supabase
@@ -181,7 +212,8 @@ open('/tmp/_kb_syntax.js','w').write(s[0])
 ```
 **Wenn der Check fehlschlägt → NICHT pushen, erst fixen.**
 
-**Ohne Node.js auf dem Rechner** (Stand Nov 2026 nicht installiert): gleichwertiger Check im Browser-Preview
+**Ohne Node.js auf dem Rechner** (Stand Nov 2026 nicht fest installiert; eine tragbare Kopie von nodejs.org im
+Arbeitsordner genügt, auch für `wrangler`): gleichwertiger Check im Browser-Preview
 (`python -m http.server`, Config „classpuls" in `.claude/launch.json`) — derselbe V8-Parser, ohne Ausführung:
 ```js
 const html = await (await fetch('/index.html?v=' + Date.now())).text();
@@ -230,11 +262,14 @@ Zusätzlich die Seite laden und die Konsole auf Fehler prüfen.
 
 ## Offene Aufgaben
 - [ ] Impressum: Platzhalter durch echte Angaben ersetzen (rechtlich nötig vor Live-Payments); AGB fehlen
-- [ ] Kontakt-Adresse: `info@classpuls.de` auf der Landing Page existiert nicht
+- [ ] Umzug zu Cloudflare abschließen: Worker verbinden + Schlüssel eintragen, Domains (Nameserver bei INWX) umstellen,
+      danach Netlify auf Gratis stellen. Android-App startet noch auf klassenboard.netlify.app → auf
+      `https://scolavis.de/index.html` umstellen (gespeicherte Tafeln liegen pro Adresse getrennt → Umzugsweg nötig);
+      erst danach `netlify/`, `netlify.toml`, `package.json` entfernen
 - [ ] Stripe auf Live-Mode umschalten + Webhook, der nach Zahlung `app_metadata.plan` setzt
 - [ ] Preistabelle vs. tatsächliche Sperren abgleichen (Cloud-Sync, Datei-Widget, KI sind laut Landing Page Pro, technisch aber frei)
 - [ ] Text-Tool: weitere Verbesserungen (Schriftauswahl, Größe)
 - [ ] Redesign Etappe 2 (Rest): direkte Bedienung für weitere Elemente (Zufallszahl-Bereich, Namen/Checkliste direkt
       im Element bearbeiten, QR-Link eintippen); KI-Tafel-Generator nutzt noch ein einfaches Fließ-Layout
 - [ ] Rest aus Etappe 1: Zeichen-Leiste und Dialog-Überschriften nutzen noch Emojis; Dialoge sind noch dunkel;
-      Landing Page hat noch das alte Indigo-Branding und die Systemschrift
+      (Landing Page ist seit 19.11.2026 im Markenlook neu gebaut)
