@@ -258,6 +258,9 @@ Zusätzlich die Seite laden und die Konsole auf Fehler prüfen.
 - Signatur-Schlüssel liegt NUR lokal in `.signing/` (gitignored) + in den GitHub-Secrets. Verlust = keine Updates mehr
 
 ## Häufige Fallstricke
+- **Bilder/Symbole ändern = neuer Dateiname:** `/icons/`, `/fonts/`, `/vendor/` kommen per Service Worker und
+  Cache-Header (1 Woche bzw. 1 Jahr) aus dem Speicher. Neuer Inhalt unter altem Namen bleibt bei Nutzern alt
+  (passiert beim Logo-Wechsel: altes Herz blieb sichtbar). Logo liegt deshalb unter `icons/scolavis-*.png`
 - **File-Truncation:** Bei großen Ersetzungen mit Python arbeiten (nicht Edit-Tool direkt), danach Syntax-Check
 - **Backticks in Python-Strings:** Template-Literals `` `...` `` in Python-heredocs können falsch escaped werden → führt zu `SyntaxError`
 - **Toolbar nicht klickbar:** Meistens ein JS-Fehler der den Startup-Code verhindert → Syntax prüfen
