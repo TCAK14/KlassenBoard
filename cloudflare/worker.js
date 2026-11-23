@@ -50,15 +50,21 @@ function endpoint({ allowMissingOrigin = false, run }) {
   return async (request, env, url) => {
     const cors = corsHeaders(request, url);
     const json = (status, obj) => new Response(JSON.stringify(obj), {
-      status, headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+      status, headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
     });
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     if (request.method !== 'POST') return json(405, { error: 'method' });
     // Browser senden bei POST immer einen Origin-Header – fehlt er, kommt die Anfrage von einem Skript
     const { origin, ok } = originOf(request, url);
     if (!ok && !(allowMissingOrigin && !origin)) return json(403, { error: 'forbidden' });
+    // Anfragen sind winzig (Frage, Suchbegriff, Adresse) – alles über 64 KB ist kein normaler Aufruf
+    if (Number(request.headers.get('Content-Length') || 0) > 65536) return json(413, { error: 'invalid' });
     let body;
-    try { body = JSON.parse((await request.text()) || '{}'); } catch (e) { return json(400, { error: 'invalid' }); }
+    try {
+      const raw = await request.text();
+      if (raw.length > 65536) return json(413, { error: 'invalid' });
+      body = JSON.parse(raw || '{}');
+    } catch (e) { return json(400, { error: 'invalid' }); }
     if (!body || typeof body !== 'object') return json(400, { error: 'invalid' });
     return run({ request, env, url, body, json, cors });
   };
@@ -204,8 +210,10 @@ const imageLimited = makeLimiter(20, 400);
 
 // Übersetzt den Suchbegriff ins Englische (Pixabay findet so deutlich besser) und prüft dabei,
 // ob das Motiv für eine Schulklasse geeignet ist. Antwort „BLOCK" = kein Bild zeigen.
+// Rückgabe { q, checked }: checked = false heißt, die Prüfung konnte nicht stattfinden (Dienst gestört/kein Schlüssel).
 async function smartTranslate(query, geminiKey) {
-  if (!geminiKey) return query;
+  const unchecked = { q: query, checked: false };
+  if (!geminiKey) return unchecked;
   try {
     const res = await fetch(GEMINI_URL, {
       method: 'POST',
@@ -237,11 +245,11 @@ async function smartTranslate(query, geminiKey) {
         generationConfig: { maxOutputTokens: 24, temperature: 0, thinkingConfig: { thinkingBudget: 0 } },
       }),
     });
-    if (!res.ok) return query;
+    if (!res.ok) return unchecked;
     const data = await res.json();
     const text = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
-    return text ? text.replace(/["'\n]/g, ' ').trim().slice(0, 80) : query;
-  } catch (e) { return query; }
+    return text ? { q: text.replace(/["'\n]/g, ' ').trim().slice(0, 80), checked: true } : unchecked;
+  } catch (e) { return unchecked; }
 }
 
 async function searchPixabay(query, type, index, large, pixabayKey) {
@@ -308,7 +316,7 @@ const imageSearch = endpoint({
       const type = body.type === 'illustration' ? 'illustration' : 'photo';
       const index = Math.max(0, Math.min(50, parseInt(body.index, 10) || 0));
 
-      const englishQuery = await smartTranslate(query, env.GEMINI_API_KEY);
+      const { q: englishQuery, checked } = await smartTranslate(query, env.GEMINI_API_KEY);
       if (/^\W*BLOCK\W*$/i.test(englishQuery)) return json(200, { url: null, blocked: true });
 
       // Pixabay zuerst (bessere Qualität, Jugendschutz-Filter), sonst Wikimedia
@@ -316,7 +324,8 @@ const imageSearch = endpoint({
       const pix = env.PIXABAY_API_KEY;
       const found = (await searchPixabay(englishQuery, type, index, large, pix))
         || (type === 'illustration' ? await searchPixabay(englishQuery, 'photo', index, large, pix) : null)
-        || (await searchWikimedia(englishQuery, index));
+        // Wikimedia hat keinen Jugendschutz-Filter → nur, wenn die Prüfung oben wirklich stattgefunden hat
+        || (checked ? await searchWikimedia(englishQuery, index) : null);
       if (!found) return json(200, { url: null });
 
       const out = { url: found.url, credit: found.credit, more: !!found.more };
@@ -347,24 +356,38 @@ function isPublicHttpUrl(raw) {
   if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal')) return false;
   if (/^(127\.|10\.|0\.|169\.254\.|192\.168\.)/.test(host)) return false;
   if (/^172\.(1[6-9]|2\d|3[01])\./.test(host)) return false;
-  if (host === '::1' || host.startsWith('fc') || host.startsWith('fd') || host.startsWith('fe80')) return false;
+  if (host === '::1' || host === '::' || host.startsWith('fc') || host.startsWith('fd') || host.startsWith('fe80')) return false;
+  if (host.includes(':') && /^(::ffff:|64:ff9b:)/.test(host)) return false;   // IPv4 in IPv6-Schreibweise
+  if (/^\d+$/.test(host) || /^0x/i.test(host)) return false;                  // IP als eine einzige Zahl
   return true;
 }
 
+const icalLimited = makeLimiter(30, 600);
+
 const ical = endpoint({
-  allowMissingOrigin: true,          // wie bisher: nur eine FALSCHE Herkunft wird abgelehnt (kein offener Proxy für andere Seiten)
-  async run({ body, json, cors }) {
+  async run({ request, body, json, cors }) {
+    if (icalLimited(clientIp(request))) return json(429, { error: 'Zu viele Abrufe. Bitte kurz warten.' });
     const target = String(body.url || '').trim();
     if (!target || target.length > 2000 || !isPublicHttpUrl(target)) return json(400, { error: 'Ungültiger Kalender-Link' });
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);
     try {
-      const res = await fetch(target, {
-        signal: controller.signal,
-        redirect: 'follow',
-        headers: { 'User-Agent': 'Scolavis-Stundenplan/1.0', 'Accept': 'text/calendar, text/plain, */*' },
-      });
+      // Weiterleitungen selbst verfolgen und jedes Ziel erneut prüfen (sonst führt ein harmloser Link ins interne Netz)
+      let res, next = target;
+      for (let hop = 0; hop < 4; hop++) {
+        res = await fetch(next, {
+          signal: controller.signal,
+          redirect: 'manual',
+          headers: { 'User-Agent': 'Scolavis-Stundenplan/1.0', 'Accept': 'text/calendar, text/plain, */*' },
+        });
+        if (res.status < 300 || res.status >= 400) break;
+        const loc = res.headers.get('Location');
+        if (!loc) break;
+        next = new URL(loc, next).href;
+        if (!isPublicHttpUrl(next)) return json(400, { error: 'Ungültiger Kalender-Link' });
+        if (hop === 3) return json(502, { error: 'Kalender-Server leitet zu oft weiter' });
+      }
       if (!res.ok) return json(502, { error: 'Kalender-Server antwortet mit Fehler ' + res.status });
       if (Number(res.headers.get('content-length') || 0) > ICAL_MAX_BYTES) return json(413, { error: 'Kalender ist zu groß' });
 
@@ -502,7 +525,7 @@ export default {
     // gespeicherte ältere Fassung der Tafel weiter funktioniert.
     const api = path.match(/^\/(?:api|\.netlify\/functions)\/([a-z-]+)\/?$/);
     if (api) {
-      const handler = API[api[1]];
+      const handler = Object.hasOwn(API, api[1]) ? API[api[1]] : null;
       if (!handler) return new Response(JSON.stringify({ error: 'not-found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
       return handler(request, env, url);
     }
@@ -514,7 +537,7 @@ export default {
     if (PAGES[clean]) return env.ASSETS.fetch(new Request(new URL(PAGES[clean], url), request));
 
     return new Response(request.method === 'HEAD' ? null : NOT_FOUND, {
-      status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+      status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY' },
     });
   },
 };

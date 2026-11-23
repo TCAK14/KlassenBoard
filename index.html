@@ -610,7 +610,7 @@ body.fullscreen #board { top:0; }
 .auth-msg { font-size:12px; text-align:center; margin-top:12px; min-height:18px; }
 .auth-msg.error { color:#f87171; }
 .auth-msg.success { color:#4ade80; }
-.auth-info { font-size:11px; color:rgba(255,255,255,0.3); text-align:center; margin-top:14px; line-height:1.5; }
+.auth-info { font-size:12px; color:rgba(255,255,255,0.55); text-align:center; margin-top:14px; line-height:1.5; }
 
 /* ── Poll Widget ── */
 .poll-question { font-size:13px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:10px; }
@@ -2475,6 +2475,10 @@ const WIDGET_CATS = [
 // FREEMIUM LIMITS
 // ══════════════════════════════════════════════════════════════
 const FREE_LIMITS = { maxClasses: 1, maxBoards: 3 };
+// Startphase: Scolavis ist kostenlos und es gibt noch keinen Kaufweg (siehe landing.html „In der Startphase kostenlos“).
+// Solange das so ist, greifen die Grenzen NICHT – sonst endet „+“ in einer Bezahl-Meldung ohne Kaufmöglichkeit.
+// Erst auf false stellen, wenn Bezahlen wirklich funktioniert (Stripe live + Webhook, der app_metadata.plan setzt).
+const LAUNCH_PHASE = true;
 
 function isPro() {
   // Pro/School nur bei gesetztem Plan in app_metadata — das kann NUR serverseitig
@@ -2485,7 +2489,7 @@ function isPro() {
 }
 
 function checkBoardLimit() {
-  if (isPro()) return true;
+  if (LAUNCH_PHASE || isPro()) return true;
   if (APP.state.boards.length >= FREE_LIMITS.maxBoards) {
     openUpgradeModal('boards');
     return false;
@@ -2494,7 +2498,7 @@ function checkBoardLimit() {
 }
 
 function checkClassLimit() {
-  if (isPro()) return true;
+  if (LAUNCH_PHASE || isPro()) return true;
   const count = CLASSES.list().length;
   if (count >= FREE_LIMITS.maxClasses) {
     openUpgradeModal('classes');
@@ -2936,7 +2940,7 @@ const APP = {
     const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'ClassPuls_' + new Date().toISOString().slice(0,10) + '.json';
+    a.download = 'Scolavis_' + new Date().toISOString().slice(0,10) + '.json';
     a.click();
     toast('✅ Exportiert');
   },
@@ -4159,7 +4163,7 @@ async function getPdfDoc(fileId) {
     if (!buf) return null;
     const lib = await loadPdfJs();
     // Kopie übergeben: PDF.js übernimmt den Puffer und macht das Original unbrauchbar
-    return lib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise;
+    return lib.getDocument({ data: new Uint8Array(buf.slice(0)), isEvalSupported: false }).promise;
   })();
   _pdfDocs.set(fileId, p);
   p.then(d => { if (!d) _pdfDocs.delete(fileId); }, () => _pdfDocs.delete(fileId));
@@ -4542,6 +4546,19 @@ function _slimConfig(cfg) {
   });
   return out;
 }
+// Einstellungen aus fremder Quelle (geteilter Link): was eine Zahl sein soll, muss eine Zahl sein – sonst weg damit.
+const NUMERIC_CONFIG_KEYS = ['fontSize','min','max','size','sensitivity','lowThreshold','highThreshold','minutes','seconds','count','value','rounds','teams'];
+function _typedConfig(type, cfg) {
+  const def = getDefaultConfig(type) || {};
+  Object.keys(cfg).forEach(k => {
+    const wantsNumber = typeof def[k] === 'number' || NUMERIC_CONFIG_KEYS.includes(k);
+    if (wantsNumber && typeof cfg[k] !== 'number' && cfg[k] !== null) {
+      const n = Number(cfg[k]);
+      if (typeof cfg[k] === 'string' && cfg[k] !== '' && isFinite(n)) cfg[k] = n; else delete cfg[k];
+    }
+  });
+  return cfg;
+}
 async function shareBoardLink() {
   const board = APP.activeBoard();
   if (!board) return;
@@ -4588,7 +4605,7 @@ async function checkSharedBoard() {
   const widgets = data.w.slice(0, 60).filter(x => x && REGISTRY[x.t]).map(x => ({
     type: x.t, x: num(x.x, 0, 6000, 20), y: num(x.y, 0, 6000, 20),
     w: num(x.w, 100, 3000, REGISTRY[x.t].w), h: num(x.h, 60, 3000, REGISTRY[x.t].h),
-    config: { ...getDefaultConfig(x.t), ..._slimConfig(x.c && typeof x.c === 'object' ? x.c : {}) },
+    config: { ...getDefaultConfig(x.t), ..._typedConfig(x.t, _slimConfig(x.c && typeof x.c === 'object' ? x.c : {})) },
   }));
   const name = String(data.n || 'Geteilte Tafel').slice(0, 40);
   const bg = data.b && data.b.type === 'pattern' && BG_PATTERNS[data.b.value] ? { type: 'pattern', value: data.b.value }
@@ -7071,7 +7088,9 @@ const WIDGET_RENDERERS = {
     const viewer = document.createElement('div');
     viewer.style.cssText = 'flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;background:var(--w-fill);';
 
-    if (file.type.startsWith('text/')) {
+    // Nur eingebettete Daten (data:/blob:) anzeigen – nie eine fremde oder javascript:-Adresse aus einer importierten Datei
+    const fileUrl = /^(data:|blob:)/i.test(String(file.data || '')) ? file.data : 'about:blank';
+    if (String(file.type || '').startsWith('text/')) {
       // Textdateien wurden als Roh-Text gespeichert (readAsText) — direkt anzeigen
       const pre = document.createElement('pre');
       pre.style.cssText = 'width:100%;height:100%;margin:0;padding:12px;overflow:auto;font-size:12.5px;line-height:1.5;color:var(--w-ink);background:var(--w-fill);white-space:pre-wrap;word-break:break-word;box-sizing:border-box;text-align:left';
@@ -7080,27 +7099,27 @@ const WIDGET_RENDERERS = {
       viewer.appendChild(pre);
     } else if (file.type.startsWith('image/')) {
       const img = document.createElement('img');
-      img.src = file.data;
+      img.src = fileUrl;
       img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain';
       viewer.appendChild(img);
     } else if (file.type === 'application/pdf') {
       const frame = document.createElement('iframe');
-      frame.src = file.data;
+      frame.src = fileUrl;
       frame.style.cssText = 'width:100%;height:100%;border:none;';
       viewer.appendChild(frame);
     } else if (file.type.startsWith('video/')) {
       const vid = document.createElement('video');
-      vid.src = file.data; vid.controls = true;
+      vid.src = fileUrl; vid.controls = true;
       vid.style.cssText = 'max-width:100%;max-height:100%';
       viewer.appendChild(vid);
     } else if (file.type.startsWith('audio/')) {
       const aud = document.createElement('audio');
-      aud.src = file.data; aud.controls = true;
+      aud.src = fileUrl; aud.controls = true;
       aud.style.cssText = 'width:90%;margin:auto';
       viewer.appendChild(aud);
     } else if (file.type.startsWith('audio/') || file.name?.match(/\.(mp3|wav|ogg|aac|flac|m4a)$/i)) {
       const aud = document.createElement('audio');
-      aud.src = file.data; aud.controls = true; aud.autoplay = false;
+      aud.src = fileUrl; aud.controls = true; aud.autoplay = false;
       aud.style.cssText = 'width:90%;margin:20px auto;display:block';
       viewer.style.background = 'var(--w-fill)';
       const lbl = document.createElement('div');
@@ -7120,7 +7139,7 @@ const WIDGET_RENDERERS = {
       name.style.cssText = 'color:var(--w-ink);font-size:13px;text-align:center;word-break:break-all';
       name.textContent = file.name || 'Datei';
       const dl = document.createElement('a');
-      dl.href = file.data;
+      dl.href = fileUrl;
       dl.download = file.name || 'datei';
       dl.textContent = '⬇ Herunterladen';
       dl.style.cssText = 'background:var(--accent);color:#fff;padding:8px 20px;border-radius:8px;text-decoration:none;font-size:13px';
@@ -8306,10 +8325,9 @@ async function fetchIcal(url, boardId, opts = {}) {
       signal: ctl.signal,
     });
     if ([404, 405, 501].includes(resp.status)) {
-      // Endpunkt nicht vorhanden (lokale Entwicklung ohne Server-Funktionen) → öffentlicher Proxy als Ersatz
-      const alt = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), { signal: ctl.signal });
-      if (!alt.ok) throw new Error('HTTP ' + alt.status);
-      text = await alt.text();
+      // Endpunkt nicht vorhanden (lokale Entwicklung ohne Server-Funktionen). Bewusst KEIN fremder Proxy als Ersatz:
+      // der Kalender-Link enthält einen persönlichen Schlüssel.
+      throw new Error('Stundenplan-Abruf ist hier nicht verfügbar');
     } else if (!resp.ok) {
       const info = await resp.json().catch(() => ({}));
       throw new Error(info.error || 'HTTP ' + resp.status);
@@ -8516,9 +8534,10 @@ function openPollSettings(w) {
 
 function openNoiseSettings(w) {
   const cfg = w.config;
-  const sens    = cfg.sensitivity    ?? 3;
-  const lowThr  = cfg.lowThreshold   ?? 25;
-  const highThr = cfg.highThreshold  ?? 55;
+  // Number(): die Werte landen unten im HTML – eine präparierte Tafel darf hier keinen Text einschleusen
+  const sens    = Number(cfg.sensitivity)   || 3;
+  const lowThr  = Number(cfg.lowThreshold  ?? 25) || 0;
+  const highThr = Number(cfg.highThreshold ?? 55) || 0;
 
   const { overlay, close } = openModal(`
     <div class="modal">
@@ -8581,7 +8600,7 @@ function openTextEdit(w) {
       </div>
       <div class="form-group">
         <label>Schriftgröße in px (leer = passt sich automatisch an)</label>
-        <input type="number" id="te-size" value="${w.config.fontSize||''}" placeholder="automatisch" min="10" max="200">
+        <input type="number" id="te-size" value="${safeText(w.config.fontSize||'')}" placeholder="automatisch" min="10" max="200">
       </div>
       <button class="btn-primary" id="te-save">Speichern</button>
     </div>
@@ -8856,11 +8875,11 @@ function openRandNumSettings(w) {
       <h2>🔢 Zufallszahl</h2>
       <div class="form-group">
         <label>Minimum</label>
-        <input type="number" id="rn-min" value="${w.config.min ?? 1}">
+        <input type="number" id="rn-min" value="${safeText(w.config.min ?? 1)}">
       </div>
       <div class="form-group">
         <label>Maximum</label>
-        <input type="number" id="rn-max" value="${w.config.max ?? 30}">
+        <input type="number" id="rn-max" value="${safeText(w.config.max ?? 30)}">
       </div>
       <button class="btn-primary" id="rn-save">Speichern</button>
     </div>
@@ -8893,7 +8912,7 @@ function openGroupsSettings(w) {
       </div>
       <div class="form-group">
         <label>Gruppengröße</label>
-        <input type="number" id="gr-size" value="${w.config.size||3}" min="2" max="10">
+        <input type="number" id="gr-size" value="${safeText(w.config.size||3)}" min="2" max="10">
       </div>
       <button class="btn-primary" id="gr-save">Speichern & Neu mischen</button>
     </div>
@@ -9489,7 +9508,7 @@ function openLoginModal() {
       </div>
       <div class="auth-field">
         <label>E-Mail</label>
-        <input type="email" id="auth-email" placeholder="lehrer@schule.at" autocomplete="email">
+        <input type="email" id="auth-email" placeholder="name@schule.de" autocomplete="email">
       </div>
       <div class="auth-field">
         <label>Passwort</label>
@@ -9500,7 +9519,9 @@ function openLoginModal() {
         <a href="#" id="auth-forgot" style="font-size:12px;color:rgba(255,255,255,0.5)">Passwort vergessen?</a>
       </div>
       <div class="auth-msg" id="auth-msg"></div>
-      <div class="auth-info">Deine Boards werden automatisch in der<br>Cloud gespeichert und überall verfügbar.</div>
+      <div class="auth-info">Deine Tafeln werden automatisch in der<br>Cloud gespeichert und überall verfügbar.<br>
+        <a href="datenschutz.html" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Datenschutzerklärung</a> ·
+        <a href="impressum.html" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Impressum</a></div>
     </div>
   `);
   _authMode = 'login';
@@ -10103,7 +10124,7 @@ async function showVotingPage(pollId) {
   const page = document.createElement('div'); page.id = 'voting-page';
   const logo = document.createElement('div');
   logo.style.cssText = 'font-size:22px;font-weight:800;color:#fff;margin-bottom:28px;letter-spacing:-0.5px;';
-  logo.innerHTML = '<span style="color:#5ED3C9">Class</span>Puls';
+  logo.innerHTML = 'Scola<span style="color:#9FE8FF">vis</span>';
   const card = document.createElement('div'); card.className = 'voting-card';
   card.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);padding:20px;">Lade Umfrage…</div>';
   page.append(logo, card);
@@ -11847,7 +11868,13 @@ const DRAW = {
   if (!panel) return;
 
   const TEXT_AI_KEY = 'kb_text_ai_count';
-  const MAX_FREE_TEXT = 50;
+  const MAX_FREE_TEXT = 100;                      // freie KI-Fragen pro Monat (Schutz vor ausufernden Kosten)
+  // Zähler gilt pro Kalendermonat: gespeichert als „2026-11:17“ (ältere Einträge ohne Monat zählen nicht mehr)
+  const kiMonth = () => new Date().toISOString().slice(0, 7);
+  const kiCount = () => {
+    const m = String(localStorage.getItem(TEXT_AI_KEY) || '').match(/^(\d{4}-\d{2}):(\d+)$/);
+    return m && m[1] === kiMonth() ? parseInt(m[2], 10) || 0 : 0;
+  };
   const SUGGESTIONS = [
     '5 Kopfrechen-Aufgaben für Klasse 3',
     'Erkläre Photosynthese für Klasse 5',
@@ -11918,8 +11945,8 @@ const DRAW = {
   function updateFoot() {
     const hint = 'Bitte keine Namen oder Daten von Kindern eingeben.';
     if (isPro()) { foot.textContent = hint; return; }
-    const left = Math.max(0, MAX_FREE_TEXT - (parseInt(localStorage.getItem(TEXT_AI_KEY) || '0', 10) || 0));
-    foot.textContent = 'Noch ' + left + ' von ' + MAX_FREE_TEXT + ' kostenlosen Fragen · ' + hint;
+    const left = Math.max(0, MAX_FREE_TEXT - kiCount());
+    foot.textContent = left <= 20 ? 'Noch ' + left + ' Fragen in diesem Monat · ' + hint : hint;
   }
 
   function scrollDown() { historyEl.scrollTop = historyEl.scrollHeight; }
@@ -12207,12 +12234,9 @@ const DRAW = {
       return;
     }
 
-    const count = parseInt(localStorage.getItem(TEXT_AI_KEY) || '0', 10) || 0;
+    const count = kiCount();
     if (!isPro() && count >= MAX_FREE_TEXT) {
-      const b = addBubble('ai', 'Die ' + MAX_FREE_TEXT + ' kostenlosen Fragen sind aufgebraucht. Mit Scolavis Pro kannst du unbegrenzt weiterfragen.');
-      const acts = document.createElement('div'); acts.className = 'ki-actions';
-      acts.appendChild(actBtn('ai', 'Pro ansehen', () => openUpgradeModal('ki'), true));
-      b.appendChild(acts);
+      addBubble('ai', 'Für diesen Monat sind die ' + MAX_FREE_TEXT + ' freien KI-Fragen aufgebraucht. Am Monatsanfang geht es weiter. Brauchst du mehr? Schreib uns: info@scolavis.de');
       return;
     }
 
@@ -12235,7 +12259,7 @@ const DRAW = {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'http-' + res.status);
 
-      if (!isPro()) localStorage.setItem(TEXT_AI_KEY, String(count + 1));
+      if (!isPro()) localStorage.setItem(TEXT_AI_KEY, kiMonth() + ':' + (count + 1));
       if (!data.blocked && !data.empty) {
         chatHistory.push({ role: 'user', content: q });
         chatHistory.push({ role: 'assistant', content: data.text });
@@ -12479,6 +12503,9 @@ function openMoreMenu() {
   const auto = document.body.classList.contains('autohide');
   item('eye', 'Leisten ausblenden', () => setAutoHide(!auto), { note: auto ? 'an' : 'aus' });
   sep();
+  item('files', 'Datenschutz', () => window.open('datenschutz.html', '_blank', 'noopener'));
+  item('link', 'Impressum', () => window.open('impressum.html', '_blank', 'noopener'));
+  sep();
   item('reset', 'Alles zurücksetzen …', openResetDialog, { danger: true });
 
   const r = document.getElementById('btn-more').getBoundingClientRect();
@@ -12576,6 +12603,7 @@ const UMZUG = {
         if (k && this.KEYS.test(k)) localStorage.removeItem(k);
       }
       for (const [k, v] of Object.entries(data.ls)) {
+        if (k === 'kb_phone_link') continue;      // Handy neu koppeln – Schlüssel nie aus einer Datei übernehmen
         if (this.KEYS.test(k) && typeof v === 'string') localStorage.setItem(k, v);
       }
       localStorage.setItem('classpuls_moved_from', String(data.from || OLD_HOST).slice(0, 80));

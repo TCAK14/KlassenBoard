@@ -22,3 +22,14 @@
 /icons/*
   ! Cache-Control
   Cache-Control: public, max-age=604800
+
+# Sicherheits-Kopfzeilen für alle ausgelieferten Dateien
+# - HSTS: Browser rufen die Seite danach nur noch verschlüsselt auf (zusätzlich „Always Use HTTPS" im Cloudflare-Dashboard)
+# - frame-ancestors: Scolavis darf nicht in fremde Seiten eingebettet werden (Schutz vor untergeschobenen Klicks)
+# - Kamera/Mikrofon nur für die eigene Seite, nie für eingebettete Fremdseiten
+/*
+  Strict-Transport-Security: max-age=15552000
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(self), microphone=(self), geolocation=()
+  Content-Security-Policy: frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'

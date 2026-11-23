@@ -85,12 +85,15 @@ textarea { min-height:92px; resize:vertical; }
 .sub img { flex:none; width:92px; height:92px; object-fit:cover; border-radius:12px; background:#ddd; }
 .sub .who { font-weight:800; margin-bottom:6px; overflow-wrap:anywhere; }
 .hide { display:none !important; }
+#legal { flex:none; margin:0; padding:6px 14px; text-align:center; font-size:12.5px; color:#A9A4DA; }
+#legal a { color:inherit; }
 </style>
 </head>
 <body>
 <div id="app">
   <header><img src="icons/scolavis-192.png" alt=""><b>Scolavis</b><div id="status"><i></i><span>verbinde …</span></div></header>
   <main id="view"></main>
+  <p id="legal"><a href="datenschutz.html" target="_blank" rel="noopener">Datenschutz</a> · <a href="impressum.html" target="_blank" rel="noopener">Impressum</a></p>
   <nav id="tabs" class="hide"></nav>
 </div>
 <script src="/vendor/supabase-2.119.0.js"></script>

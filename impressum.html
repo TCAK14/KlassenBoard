@@ -9,12 +9,13 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --brand: #6366f1;
-  --brand2: #818cf8;
-  --brand3: #a5b4fc;
-  --dark: #0c0c1d;
-  --dark2: #13132b;
-  --dark3: #1a1a38;
+  --brand: #6D4BFF;
+  --brand2: #9FE8FF;
+  --brand3: #B9A8FF;
+  --brand-grad: linear-gradient(120deg, #C04BFF 0%, #6D4BFF 45%, #22D3F5 100%);
+  --dark: #050136;
+  --dark2: #0B0747;
+  --dark3: #120C5A;
   --card: rgba(255,255,255,0.04);
   --border: rgba(255,255,255,0.07);
   --border2: rgba(255,255,255,0.12);
@@ -23,27 +24,30 @@
   --muted2: rgba(255,255,255,0.65);
   --radius: 18px;
 }
+/* Schrift lokal (fonts/) – es wird nichts von fremden Servern geladen */
+@font-face { font-family:'Atkinson Hyperlegible Next'; src:url('fonts/atkinson-hyperlegible-next-latin.woff2') format('woff2'); font-weight:200 800; font-display:swap; }
 html { scroll-behavior: smooth; font-size: 16px; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--dark); color: var(--text); line-height: 1.65; overflow-x: hidden; }
+body { font-family: 'Atkinson Hyperlegible Next', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--dark); color: var(--text); line-height: 1.65; overflow-x: hidden; }
 a { color: var(--brand2); }
 
 nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-  background: rgba(12,12,29,0.88); backdrop-filter: blur(16px) saturate(1.5);
+  background: rgba(5,1,54,0.9); backdrop-filter: blur(16px) saturate(1.5);
   border-bottom: 1px solid var(--border);
 }
 .nav-inner {
   display: flex; align-items: center; justify-content: space-between;
   height: 62px; max-width: 1160px; margin: 0 auto; padding: 0 28px;
 }
-.nav-logo { font-size: 19px; font-weight: 900; letter-spacing: -0.5px; text-decoration: none; color: var(--text); }
-.nav-logo em { color: var(--brand2); font-style: normal; }
+.nav-logo { display: inline-flex; align-items: center; gap: 9px; font-size: 20px; font-weight: 800; letter-spacing: -0.3px; text-decoration: none; color: var(--text); }
+.nav-logo img { width: 34px; height: 34px; border-radius: 9px; box-shadow: 0 0 14px rgba(125,90,255,0.55); }
+.nav-logo em { font-style: normal; background: var(--brand-grad); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
 .nav-actions { display: flex; gap: 10px; align-items: center; }
 .btn { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; border-radius: 11px; font-weight: 700; transition: all .18s; cursor: pointer; border: none; font-size: 14px; }
 .btn-ghost { padding: 9px 18px; color: var(--muted2); background: transparent; }
 .btn-ghost:hover { color: #fff; background: rgba(255,255,255,0.06); }
-.btn-primary { padding: 10px 22px; background: var(--brand); color: #fff; box-shadow: 0 4px 20px rgba(99,102,241,0.35); }
-.btn-primary:hover { background: #4f46e5; transform: translateY(-1px); }
+.btn-primary { padding: 10px 22px; background: linear-gradient(120deg, #C04BFF 0%, #6D4BFF 60%, #3F7BFF 100%); color: #fff; box-shadow: 0 4px 20px rgba(109,75,255,0.4); }
+.btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
 
 .legal {
   max-width: 780px; margin: 0 auto;
@@ -84,10 +88,10 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
 
 <nav>
   <div class="nav-inner">
-    <a href="landing.html" class="nav-logo">Class<em>Puls</em></a>
+    <a href="/" class="nav-logo"><img src="icons/scolavis-192.png" alt="" width="34" height="34"><span>Scola<em>vis</em></span></a>
     <div class="nav-actions">
-      <a href="landing.html" class="btn btn-ghost">Startseite</a>
-      <a href="index.html" class="btn btn-primary">App starten</a>
+      <a href="/" class="btn btn-ghost">Startseite</a>
+      <a href="index.html" class="btn btn-primary">Tafel öffnen</a>
     </div>
   </div>
 </nav>
@@ -128,11 +132,10 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
 
   <h2>Haftung für Inhalte</h2>
   <p>
-    Als Diensteanbieter sind wir gemäß § 7 Abs. 1 TMG für eigene Inhalte auf diesen Seiten
-    nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 TMG sind wir als
-    Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde
-    Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige
-    Tätigkeit hinweisen.
+    Als Diensteanbieter sind wir für eigene Inhalte auf diesen Seiten nach den allgemeinen
+    Gesetzen verantwortlich. Wir sind jedoch nicht verpflichtet, übermittelte oder gespeicherte
+    fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine
+    rechtswidrige Tätigkeit hinweisen.
   </p>
 
   <h2>Haftung für Links</h2>
@@ -158,7 +161,7 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
     <div class="footer-links">
       <a href="impressum.html">Impressum</a>
       <a href="datenschutz.html">Datenschutz</a>
-      <a href="landing.html">Startseite</a>
+      <a href="/">Startseite</a>
     </div>
   </div>
 </footer>

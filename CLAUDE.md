@@ -199,6 +199,13 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
   dafür `npx wrangler dev`. Fehler gehen als Kürzel (`busy`, `rate`, `timeout`) an den Browser, Details nur ins
   Server-Protokoll (Cloudflare: Worker → Logs)
 
+## Startphase: alles kostenlos
+- `LAUNCH_PHASE = true` (index.html, bei `FREE_LIMITS`): keine Grenzen für Tafeln/Klassen, kein „Upgrade auf Pro" –
+  es gibt keinen Kaufweg. KI: 100 Fragen pro Kalendermonat (`kb_text_ai_count` = „JJJJ-MM:Zahl", nur im Browser gezählt).
+  Erst auf `false` stellen, wenn Bezahlen wirklich funktioniert
+- Rechtsseiten: `impressum.html`/`datenschutz.html` im Markenlook; bei jedem neuen Dienst/Hoster die Datenschutzerklärung
+  (Abschnitt + Tabelle „Übersicht der Dienste") mitziehen. Verlinkt aus Menü ⋯, Anmelde-Dialog und `handy.html`
+
 ## Stripe / Payments
 - **Publishable Key** (im Code erlaubt): `pk_test_51TibNc9fJyerANl5...`
 - **Secret Key:** NUR als Secret `STRIPE_SECRET_KEY` beim Hoster (Cloudflare/Netlify) — NIEMALS in Dateien schreiben
@@ -256,6 +263,20 @@ Zusätzlich die Seite laden und die Konsole auf Fehler prüfen.
   Secrets `KEYSTORE_BASE64` + `KEYSTORE_PASSWORD` und veröffentlicht `ClassPuls.apk` als neuestes Release
 - Download-Link (fest): `https://github.com/TCAK14/KlassenBoard/releases/latest/download/ClassPuls.apk`, Seite `/app` (`app.html`)
 - Signatur-Schlüssel liegt NUR lokal in `.signing/` (gitignored) + in den GitHub-Secrets. Verlust = keine Updates mehr
+
+## Sicherheit (nach dem Gutachten vom 23.11.2026)
+- **Einstellungen eines Elements sind fremde Daten** (geteilter Link `#tafel=`, Import-/Umzugsdatei, Cloud): in
+  Dialogen und Renderern nie ungeprüft ins HTML – immer `safeText(...)` oder `Number(...)`, auch bei „Zahlen".
+  `_typedConfig()` erzwingt beim geteilten Link Zahlen; Adressen aus Einstellungen nur als `data:`/`blob:` (Datei-Element)
+  bzw. geprüft per `new URL` (Link-Element) verwenden
+- **Kopfzeilen** stehen in `_headers` (`/*`): HSTS, nosniff, Referrer-Policy, Permissions-Policy (Kamera/Mikro nur selbst),
+  CSP `frame-ancestors 'self'` u. a. Eine volle CSP gegen Inline-Skripte fehlt noch (die App ist ein Inline-Skript)
+- **Server-Funktionen** (`cloudflare/worker.js`): alle verlangen einen erlaubten `Origin`, Körper höchstens 64 KB, Bremse pro IP;
+  Stundenplan-Abruf verfolgt Weiterleitungen selbst und prüft jedes Ziel; Bildersuche nutzt Wikimedia nur, wenn die
+  Jugendschutz-Prüfung wirklich stattgefunden hat. Die Netlify-Kopien haben diese Härtung NICHT (alte Adresse)
+- **PDF.js** wird mit `isEvalSupported:false` aufgerufen (3.11.174 ist sonst angreifbar) – beim Wechsel der Version beibehalten
+- Offen aus dem Gutachten: Handy-Kopplung ohne Geräte-Bestätigung (QR gilt dauerhaft), Supabase-Regeln aller Tabellen
+  prüfen und ins Repo legen, Kostenlimit bei Google/Groq, Überwachung, PDF.js nach `vendor/`, AVV-Muster für Schulen
 
 ## Häufige Fallstricke
 - **Bilder/Symbole ändern = neuer Dateiname:** `/icons/`, `/fonts/`, `/vendor/` kommen per Service Worker und

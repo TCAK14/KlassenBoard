@@ -9,12 +9,13 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --brand: #6366f1;
-  --brand2: #818cf8;
-  --brand3: #a5b4fc;
-  --dark: #0c0c1d;
-  --dark2: #13132b;
-  --dark3: #1a1a38;
+  --brand: #6D4BFF;
+  --brand2: #9FE8FF;
+  --brand3: #B9A8FF;
+  --brand-grad: linear-gradient(120deg, #C04BFF 0%, #6D4BFF 45%, #22D3F5 100%);
+  --dark: #050136;
+  --dark2: #0B0747;
+  --dark3: #120C5A;
   --card: rgba(255,255,255,0.04);
   --border: rgba(255,255,255,0.07);
   --border2: rgba(255,255,255,0.12);
@@ -23,27 +24,30 @@
   --muted2: rgba(255,255,255,0.65);
   --radius: 18px;
 }
+/* Schrift lokal (fonts/) – es wird nichts von fremden Servern geladen */
+@font-face { font-family:'Atkinson Hyperlegible Next'; src:url('fonts/atkinson-hyperlegible-next-latin.woff2') format('woff2'); font-weight:200 800; font-display:swap; }
 html { scroll-behavior: smooth; font-size: 16px; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--dark); color: var(--text); line-height: 1.65; overflow-x: hidden; }
+body { font-family: 'Atkinson Hyperlegible Next', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--dark); color: var(--text); line-height: 1.65; overflow-x: hidden; }
 a { color: var(--brand2); }
 
 nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-  background: rgba(12,12,29,0.88); backdrop-filter: blur(16px) saturate(1.5);
+  background: rgba(5,1,54,0.9); backdrop-filter: blur(16px) saturate(1.5);
   border-bottom: 1px solid var(--border);
 }
 .nav-inner {
   display: flex; align-items: center; justify-content: space-between;
   height: 62px; max-width: 1160px; margin: 0 auto; padding: 0 28px;
 }
-.nav-logo { font-size: 19px; font-weight: 900; letter-spacing: -0.5px; text-decoration: none; color: var(--text); }
-.nav-logo em { color: var(--brand2); font-style: normal; }
+.nav-logo { display: inline-flex; align-items: center; gap: 9px; font-size: 20px; font-weight: 800; letter-spacing: -0.3px; text-decoration: none; color: var(--text); }
+.nav-logo img { width: 34px; height: 34px; border-radius: 9px; box-shadow: 0 0 14px rgba(125,90,255,0.55); }
+.nav-logo em { font-style: normal; background: var(--brand-grad); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
 .nav-actions { display: flex; gap: 10px; align-items: center; }
 .btn { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; border-radius: 11px; font-weight: 700; transition: all .18s; cursor: pointer; border: none; font-size: 14px; }
 .btn-ghost { padding: 9px 18px; color: var(--muted2); background: transparent; }
 .btn-ghost:hover { color: #fff; background: rgba(255,255,255,0.06); }
-.btn-primary { padding: 10px 22px; background: var(--brand); color: #fff; box-shadow: 0 4px 20px rgba(99,102,241,0.35); }
-.btn-primary:hover { background: #4f46e5; transform: translateY(-1px); }
+.btn-primary { padding: 10px 22px; background: linear-gradient(120deg, #C04BFF 0%, #6D4BFF 60%, #3F7BFF 100%); color: #fff; box-shadow: 0 4px 20px rgba(109,75,255,0.4); }
+.btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
 
 .legal {
   max-width: 780px; margin: 0 auto;
@@ -96,10 +100,10 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
 
 <nav>
   <div class="nav-inner">
-    <a href="landing.html" class="nav-logo">Class<em>Puls</em></a>
+    <a href="/" class="nav-logo"><img src="icons/scolavis-192.png" alt="" width="34" height="34"><span>Scola<em>vis</em></span></a>
     <div class="nav-actions">
-      <a href="landing.html" class="btn btn-ghost">Startseite</a>
-      <a href="index.html" class="btn btn-primary">App starten</a>
+      <a href="/" class="btn btn-ghost">Startseite</a>
+      <a href="index.html" class="btn btn-primary">Tafel öffnen</a>
     </div>
   </div>
 </nav>
@@ -126,18 +130,26 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
 
   <h2>3. Hosting</h2>
   <p>
-    Diese Website wird bei <strong>Netlify, Inc.</strong> (44 Montgomery Street, Suite 300,
-    San Francisco, CA 94104, USA) gehostet. Beim Aufruf der Seite erhebt Netlify automatisch
-    Server-Logdaten (IP-Adresse, Zeitstempel, aufgerufene Seite, Browser-Typ).
-    Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der sicheren
-    Bereitstellung der Website). Netlify ist unter dem EU-U.S. Data Privacy Framework
-    zertifiziert.
+    Scolavis (scolavis.de und scolavis.com) wird über <strong>Cloudflare, Inc.</strong>
+    (101 Townsend Street, San Francisco, CA 94107, USA) ausgeliefert. Cloudflare betreibt dafür
+    ein weltweites Netz und beantwortet Aufrufe in der Regel vom nächstgelegenen Standort. Beim
+    Aufruf der Seite verarbeitet Cloudflare technisch bedingt Verbindungsdaten (IP-Adresse,
+    Zeitpunkt, aufgerufene Adresse, Browser-Typ). Auch unsere Server-Funktionen (KI-Assistent,
+    Bildersuche, Stundenplan-Abruf) laufen bei Cloudflare; Cloudflare verwaltet außerdem die
+    Adress-Einträge (DNS) unserer Domains. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO
+    (berechtigtes Interesse an der sicheren und schnellen Bereitstellung). Cloudflare ist unter
+    dem EU-U.S. Data Privacy Framework zertifiziert.
+  </p>
+  <p>
+    Die frühere Adresse <em>klassenboard.netlify.app</em> läuft für eine Übergangszeit weiter bei
+    Netlify, Inc. (San Francisco, USA) und zeigt den Hinweis auf den Umzug. Auch dort fallen beim
+    Aufruf Verbindungsdaten an.
   </p>
 
   <h2>4. Nutzerkonto und Authentifizierung</h2>
   <p>
-    Für die Nutzung von Cloud-Funktionen (Synchronisation, Pro-Features) ist eine
-    Registrierung erforderlich. Die Authentifizierung erfolgt über <strong>Supabase</strong>
+    Scolavis lässt sich ohne Konto nutzen. Nur für Cloud-Funktionen (deine Tafeln auf mehreren
+    Geräten, Live-Umfrage, KI-Tafel) ist eine Registrierung erforderlich. Die Authentifizierung erfolgt über <strong>Supabase</strong>
     (Supabase, Inc., San Francisco, USA). Dabei werden verarbeitet:
   </p>
   <ul>
@@ -149,38 +161,63 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
     Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung). Supabase
     speichert die Daten auf Servern in der EU (Irland, AWS eu-west-1).
   </p>
+  <p>
+    <strong>Konto löschen:</strong> Schreib uns von der E-Mail-Adresse deines Kontos an
+    <a href="mailto:info@scolavis.de">info@scolavis.de</a>. Wir löschen dein Konto und die dazu
+    in der Cloud gespeicherten Tafeln spätestens innerhalb eines Monats.
+  </p>
 
   <h2>5. Cloud-Synchronisation</h2>
   <p>
     Wenn du dich anmeldest, werden deine Tafeln, Klassen und Einstellungen in einer
     Supabase-Datenbank (EU-Server) gespeichert, um sie geräteübergreifend verfügbar
-    zu machen. Es werden keine Schülerdaten erhoben — Scolavis speichert nur die
-    von der Lehrkraft eingegebenen Board-Inhalte.
+    zu machen. Gespeichert wird genau das, was du auf deinen Tafeln eingetragen hast.
+  </p>
+  <p>
+    <strong>Namen von Schülerinnen und Schülern:</strong> Trägst du Namen in Elemente wie
+    Namensrad, Gruppen, Klassendienste oder Punktetafel ein, sind sie Teil der Tafel und werden
+    bei angemeldeten Konten mit in der Cloud gespeichert. Wir empfehlen, nur Vornamen oder Kürzel
+    zu verwenden. Ohne Anmeldung bleiben alle Tafeln ausschließlich auf deinem Gerät. Die
+    „gemerkte Klassenliste“ bleibt in jedem Fall nur auf dem Gerät.
+  </p>
+  <p>
+    Für die Daten deiner Schülerinnen und Schüler bleibt deine Schule bzw. du als Lehrkraft
+    verantwortlich; wir verarbeiten sie nur, um dir Scolavis bereitzustellen. Benötigt deine
+    Schule dafür einen Vertrag zur Auftragsverarbeitung, schreib uns an
+    <a href="mailto:info@scolavis.de">info@scolavis.de</a>.
   </p>
   <p>Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).</p>
 
-  <h2>6. Zahlungsabwicklung</h2>
+  <h2>6. Zahlungen</h2>
   <p>
-    Für kostenpflichtige Pläne nutzen wir <strong>Stripe, Inc.</strong> (510 Townsend Street,
-    San Francisco, CA 94103, USA) als Zahlungsdienstleister. Bei einem Kauf werden an
-    Stripe übermittelt:
+    Scolavis ist derzeit kostenlos. Es gibt keine Bezahlfunktion, und es werden keine
+    Zahlungsdaten verarbeitet. Bevor kostenpflichtige Tarife eingeführt werden, ergänzen wir
+    diese Erklärung um den dann genutzten Zahlungsdienst.
   </p>
-  <ul>
-    <li>E-Mail-Adresse</li>
-    <li>Zahlungsdaten (Kreditkarte, SEPA etc.) — diese werden ausschließlich von Stripe verarbeitet und sind für uns nicht einsehbar</li>
-    <li>Rechnungsadresse (falls angegeben)</li>
-  </ul>
+
+  <h2>6a. Kontakt per E-Mail</h2>
   <p>
-    Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung). Stripe ist unter
-    dem EU-U.S. Data Privacy Framework zertifiziert.
-    <a href="https://stripe.com/de/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Stripe</a>.
+    Schreibst du uns an info@scolavis.de, verarbeiten wir deine E-Mail-Adresse und den Inhalt
+    deiner Nachricht, um zu antworten. Die Adresse wird über unseren Domain-Anbieter
+    (INWX GmbH &amp; Co. KG, Berlin) an ein Postfach bei Google (Gmail) weitergeleitet.
+    Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO bzw. lit. b, wenn es um die Nutzung von
+    Scolavis geht. Wir löschen Anfragen, sobald sie erledigt sind und keine
+    Aufbewahrungspflicht besteht.
   </p>
 
   <h2>7. Lokale Datenspeicherung</h2>
   <p>
-    Scolavis speichert Board-Daten im Local Storage deines Browsers. Diese Daten
-    verlassen dein Gerät nicht, solange du nicht angemeldet bist. Es werden keine Cookies
-    für Tracking oder Werbezwecke gesetzt.
+    Scolavis speichert deine Tafeln, Zeichnungen und Einstellungen im Speicher deines Browsers
+    (Local Storage), Dateien wie PDFs, Videos und Fotos vom Handy in dessen Datenbank (IndexedDB).
+    Diese Daten verlassen dein Gerät nicht, solange du nicht angemeldet bist; Dateien und
+    Zeichnungen bleiben auch mit Anmeldung auf dem Gerät. Es werden keine Cookies für Tracking
+    oder Werbezwecke gesetzt.
+  </p>
+  <p>
+    <strong>Speicherdauer:</strong> Lokale Daten bleiben, bis du sie löschst – über das Menü
+    „⋯ → Alles zurücksetzen“ oder indem du die Website-Daten im Browser löschst. Daten in der
+    Cloud bleiben, bis du sie löschst oder dein Konto gelöscht wird. Beim Abmelden wird die
+    lokale Kopie vom Gerät entfernt.
   </p>
 
   <h2>8. KI-Funktionen</h2>
@@ -208,7 +245,7 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
   <ul>
     <li><strong>YouTube-Element:</strong> Vorschaubild und Video werden von YouTube (Google) geladen, das Video im „erweiterten Datenschutzmodus" (youtube-nocookie.com). Ohne YouTube-Element findet kein Abruf statt.</li>
     <li><strong>Browser- und Favoriten-Element:</strong> Die Symbole der gespeicherten Webseiten werden über den Favicon-Dienst von Google geladen; dabei wird der Name der jeweiligen Webseite übertragen.</li>
-    <li><strong>Stundenplan (iCal):</strong> Dein Kalender-Link wird über unsere Server-Funktion (Netlify) beim Kalender-Server deiner Schule abgerufen und zusammen mit deinen Tafeln gespeichert.</li>
+    <li><strong>Stundenplan (iCal):</strong> Dein Kalender-Link wird über unsere Server-Funktion (bei Cloudflare) beim Kalender-Server deiner Schule abgerufen und zusammen mit deinen Tafeln gespeichert.</li>
     <li><strong>Live-Umfrage:</strong> Stimmen werden ohne Namen in unserer Datenbank (Supabase) gespeichert.</li>
     <li><strong>Lautstärke-Element:</strong> Das Mikrofonsignal wird ausschließlich in deinem Browser ausgewertet – es wird nichts aufgezeichnet oder übertragen.</li>
     <li><strong>Programmbibliotheken:</strong> Die technischen Bibliotheken liefert Scolavis selbst aus. Einzige Ausnahme: Die Bibliothek zur PDF-Anzeige wird vom Verteilnetz cdnjs (Cloudflare) geladen – erst dann, wenn du ein PDF öffnest. PDF- und Videodateien werden nur lokal in deinem Browser gespeichert und nicht an uns oder Dritte übertragen.</li>
@@ -246,15 +283,16 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
       <tr><th>Dienst</th><th>Zweck</th><th>Serverstandort</th></tr>
     </thead>
     <tbody>
-      <tr><td>Netlify</td><td>Hosting, Server-Funktionen</td><td>Global CDN (DPF-zertifiziert)</td></tr>
+      <tr><td>Cloudflare</td><td>Auslieferung der Seite, Server-Funktionen, Adress-Einträge (DNS)</td><td>Weltweites Netz, nächstgelegener Standort (DPF-zertifiziert)</td></tr>
+      <tr><td>Netlify</td><td>Frühere Adresse klassenboard.netlify.app (Übergangszeit)</td><td>Weltweites Netz (DPF-zertifiziert)</td></tr>
       <tr><td>Supabase</td><td>Anmeldung, Datenbank, Live-Umfragen, verschlüsselter Durchreiche-Kanal der Handy-Verbindung</td><td>EU (Irland)</td></tr>
-      <tr><td>Stripe</td><td>Zahlungen</td><td>USA (DPF-zertifiziert)</td></tr>
+      <tr><td>INWX, Google (Gmail)</td><td>E-Mail-Kontakt (info@scolavis.de)</td><td>Deutschland / EU, USA</td></tr>
       <tr><td>Google (Gemini API)</td><td>KI-Assistent – nur bei Nutzung</td><td>EU/USA (DPF-zertifiziert)</td></tr>
       <tr><td>Groq</td><td>KI-Tafel-Generator, Sprachbefehle – nur bei Nutzung</td><td>USA</td></tr>
       <tr><td>Pixabay, Wikimedia Commons</td><td>Bildersuche im KI-Assistenten – nur bei Nutzung, Abruf über unseren Server</td><td>EU/USA</td></tr>
       <tr><td>Pollinations.ai</td><td>KI-Bilder im Element „Frag die KI“ – nur bei Nutzung</td><td>EU/USA</td></tr>
       <tr><td>Google (YouTube, Favicons)</td><td>Videos und Webseiten-Symbole – nur mit entsprechendem Element</td><td>EU/USA (DPF-zertifiziert)</td></tr>
-      <tr><td>Cloudflare (cdnjs, STUN)</td><td>Bibliothek zur PDF-Anzeige – nur beim Öffnen eines PDFs; Verbindungsaufbau der Live-Kamera vom Handy – nur bei Nutzung</td><td>Global CDN</td></tr>
+      <tr><td>Cloudflare (cdnjs, Vermittlungsserver)</td><td>Bibliothek zur PDF-Anzeige – nur beim Öffnen eines PDFs; Verbindungsaufbau der Live-Kamera vom Handy – nur bei Nutzung</td><td>Global CDN</td></tr>
     </tbody>
   </table>
 
@@ -272,7 +310,7 @@ footer { border-top:1px solid var(--border); padding:40px 28px; }
     <div class="footer-links">
       <a href="impressum.html">Impressum</a>
       <a href="datenschutz.html">Datenschutz</a>
-      <a href="landing.html">Startseite</a>
+      <a href="/">Startseite</a>
     </div>
   </div>
 </footer>
