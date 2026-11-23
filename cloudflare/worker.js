@@ -260,7 +260,8 @@ async function searchPixabay(query, type, index, large, pixabayKey) {
       + '&image_type=' + (type === 'illustration' ? 'illustration' : 'photo')
       + '&per_page=8&safesearch=true&order=popular';
     const res = await fetch(url);
-    if (!res.ok) return null;
+    // Status ins Protokoll (ohne Adresse – sie enthält den Schlüssel), damit Ausfälle bei Pixabay sichtbar werden
+    if (!res.ok) { console.warn('Pixabay antwortet mit', res.status); return null; }
     const data = await res.json();
     if (!data.hits || data.hits.length === 0) return null;
     const hit = data.hits[index % data.hits.length];
@@ -298,7 +299,7 @@ async function searchWikimedia(query, index) {
 async function toDataUrl(url, maxBytes) {
   try {
     const res = await fetch(url, { headers: { 'User-Agent': 'Scolavis/1.0 (https://scolavis.de)' } });
-    if (!res.ok) return null;
+    if (!res.ok) { console.warn('Bild-Abruf fehlgeschlagen', res.status, new URL(url).hostname); return null; }
     const type = (res.headers.get('content-type') || '').split(';')[0].trim();
     if (!/^image\/(jpeg|png|webp|gif)$/.test(type)) return null;
     const buf = Buffer.from(await res.arrayBuffer());
