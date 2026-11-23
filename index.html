@@ -1774,6 +1774,13 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
   box-shadow:0 10px 30px rgba(0,0,0,.45); border:1px solid rgba(159,232,255,.35); font-size:14px; line-height:1.35; }
 .umzug-go { flex:none; padding:8px 14px; border-radius:999px; background:var(--brand-grad); color:#fff; font-weight:700; text-decoration:none; }
 .umzug-x { flex:none; background:none; border:0; color:inherit; font-size:22px; line-height:1; cursor:pointer; opacity:.7; padding:2px 4px; }
+/* Rückgängig-Knopf + Meldung mit Knopf */
+#btn-undo[hidden] { display:none !important; }
+#toast.has-action { pointer-events:auto; display:flex; align-items:center; gap:14px; padding:8px 8px 8px 18px; }
+.toast-action { flex:none; border:0; border-radius:9px; padding:9px 16px; min-height:40px; cursor:pointer;
+  background:var(--brand-grad); color:#fff; font:inherit; font-size:14px; font-weight:800; }
+/* Ein Element im Vollbild liegt mit position:fixed über allem – das geht nur ohne Maßstab auf der Ebene */
+body.wfull-on #widgets-layer { transform:none !important; width:auto !important; margin-right:0 !important; margin-bottom:0 !important; }
 </style>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -1809,6 +1816,7 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
   <div id="board-tabs"></div>
   <button id="add-board-btn" title="Neue Tafel" aria-label="Neue Tafel"></button>
   <div class="tb-spacer"></div>
+  <button class="tb-icon-btn" id="btn-undo" title="Rückgängig – Strg+Z" aria-label="Rückgängig" hidden></button>
   <div id="edit-mode-btn" role="group" aria-label="Ansicht oder Bearbeiten"></div>
   <button class="tb-icon-btn" id="btn-fullscreen" title="Vollbild (F)" aria-label="Vollbild"></button>
   <button class="tb-icon-btn" id="btn-more" title="Mehr: Vorlagen, Hintergrund, Einstellungen" aria-label="Mehr"></button>
@@ -2347,7 +2355,7 @@ const AUTH = {
     APP._dirtyPending = false;
     APP.state.boards        = Array.isArray(d.boards) ? d.boards : [];
     APP.state.activeBoardId = d.activeBoardId || null;
-    APP.state.undo          = null;
+    APP.clearUndo();
     APP.icalCache           = d.icalCache || {};
     // Klassen gehören zum Gesamtstand (ältere Cloud-Stände ohne den Schlüssel lassen lokale Klassen unberührt)
     if ('classes' in d || foreign) {
@@ -2831,6 +2839,45 @@ const TPL_CATS = [
 })();
 
 // Entwurfsfläche (1076×532) → tatsächlicher Bildschirm
+// ══════════════════════════════════════════════════════════════
+// ANZEIGE-MASSSTAB — eine Tafel sieht auf jedem Bildschirm gleich aus
+// Jede Tafel merkt sich die Fensterbreite, für die sie gebaut wurde (board.size.w). Ist der Bildschirm breiter oder
+// schmaler, wird die Elemente-Ebene per CSS-transform proportional vergrößert/verkleinert (wie eine Folie).
+// Die gespeicherten Maße (x, y, w, h) bleiben unverändert – nichts „wandert“ beim Wechsel zwischen Geräten.
+// Wer mit Zeiger-Koordinaten rechnet (Ziehen, Größe ändern, Doppelklick-Text, freier Platz), teilt durch VIEW.scale.
+// Bewusst nur nach der BREITE: Vollbild/Leisten ändern die Höhe, und dabei soll sich nichts verschieben
+// (die Zeichnung liegt in Bildschirm-Pixeln darüber). Handy (< 600 px) und Tafeln ohne size: Maßstab 1.
+// ══════════════════════════════════════════════════════════════
+const VIEW = { scale: 1 };
+function boardScale(board) {
+  const cur = window.innerWidth, base = board && board.size && Number(board.size.w);
+  if (!base || base < 600 || cur < 600) return 1;
+  const s = cur / base;
+  if (Math.abs(s - 1) < 0.04) return 1;      // kleine Unterschiede (Bildlaufleiste, Fensterrand) nicht skalieren
+  return Math.max(0.4, Math.min(3, s));
+}
+// Merkt sich an der Tafel, für welche Fensterbreite ihre Maße gelten. force = Maße wurden gerade für DIESEN Bildschirm gesetzt.
+function stampBoardSize(board, force) {
+  if (!board || !(window.innerWidth >= 240)) return;
+  if (force || !board.size) board.size = { w: window.innerWidth, h: window.innerHeight };
+}
+// Menü ⋯ „An Bildschirm anpassen“: auch für ältere Tafeln ohne gemerkte Breite – nimmt den Inhalt als Maß
+// (linker Rand = rechter Rand) und füllt damit die Breite. Ändert keine Element-Maße, ist rückgängig machbar.
+function fitBoardToScreen() {
+  const board = APP.activeBoard();
+  if (!board || !board.widgets.length) { toast('Auf dieser Tafel liegt noch nichts.'); return; }
+  if (window.innerWidth < 600) { toast('Auf dem Handy werden Tafeln nicht verkleinert – dort wird gescrollt.', 4000); return; }
+  const minX = Math.min(...board.widgets.map(w => w.x || 0));
+  const maxR = Math.max(...board.widgets.map(w => (w.x || 0) + (w.w || 200)));
+  const contentW = Math.max(600, Math.round(maxR + Math.max(12, Math.min(minX, 60))));
+  if (board.size && Math.abs(board.size.w - contentW) < 8) { toast('Die Tafel füllt den Bildschirm bereits.'); return; }
+  APP.snapshotUndo();
+  board.size = { w: contentW, h: window.innerHeight };
+  APP.save();
+  updateLayerSize();
+  toast('Tafel an den Bildschirm angepasst', 6000, { label: 'Rückgängig', fn: () => APP.undo() });
+}
+
 function fitLayout(widgets) {
   const boardEl = document.getElementById('board');
   const css = getComputedStyle(document.documentElement);
@@ -2861,8 +2908,9 @@ const APP = {
   state: {
     boards: [],
     activeBoardId: null,
-    editMode: true,
-    undo: null,   // previous boards snapshot (1 level)
+    // Ansicht/Bearbeiten wird pro Gerät gemerkt (am Smartboard soll nach dem Neuladen nichts verrutschen können)
+    editMode: (() => { try { return localStorage.getItem('kb_edit_mode') !== '0'; } catch (e) { return true; } })(),
+    undoStack: [],   // frühere Stände der Tafeln (JSON), neuester zuletzt
   },
   intervals: {},   // widgetId -> intervalId
   selectedId: null,
@@ -2960,22 +3008,34 @@ const APP = {
       toast('✅ Importiert: ' + data.boards.length + ' Tafel(n)');
     } catch(e) { toast('❌ Import fehlgeschlagen: ' + e.message); }
   },
-  // ── Undo ──
-  snapshotUndo() {
-    this.state.undo = JSON.stringify(this.state.boards);
+  // ── Rückgängig (mehrere Schritte) ──
+  // VOR jeder Änderung an Tafeln/Elementen aufrufen. json = bereits vorher genommener Stand (Ziehen/Größe ändern).
+  // Der Stapel hält höchstens 25 Stände bzw. rund 12 MB (Tafeln mit eingebetteten Bildern sind groß).
+  snapshotUndo(json) {
+    const snap = json || JSON.stringify(this.state.boards);
+    const st = this.state.undoStack;
+    if (st.length && st[st.length - 1] === snap) return;
+    st.push(snap);
+    let total = st.reduce((n, s) => n + s.length, 0);
+    while (st.length > 25 || (st.length > 1 && total > 12e6)) total -= st.shift().length;
+    updateUndoBtn();
   },
+  clearUndo() { this.state.undoStack = []; updateUndoBtn(); },
   undo() {
-    if (!this.state.undo) { toast('Kein Rückgängig verfügbar'); return; }
-    const prev = JSON.parse(this.state.undo);
-    this.state.undo = null;
-    this.state.boards = prev;
+    const st = this.state.undoStack;
+    const cur = JSON.stringify(this.state.boards);
+    let prev = st.pop();
+    while (prev !== undefined && prev === cur) prev = st.pop();   // Stände ohne Unterschied überspringen
+    updateUndoBtn();
+    if (prev === undefined) { toast('Nichts zum Rückgängigmachen'); return; }
+    this.state.boards = JSON.parse(prev);
     if (!this.state.boards.find(b => b.id === this.state.activeBoardId)) {
       this.state.activeBoardId = this.state.boards[0]?.id || null;
     }
     this.save();
     renderAll();
     DRAW.loadBoard(this.state.activeBoardId); // Zeichenebene zum ggf. gewechselten Board holen
-    toast('↩ Rückgängig');
+    toast(st.length ? 'Rückgängig gemacht · noch ' + st.length + (st.length === 1 ? ' Schritt' : ' Schritte') : 'Rückgängig gemacht');
   },
 
   // ── Board helpers ──
@@ -2987,12 +3047,28 @@ const APP = {
 // ══════════════════════════════════════════════════════════════
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
-function toast(msg, dur=2500) {
+// action = { label, fn }: Knopf in der Meldung (z. B. „Rückgängig“ nach dem Löschen)
+function toast(msg, dur=2500, action) {
   const el = document.getElementById('toast');
   el.textContent = msg;
+  el.classList.toggle('has-action', !!action);
+  if (action) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'toast-action'; b.textContent = action.label;
+    b.addEventListener('click', () => { el.classList.remove('show', 'has-action'); action.fn(); });
+    el.appendChild(b);
+  }
   el.classList.add('show');
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('show'), dur);
+  el._t = setTimeout(() => el.classList.remove('show', 'has-action'), dur);
+}
+// Rückgängig-Knopf in der oberen Leiste: nur sichtbar, wenn es etwas zurückzunehmen gibt
+function updateUndoBtn() {
+  const b = document.getElementById('btn-undo');
+  if (!b) return;
+  const n = APP.state.undoStack.length;
+  b.hidden = n === 0;
+  b.title = 'Rückgängig' + (n > 1 ? ' (' + n + ' Schritte)' : '') + ' – Strg+Z';
 }
 
 // Escaped für HTML-Text UND Attribute. Ohne die Anführungszeichen wurden Werte wie
@@ -3012,7 +3088,7 @@ function resetLocalData() {
   APP._dirtyPending = false;
   APP.state.boards = [];
   APP.state.activeBoardId = null;
-  APP.state.undo = null;
+  APP.clearUndo();
   APP.icalCache = {};
   DRAW.boardDrawings = {};
   const nameEl = document.getElementById('class-btn-name');
@@ -3082,7 +3158,7 @@ async function resetEverything() {
   clearTimeout(DRAW._saveTimer);
   ['classpuls_v2','classpuls_classes','classpuls_current_class','classpuls_drawings',
    'classpuls_dirty_at','classpuls_synced_at','classpuls_owner','classpuls_visited',
-   'kb_toolbar_pos','kb_toolbar_side','kb_toolbar_prefs','kb_dock_items','kb_autohide','kb_cards'].forEach(k => localStorage.removeItem(k));
+   'kb_toolbar_pos','kb_toolbar_side','kb_toolbar_prefs','kb_dock_items','kb_autohide','kb_cards','kb_edit_mode'].forEach(k => localStorage.removeItem(k));
   try { indexedDB.deleteDatabase('classpuls_files'); } catch(e) {}
   localStorage.removeItem('classpuls_roster');
   // Neu laden → die App startet wie beim ersten Besuch (ohne ?reset in der Adresse)
@@ -3294,6 +3370,7 @@ function createBoard(name, bg, widgets=[], skipLimit=false) {
     widgets: widgets.map((w, i) => ({ zIndex: i + 1, ...JSON.parse(JSON.stringify(w)), id: uid(), createdAt: new Date().toISOString() })),
     createdAt: new Date().toISOString(),
   };
+  stampBoardSize(board, true);
   // Zeichnung der bisherigen Tafel sichern, damit sie nicht auf der neuen erscheint
   if (DRAW.canvas && APP.state.activeBoardId) DRAW.saveBoard(APP.state.activeBoardId);
   APP.state.boards.push(board);
@@ -3366,9 +3443,11 @@ function findFreeSpot(board, w, h) {
   const css = getComputedStyle(document.documentElement);
   const top = parseInt(css.getPropertyValue('--toolbar-h')) || 60;
   const dock = parseInt(css.getPropertyValue('--dock-h')) || 84;
-  const sx = boardEl ? boardEl.scrollLeft : 0, sy = boardEl ? boardEl.scrollTop : 0;
-  const viewW = (boardEl ? boardEl.clientWidth : window.innerWidth);
-  const viewH = (boardEl ? boardEl.clientHeight : window.innerHeight) - top - dock - 16;
+  // sichtbarer Bereich in Tafel-Maßen (bei vergrößerter/verkleinerter Anzeige durch den Maßstab teilen)
+  const k = VIEW.scale || 1;
+  const sx = (boardEl ? boardEl.scrollLeft : 0) / k, sy = (boardEl ? boardEl.scrollTop : 0) / k;
+  const viewW = (boardEl ? boardEl.clientWidth : window.innerWidth) / k;
+  const viewH = ((boardEl ? boardEl.clientHeight : window.innerHeight) - top - dock - 16) / k;
   const gap = 16, step = 24, pad = 24;
   const others = (board.widgets || []).map(o => ({ x:o.x||0, y:o.y||0, w:o.w||200, h:o.h||100 }));
   const free = (x, y) => !others.some(o => x < o.x + o.w + gap && x + w + gap > o.x && y < o.y + o.h + gap && y + h + gap > o.y);
@@ -3405,7 +3484,7 @@ function addWidget(type, extraConfig={}, size) {
   APP.snapshotUndo();
   const def = REGISTRY[type];
   // auf dem Handy nicht breiter als der Bildschirm
-  const maxNewW = Math.max(200, ((document.getElementById('board') || {}).clientWidth || window.innerWidth) - 24);
+  const maxNewW = Math.max(200, ((document.getElementById('board') || {}).clientWidth || window.innerWidth) / (VIEW.scale || 1) - 24);
   const newW = (size && size.w) || def.w, newH = (size && size.h) || def.h;
   const widget = {
     id: uid(),
@@ -3419,6 +3498,7 @@ function addWidget(type, extraConfig={}, size) {
     createdAt: new Date().toISOString(),
   };
   board.widgets.push(widget);
+  stampBoardSize(board);
   APP.save();
   renderWidgets();
   // select new widget
@@ -3444,6 +3524,8 @@ function removeWidget(id) {
   APP.selectedId = null;
   APP.save();
   renderWidgets();
+  // Kein Nachfragen vor dem Löschen (stört beim Aufräumen) – dafür 8 Sekunden lang ein Knopf zum Zurückholen
+  toast('Element entfernt', 8000, { label: 'Rückgängig', fn: () => APP.undo() });
 }
 
 function updateWidget(id, patch) {
@@ -3692,8 +3774,9 @@ function updateLayerSize() {
   const layer = document.getElementById('widgets-layer');
   const board = APP.activeBoard();
   if (!layer || !board) return;
+  const s = VIEW.scale = boardScale(board);
   // Auf Handys bewusst eine größere virtuelle Tafel, sonst passt kaum ein Widget
-  const small = window.innerWidth <= 768;
+  const small = window.innerWidth <= 768 && s === 1;
   let maxR = small ? 900 : 0, maxB = small ? 600 : 0;
   board.widgets.forEach(w => {
     maxR = Math.max(maxR, (w.x || 0) + (w.w || 200) + 20);
@@ -3701,8 +3784,25 @@ function updateLayerSize() {
   });
   layer.style.minWidth = maxR + 'px';
   layer.style.minHeight = maxB + 'px';
+  // Anzeige-Maßstab (siehe boardScale): die Ebene behält ihre Tafel-Maße und wird als Ganzes skaliert.
+  // Breite = Fensterbreite in Tafel-Maßen, damit die skalierte Ebene genau den Bildschirm füllt (kein Quer-Scrollen).
+  layer.style.transformOrigin = '0 0';
+  layer.style.transform = s === 1 ? '' : 'scale(' + s + ')';
+  const bEl = document.getElementById('board');
+  layer.style.width = s === 1 ? '' : (((bEl && bEl.clientWidth) || window.innerWidth) / s) + 'px';
+  // Verkleinert (s < 1) rechnet der Browser den Scrollbereich weiter mit der unskalierten Fläche -> Überstand abziehen
+  layer.style.marginRight = layer.style.marginBottom = '';
+  if (s < 1) {
+    layer.style.marginRight = -Math.ceil(layer.offsetWidth * (1 - s)) + 'px';
+    layer.style.marginBottom = -Math.ceil(layer.offsetHeight * (1 - s)) + 'px';
+  }
   if (DRAW.canvas) DRAW._syncScroll();
 }
+// Fenstergröße geändert (anderer Monitor, Fenster gezogen): nur den Maßstab neu setzen, nichts neu aufbauen
+window.addEventListener('resize', () => {
+  clearTimeout(VIEW._t);
+  VIEW._t = setTimeout(() => { if (!_wfull) updateLayerSize(); }, 120);
+});
 
 // ── Einzelnes Element im Vollbild (PDF, Video, Timer … für die ganze Klasse) ──
 let _wfull = null;
@@ -3905,7 +4005,7 @@ function hideSnapGuides() { showSnapGuide('v', null); showSnapGuide('h', null); 
 const snapGrid = v => Math.round(v / SNAP.grid) * SNAP.grid;
 
 function initDrag(shell, handle, w) {
-  let startX, startY, startLeft, startTop, lines;
+  let startX, startY, startLeft, startTop, lines, before;
   // Ohne touch-action:none übernimmt der Browser den Touch fürs Board-Scrollen
   // und feuert pointercancel mitten im Drag
   handle.style.touchAction = 'none';
@@ -3916,13 +4016,15 @@ function initDrag(shell, handle, w) {
     handle.setPointerCapture(e.pointerId);
     startX = e.clientX; startY = e.clientY;
     startLeft = w.x; startTop = w.y;
+    before = JSON.stringify(APP.state.boards);   // Stand fürs Rückgängig – wird nur abgelegt, wenn wirklich verschoben wurde
     lines = snapLines(w);
     handle.addEventListener('pointermove', onMove);
     handle.addEventListener('pointerup', onUp);
     handle.addEventListener('pointercancel', onUp);
   });
   function onMove(e) {
-    const dx = e.clientX - startX, dy = e.clientY - startY;
+    // Zeigerweg in Tafel-Maßen (bei skalierter Anzeige durch den Maßstab teilen)
+    const dx = (e.clientX - startX) / VIEW.scale, dy = (e.clientY - startY) / VIEW.scale;
     let x = Math.max(0, startLeft + dx), y = Math.max(0, startTop + dy);
     if (e.altKey) hideSnapGuides();
     else {
@@ -3944,25 +4046,27 @@ function initDrag(shell, handle, w) {
     handle.removeEventListener('pointerup', onUp);
     handle.removeEventListener('pointercancel', onUp);
     hideSnapGuides();
-    if (w.x !== startLeft || w.y !== startTop) { APP.save(); updateLayerSize(); }
+    if (w.x !== startLeft || w.y !== startTop) { APP.snapshotUndo(before); stampBoardSize(APP.activeBoard()); APP.save(); updateLayerSize(); }
+    before = null;
   }
 }
 
 function initResize(shell, handle, w) {
-  let startX, startY, startW, startH, lines;
+  let startX, startY, startW, startH, lines, before;
   handle.style.touchAction = 'none';
   handle.addEventListener('pointerdown', e => {
     e.preventDefault(); e.stopPropagation();
     handle.setPointerCapture(e.pointerId);
     startX = e.clientX; startY = e.clientY;
     startW = w.w; startH = w.h;
+    before = JSON.stringify(APP.state.boards);
     lines = snapLines(w);
     handle.addEventListener('pointermove', onMove);
     handle.addEventListener('pointerup', onUp);
     handle.addEventListener('pointercancel', onUp);
   });
   function onMove(e) {
-    const dx = e.clientX - startX, dy = e.clientY - startY;
+    const dx = (e.clientX - startX) / VIEW.scale, dy = (e.clientY - startY) / VIEW.scale;
     let nw = Math.max(120, startW + dx), nh = Math.max(80, startH + dy);
     if (e.altKey) hideSnapGuides();
     else {
@@ -3984,7 +4088,9 @@ function initResize(shell, handle, w) {
     handle.removeEventListener('pointerup', onUp);
     handle.removeEventListener('pointercancel', onUp);
     hideSnapGuides();
-    if (w.w === startW && w.h === startH) return;
+    if (w.w === startW && w.h === startH) { before = null; return; }
+    APP.snapshotUndo(before); before = null;
+    stampBoardSize(APP.activeBoard());
     APP.save();
     updateLayerSize();
     // re-render content so QR etc. resizes
@@ -4563,7 +4669,7 @@ async function shareBoardLink() {
   const board = APP.activeBoard();
   if (!board) return;
   const bg = board.background && typeof board.background.value === 'string' && board.background.value.length < 600 ? board.background : null;
-  const data = { v: 1, n: board.name, b: bg, w: board.widgets.map(w => ({ t: w.type, x: w.x, y: w.y, w: w.w, h: w.h, c: _slimConfig(w.config) })) };
+  const data = { v: 1, n: board.name, b: bg, s: (board.size && board.size.w) || window.innerWidth, w: board.widgets.map(w => ({ t: w.type, x: w.x, y: w.y, w: w.w, h: w.h, c: _slimConfig(w.config) })) };
   const raw = new TextEncoder().encode(JSON.stringify(data));
   let payload;
   try {
@@ -4621,7 +4727,13 @@ async function checkSharedBoard() {
   `);
   overlay.querySelector('#share-add').addEventListener('click', () => {
     close();
-    if (createBoard(name, bg, widgets)) toast('✅ Tafel „' + name + '“ hinzugefügt');
+    const nb = createBoard(name, bg, widgets);
+    if (!nb) return;
+    // Die Maße stammen vom Bildschirm des Absenders: seine Breite übernehmen (ältere Links ohne Angabe: unverändert zeigen)
+    const sw = Number(data.s);
+    if (isFinite(sw) && sw >= 600 && sw <= 8000) nb.size = { w: Math.round(sw), h: 0 }; else delete nb.size;
+    APP.save(); updateLayerSize();
+    toast('✅ Tafel „' + name + '“ hinzugefügt');
   });
 }
 
@@ -9122,6 +9234,7 @@ function applyTemplate(tpl, mode) {
     board.widgets.forEach(w => { stopInterval(w.id); });
     board.background = { ...tpl.bg };
     board.widgets = widgets.map((w, i) => ({ zIndex: i + 1, ...JSON.parse(JSON.stringify(w)), id: uid(), createdAt: new Date().toISOString() }));
+    stampBoardSize(board, true);
     APP.save();
     renderAll();
   }
@@ -9477,6 +9590,7 @@ function setEditMode(on, explain) {
   on = !!on;
   if (APP.state.editMode !== on) {
     APP.state.editMode = on;
+    try { localStorage.setItem('kb_edit_mode', on ? '1' : '0'); } catch (e) {}
     updateEditModeBtn();
     APP.selectedId = null;
     renderWidgets();
@@ -9991,8 +10105,8 @@ document.getElementById('board').addEventListener('dblclick', e => {
     board.widgets.push({
       id: uid(),
       type: 'text',
-      x: Math.max(0, Math.round(e.clientX - wlRect.left - 20)),
-      y: Math.max(0, Math.round(e.clientY - wlRect.top - 20)),
+      x: Math.max(0, Math.round((e.clientX - wlRect.left) / VIEW.scale - 20)),
+      y: Math.max(0, Math.round((e.clientY - wlRect.top) / VIEW.scale - 20)),
       w: def.w, h: def.h,
       zIndex: nextZ(board), locked: false,
       config: { text: txt },
@@ -12398,6 +12512,10 @@ function initChromeIcons() {
   set('add-board-btn', 'plus', 20);
   set('btn-more', 'dots', 22);
   set('auth-logout-btn', 'logout', 16);
+  set('btn-undo', 'undo', 20);
+  const undoBtn = document.getElementById('btn-undo');
+  if (undoBtn && !undoBtn._wired) { undoBtn._wired = true; undoBtn.addEventListener('click', () => { if (!DRAW.active) APP.undo(); }); }
+  updateUndoBtn();
   updateFullscreenBtn();
   updateEditModeBtn();
 }
@@ -12488,9 +12606,11 @@ function openMoreMenu() {
   }
   if (moved) sep();
 
+  if (APP.state.undoStack.length) item('undo', 'Rückgängig', () => APP.undo(), { note: APP.state.undoStack.length + (APP.state.undoStack.length === 1 ? ' Schritt' : ' Schritte') });
   item('grid', 'Alle Tafeln (Übersicht)', openBoardOverview);
   item('template', 'Vorlage laden', openTemplateModal);
   item('palette', 'Hintergrund', openBgModal);
+  item('maximize', 'An Bildschirm anpassen', fitBoardToScreen);
   item('timetable', 'Stundenplan verbinden', openTimetableFromMenu);
   item('mic', 'Sprachbefehl', () => VOICE.toggle());
   item('share', 'Tafel teilen (Link)', shareBoardLink);

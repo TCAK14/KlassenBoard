@@ -3,6 +3,8 @@ package de.klassenboard.app;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.ClipData;
 import android.content.ContentValues;
 import android.content.Context;
@@ -31,7 +33,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -352,6 +356,138 @@ public abstract class BaseActivity extends Activity implements
                 .setNegativeButton("Abbrechen", (d, w) -> res.complete(p.dismiss()))
                 .setOnCancelListener(d -> res.complete(p.dismiss()))
                 .show();
+        return res;
+    }
+
+    // ── Auswahlfelder (<select>) ───────────────────────────────────────────
+    // GeckoView zeigt dafür nichts von selbst an: ohne diese Methode passiert beim Antippen einfach nichts.
+    private static void flattenChoices(GeckoSession.PromptDelegate.ChoicePrompt.Choice[] in, String indent,
+                                       List<GeckoSession.PromptDelegate.ChoicePrompt.Choice> out, List<String> labels) {
+        if (in == null) return;
+        for (GeckoSession.PromptDelegate.ChoicePrompt.Choice ch : in) {
+            if (ch == null || ch.separator) continue;
+            if (ch.items != null && ch.items.length > 0) {          // Gruppe (<optgroup>): nur die Einträge darunter
+                flattenChoices(ch.items, indent + "   ", out, labels);
+                continue;
+            }
+            out.add(ch);
+            labels.add(indent + (ch.label == null ? "" : ch.label));
+        }
+    }
+
+    @Override
+    public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onChoicePrompt(GeckoSession s, GeckoSession.PromptDelegate.ChoicePrompt p) {
+        final GeckoResult<GeckoSession.PromptDelegate.PromptResponse> res = new GeckoResult<>();
+        final List<GeckoSession.PromptDelegate.ChoicePrompt.Choice> list = new ArrayList<>();
+        final List<String> labels = new ArrayList<>();
+        flattenChoices(p.choices, "", list, labels);
+        if (list.isEmpty()) return GeckoResult.fromValue(p.dismiss());
+        final String[] names = labels.toArray(new String[0]);
+        final boolean[] done = {false};
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        if (p.title != null && !p.title.isEmpty()) b.setTitle(p.title);
+
+        if (p.type == GeckoSession.PromptDelegate.ChoicePrompt.Type.MULTIPLE) {
+            final boolean[] checked = new boolean[list.size()];
+            for (int k = 0; k < checked.length; k++) checked[k] = list.get(k).selected;
+            b.setMultiChoiceItems(names, checked, (d, which, isChecked) -> checked[which] = isChecked);
+            b.setPositiveButton("OK", (d, w) -> {
+                List<String> ids = new ArrayList<>();
+                for (int k = 0; k < checked.length; k++) if (checked[k] && !list.get(k).disabled) ids.add(list.get(k).id);
+                done[0] = true;
+                res.complete(p.confirm(ids.toArray(new String[0])));
+            });
+            b.setNegativeButton("Abbrechen", (d, w) -> { done[0] = true; res.complete(p.dismiss()); });
+        } else {
+            int sel = -1;
+            for (int k = 0; k < list.size(); k++) if (list.get(k).selected) { sel = k; break; }
+            b.setSingleChoiceItems(names, sel, (d, which) -> {
+                if (list.get(which).disabled) return;               // gesperrter Eintrag: Fenster bleibt offen
+                done[0] = true;
+                res.complete(p.confirm(list.get(which).id));
+                d.dismiss();
+            });
+        }
+        AlertDialog dlg = b.create();
+        dlg.setOnDismissListener(d -> { if (!done[0]) { done[0] = true; res.complete(p.dismiss()); } });
+        dlg.show();
+        return res;
+    }
+
+    // ── Datum und Uhrzeit (<input type="date|time|datetime-local|month|week">) ─────────────
+    private static int[] parseNumbers(String v) {
+        int[] out = {-1, -1, -1, -1, -1};                           // Jahr, Monat, Tag, Stunde, Minute
+        if (v == null) return out;
+        try {
+            String date = v, time = null;
+            int t = v.indexOf('T');
+            if (t >= 0) { date = v.substring(0, t); time = v.substring(t + 1); }
+            else if (v.indexOf(':') >= 0 && v.indexOf('-') < 0) { date = null; time = v; }
+            if (date != null && !date.contains("W")) {
+                String[] d = date.split("-");
+                if (d.length > 0) out[0] = Integer.parseInt(d[0]);
+                if (d.length > 1) out[1] = Integer.parseInt(d[1]);
+                if (d.length > 2) out[2] = Integer.parseInt(d[2]);
+            }
+            if (time != null) {
+                String[] tt = time.split(":");
+                if (tt.length > 0) out[3] = Integer.parseInt(tt[0]);
+                if (tt.length > 1) out[4] = Integer.parseInt(tt[1].substring(0, Math.min(2, tt[1].length())));
+            }
+        } catch (Exception ignored) { }
+        return out;
+    }
+
+    @Override
+    public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onDateTimePrompt(GeckoSession s, GeckoSession.PromptDelegate.DateTimePrompt p) {
+        final GeckoResult<GeckoSession.PromptDelegate.PromptResponse> res = new GeckoResult<>();
+        final boolean[] done = {false};
+        final int type = p.type;
+        final Calendar now = Calendar.getInstance();
+        final int[] v = parseNumbers(p.defaultValue);
+        final int y0 = v[0] > 0 ? v[0] : now.get(Calendar.YEAR);
+        final int m0 = v[1] > 0 ? v[1] - 1 : now.get(Calendar.MONTH);
+        final int d0 = v[2] > 0 ? v[2] : now.get(Calendar.DAY_OF_MONTH);
+        final int h0 = v[3] >= 0 ? v[3] : now.get(Calendar.HOUR_OF_DAY);
+        final int min0 = v[4] >= 0 ? v[4] : now.get(Calendar.MINUTE);
+
+        if (type == GeckoSession.PromptDelegate.DateTimePrompt.Type.TIME) {
+            TimePickerDialog t = new TimePickerDialog(this, (view, h, min) -> {
+                done[0] = true;
+                res.complete(p.confirm(String.format(Locale.US, "%02d:%02d", h, min)));
+            }, h0, min0, true);
+            t.setOnDismissListener(d -> { if (!done[0]) { done[0] = true; res.complete(p.dismiss()); } });
+            t.show();
+            return res;
+        }
+
+        DatePickerDialog dp = new DatePickerDialog(this, (view, y, m, d) -> {
+            if (type == GeckoSession.PromptDelegate.DateTimePrompt.Type.MONTH) {
+                done[0] = true;
+                res.complete(p.confirm(String.format(Locale.US, "%04d-%02d", y, m + 1)));
+            } else if (type == GeckoSession.PromptDelegate.DateTimePrompt.Type.WEEK) {
+                Calendar c = Calendar.getInstance();
+                c.setFirstDayOfWeek(Calendar.MONDAY);
+                c.setMinimalDaysInFirstWeek(4);                     // Kalenderwochen nach ISO 8601
+                c.set(y, m, d);
+                done[0] = true;
+                res.complete(p.confirm(String.format(Locale.US, "%04d-W%02d", c.getWeekYear(), c.get(Calendar.WEEK_OF_YEAR))));
+            } else if (type == GeckoSession.PromptDelegate.DateTimePrompt.Type.DATETIME_LOCAL) {
+                done[0] = true;                                      // Datum steht – jetzt noch die Uhrzeit
+                final boolean[] done2 = {false};
+                TimePickerDialog t = new TimePickerDialog(this, (tv, h, min) -> {
+                    done2[0] = true;
+                    res.complete(p.confirm(String.format(Locale.US, "%04d-%02d-%02dT%02d:%02d", y, m + 1, d, h, min)));
+                }, h0, min0, true);
+                t.setOnDismissListener(x -> { if (!done2[0]) { done2[0] = true; res.complete(p.dismiss()); } });
+                t.show();
+            } else {
+                done[0] = true;
+                res.complete(p.confirm(String.format(Locale.US, "%04d-%02d-%02d", y, m + 1, d)));
+            }
+        }, y0, m0, d0);
+        dp.setOnDismissListener(d -> { if (!done[0]) { done[0] = true; res.complete(p.dismiss()); } });
+        dp.show();
         return res;
     }
 

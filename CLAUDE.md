@@ -101,6 +101,22 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
 - **Leere Elemente:** `emptyCta(icon, text, onClick)` statt Hinweistext „⚙ Einstellungen" — funktioniert auch in der Ansicht
 - **Demo:** bewusst nur 2 Tafeln (Gratis-Limit 3), damit „+" beim ersten Besuch nicht sofort die Bezahl-Meldung zeigt
 
+## Anzeige-Maßstab, Rückgängig (seit 23.11.2026)
+- **Tafeln sehen auf jedem Bildschirm gleich aus:** `board.size.w` = Fensterbreite, für die die Maße der Tafel gelten
+  (`stampBoardSize`, gesetzt in `createBoard`, beim Anwenden einer Vorlage, sonst beim ersten Verschieben/Hinzufügen).
+  `boardScale()` → `VIEW.scale`; `updateLayerSize()` skaliert `#widgets-layer` per CSS-`transform` (nur nach der Breite,
+  nicht unter 600 px, Tafeln ohne `size` = 1). Gespeicherte Maße (x/y/w/h) bleiben unverändert – Renderer rechnen weiter
+  in Tafel-Maßen. **Wer Zeiger-Koordinaten in Tafel-Maße umrechnet, teilt durch `VIEW.scale`** (`initDrag`, `initResize`,
+  `findFreeSpot`, Doppelklick-Text). Bei Element-Vollbild ist der Maßstab per CSS aus (`body.wfull-on`), weil
+  `position:fixed` in einer transformierten Ebene nicht geht. Menü ⋯ „An Bildschirm anpassen" (`fitBoardToScreen`) setzt
+  `size` aus dem Inhalt – auch für alte Tafeln. Geteilte Links tragen die Breite mit (`s`). Die Zeichnung (DRAW) liegt in
+  Bildschirm-Pixeln darüber und skaliert NICHT mit
+- **Rückgängig:** `APP.snapshotUndo()` VOR jeder Änderung (Stapel `APP.state.undoStack`, max. 25 Stände/12 MB);
+  Ziehen/Größe ändern legen den Stand erst beim Loslassen ab (`snapshotUndo(before)`). Knopf `#btn-undo` in der oberen
+  Leiste (nur sichtbar, wenn es etwas gibt), Menü ⋯, Strg+Z. `toast(text, dauer, {label, fn})` zeigt einen Knopf in der
+  Meldung – Löschen fragt nicht nach, bietet aber 8 s „Rückgängig". Einstellungs-Dialoge legen noch KEINEN Stand ab
+- Ansicht/Bearbeiten wird pro Gerät gemerkt (`kb_edit_mode`)
+
 ## Vollbild einzelner Elemente + Zeichnen
 - `toggleWidgetFull(id)` / `exitWidgetFull()`: Element füllt den Bildschirm (Kopf-Knopf im Bearbeiten-Modus, Eck-Knopf
   `.w-full-btn` in der Ansicht). Renderer bekommen über `widgetFullProxy()` die Bildschirmgröße als `w.w`/`w.h` —
@@ -256,7 +272,8 @@ Zusätzlich die Seite laden und die Konsole auf Fehler prüfen.
   Smartboards zu alt sind. minSdk 26 (= GeckoView-Minimum, Android 8), targetSdk 34 (damit `onBackPressed` noch kommt),
   Paket `de.klassenboard.app` (NIE ändern – sonst keine Updates), Name „ClassPuls" nur als Beschriftung
 - `BaseActivity`: Sitzung + Delegates (Downloads → „Downloads", Dateiauswahl, Mikrofon/Kamera nur für unsere Domain,
-  alert/confirm/prompt, neue Fenster → `PopupActivity`). User-Agent endet auf `ClassPulsApp/<version>` → Web-App
+  alert/confirm/prompt, neue Fenster → `PopupActivity`). GeckoView zeigt für `<select>` und Datums-/Zeitfelder nichts von
+  selbst: `onChoicePrompt`/`onDateTimePrompt` öffnen dafür Android-Fenster (seit 23.11.2026, am Gerät noch nicht geprüft). User-Agent endet auf `ClassPulsApp/<version>` → Web-App
   setzt `IN_ANDROID_APP`. `MainActivity`: Vollbild, Bildschirm bleibt an, Zurück = in den Hintergrund statt beenden
 - Gebaut wird NUR in GitHub Actions (`.github/workflows/android.yml`, kein Java/SDK lokal): Job `test` baut x86_64 und
   macht im Android-8-Emulator Bildschirmfotos → Vorab-Release `app-test` (öffentlich lesbar). Job `release` signiert mit
