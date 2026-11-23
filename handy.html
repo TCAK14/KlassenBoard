@@ -85,6 +85,7 @@ textarea { min-height:92px; resize:vertical; }
 .sub img { flex:none; width:92px; height:92px; object-fit:cover; border-radius:12px; background:#ddd; }
 .sub .who { font-weight:800; margin-bottom:6px; overflow-wrap:anywhere; }
 .hide { display:none !important; }
+.pair-code { margin:14px auto 16px; width:max-content; min-width:2.4em; padding:6px 22px; border-radius:20px; background:var(--accent); color:#fff; font-size:64px; font-weight:800; line-height:1.15; letter-spacing:.06em; }
 #legal { flex:none; margin:0; padding:6px 14px; text-align:center; font-size:12.5px; color:#A9A4DA; }
 #legal a { color:inherit; }
 </style>
@@ -100,7 +101,9 @@ textarea { min-height:92px; resize:vertical; }
 <script>
 'use strict';
 // Scolavis – Handy-Seite. Verbindet ein Handy/Tablet mit einer Tafel:
-//   #t.<kanal>.<schlüssel>  Lehrkraft: Foto, Live-Kamera, Fernbedienung, Abgaben freigeben
+//   #p.<kanal>.<schlüssel>  Einladung aus dem QR-Code der Tafel: Gerät bittet um Aufnahme, die Lehrkraft bestätigt an der
+//                           Tafel die hier angezeigte Nummer – erst dann kommt der private Kanal (nur für dieses Gerät lesbar)
+//   (gemerkte Verbindung)   Lehrkraft: Foto, Live-Kamera, Fernbedienung, Abgaben freigeben
 //   #s.<kanal>.<öffentlicher Schlüssel der Tafel>  Schüler: ein Foto abgeben
 // Alles läuft Ende-zu-Ende verschlüsselt über einen Durchreiche-Kanal (Supabase Realtime) – gespeichert wird dort nichts.
 const SUPABASE_URL = 'https://ubroujkwoizghiiustri.supabase.co';
@@ -317,6 +320,69 @@ function doneCard(title, text, again, againLabel) {
     h('p', { class: 'muted', text }), h('button', { class: 'big-btn', style: 'margin-top:8px', text: againLabel, onclick: again })));
   if (navigator.vibrate) navigator.vibrate(30);
 }
+
+// ══════════════════════════ Kopplung (Einladung aus dem QR-Code) ══════════════════════════
+const P = {
+  async start(chan, keyB64) {
+    let devId = null;
+    try { devId = localStorage.getItem('kb_dev'); } catch (e) {}
+    if (!devId) { devId = rid(9); try { localStorage.setItem('kb_dev', devId); } catch (e) {} }
+    const code = String(10 + (crypto.getRandomValues(new Uint8Array(1))[0] % 90));
+    const key = await crypto.subtle.importKey('raw', B64.unurl(keyB64), 'AES-GCM', false, ['encrypt', 'decrypt']);
+    const pair = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey']);
+    const pub = B64.enc(await crypto.subtle.exportKey('raw', pair.publicKey));
+    const ch = client().channel('kbp-' + chan, { config: { broadcast: { self: false } } });
+    let done = false, timer = null;
+    const stop = () => { done = true; clearInterval(timer); try { client().removeChannel(ch); } catch (e) {} };
+    const ask = async () => {
+      if (done) return;
+      try { await ch.send({ type: 'broadcast', event: 'm', payload: { f: 'p', ...(await seal(key, { t: 'pair', id: devId, code, pub })) } }); } catch (e) {}
+    };
+    setStatus('', 'warte auf die Tafel …');
+    view.replaceChildren(h('div', { class: 'card center' },
+      h('h1', { text: 'An der Tafel bestätigen' }),
+      h('div', { class: 'pair-code', text: code, 'aria-label': 'Nummer ' + code }),
+      h('p', { class: 'muted', text: 'An der Tafel erscheint gleich die Frage „Neues Gerät verbinden?“ mit dieser Nummer. Tippe dort auf „Verbinden“.' })));
+    ch.on('broadcast', { event: 'm' }, async ({ payload }) => {
+      if (done || !payload || payload.f !== 'b') return;
+      let m; try { m = await unseal(key, payload); } catch (e) { return; }
+      if (!m || m.id !== devId) return;
+      if (m.t === 'denied') {
+        stop();
+        fatal('Nicht verbunden', 'An der Tafel wurde die Verbindung abgelehnt. Wenn das ein Versehen war: den Code an der Tafel noch einmal scannen.');
+      } else if (m.t === 'paired' && m.box && m.pub) {
+        try {
+          const boardPub = await crypto.subtle.importKey('raw', B64.dec(m.pub), { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+          const shared = await crypto.subtle.deriveKey({ name: 'ECDH', public: boardPub }, pair.privateKey, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+          const link = await unseal(shared, m.box);
+          if (!link || !link.chan || !link.key) return;
+          stop();
+          try { localStorage.setItem('kb_link', JSON.stringify({ chan: link.chan, key: link.key })); } catch (e) {}
+          if (navigator.vibrate) navigator.vibrate(30);
+          await T.start(link.chan, link.key);
+        } catch (e) { /* nicht für dieses Gerät lesbar → weiter warten */ }
+      }
+    });
+    await new Promise((res, rej) => {
+      const t = setTimeout(() => rej(new Error('timeout')), 12000);
+      ch.subscribe(st => {
+        if (st === 'SUBSCRIBED') { clearTimeout(t); res(); }
+        else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') { clearTimeout(t); rej(new Error(st)); }
+      });
+    });
+    ask();
+    let n = 0;
+    timer = setInterval(() => {
+      if (done) return;
+      if (++n > 48) {      // rund zwei Minuten
+        stop();
+        fatal('Keine Antwort von der Tafel', 'Lass an der Tafel das Fenster „Handy verbinden“ offen und scanne den Code noch einmal.');
+        return;
+      }
+      ask();
+    }, 2500);
+  },
+};
 
 // ══════════════════════════ Lehrkraft ══════════════════════════
 const T = {
@@ -687,6 +753,12 @@ const S = {
   }
   const hash = location.hash.slice(1).split('.');
   if (hash[0] === 's' && hash[1] && hash[2]) { S.start(hash[1], hash[2]); return; }
+  if (hash[0] === 'p' && hash[1] && hash[2]) {
+    // Der Einladungs-Schlüssel soll nicht in der Adresszeile stehen bleiben
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    P.start(hash[1], hash[2]).catch(() => fatal('Verbindung nicht möglich', 'Bitte scanne den QR-Code an der Tafel noch einmal.'));
+    return;
+  }
   let link = null;
   if (hash[0] === 't' && hash[1] && hash[2]) {
     link = { chan: hash[1], key: hash[2] };

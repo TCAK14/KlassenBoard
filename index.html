@@ -1781,6 +1781,14 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
   background:var(--brand-grad); color:#fff; font:inherit; font-size:14px; font-weight:800; }
 /* Ein Element im Vollbild liegt mit position:fixed über allem – das geht nur ohne Maßstab auf der Ebene */
 body.wfull-on #widgets-layer { transform:none !important; width:auto !important; margin-right:0 !important; margin-bottom:0 !important; }
+/* Handy-Kopplung: Anfrage eines neuen Geräts */
+.pp-req { margin:0 0 10px; padding:12px; border-radius:14px; background:var(--accent-tint); border:1.5px solid var(--accent); }
+.pp-req b { display:block; font-size:16px; margin-bottom:4px; }
+.pp-req p { margin:0 0 10px; font-size:14.5px; line-height:1.45; }
+.pp-code { display:inline-block; min-width:2.2em; padding:1px 8px; border-radius:8px; background:var(--accent); color:#fff; font-size:22px; font-weight:800; text-align:center; vertical-align:middle; letter-spacing:.04em; }
+.pp-req-row { display:flex; gap:8px; }
+.pp-req-row .pp-btn { margin:0; }
+.pp-qr.wait { width:232px; padding:60px 16px; font-size:14px; color:var(--ink-muted); }
 </style>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -12998,12 +13006,14 @@ const PHONE = {
   LINK_KEY: 'kb_phone_link',
   link: null, key: null, ch: null, seen: 0, wasOnline: false, panel: null, parts: {}, lastState: '',
   live: null, drop: null, _laserEl: null, _laserT: null, _connecting: null,
+  pair: null,      // Einladung, solange das Fenster „Handy verbinden“ offen ist: { chan, key, ck, ch, state, reqs, denied }
 
   client() { return (typeof AUTH !== 'undefined' && AUTH.client && window.crypto && crypto.subtle) ? AUTH.client : null; },
   online() { return Date.now() - this.seen < 40000; },
   busy() { return Object.keys(this.parts).length > 0; },
   saveLink() { try { localStorage.setItem(this.LINK_KEY, JSON.stringify(this.link)); } catch (e) {} },
-  url() { return location.origin + '/handy.html#t.' + this.link.chan + '.' + this.link.key; },
+  // Der QR-Code enthält nur die Einladung (#p…), nie den privaten Kanal der Tafel
+  url() { return location.origin + '/handy.html#p.' + this.pair.chan + '.' + this.pair.key; },
 
   init() {
     try { this.link = JSON.parse(localStorage.getItem(this.LINK_KEY) || 'null'); } catch (e) { this.link = null; }
@@ -13017,7 +13027,8 @@ const PHONE = {
     const c = this.client();
     if (!c) return Promise.resolve(false);
     this._connecting = (async () => {
-      if (!this.link || !this.link.chan || !this.link.key) { this.link = { chan: KB64.rnd(12), key: KB64.rnd(32), used: 0 }; this.saveLink(); }
+      // v:2 = privater Kanal, der nie in einem QR-Code stand. Ältere Verbindungen (Schlüssel im QR-Code) werden einmalig ersetzt.
+      if (!this.link || !this.link.chan || !this.link.key || this.link.v !== 2) { this.link = { chan: KB64.rnd(12), key: KB64.rnd(32), used: 0, v: 2 }; this.saveLink(); }
       this.key = await crypto.subtle.importKey('raw', KB64.unurl(this.link.key), 'AES-GCM', false, ['encrypt', 'decrypt']);
       const ch = c.channel('kbl-' + this.link.chan, { config: { broadcast: { self: false } } });
       ch.on('broadcast', { event: 'm' }, async ({ payload }) => {
@@ -13038,13 +13049,81 @@ const PHONE = {
     if (this.ch) { try { this.client().removeChannel(this.ch); } catch (e) {} }
     this.ch = null; this.chState = ''; this.seen = 0; this.wasOnline = false; this.parts = {}; this.lastState = '';
   },
-  // Neuer Code: alle bisher gekoppelten Geräte sind damit ausgesperrt
+  // Alle Geräte trennen: neuer privater Kanal, alle bisher gekoppelten Geräte sind damit ausgesperrt
   async reset() {
     this.disconnect();
     this.link = null;
     try { localStorage.removeItem(this.LINK_KEY); } catch (e) {}
     await this.connect();
     this.paint();
+  },
+
+  // ── Kopplung: Einladung per QR-Code, Aufnahme erst nach Bestätigung an der Tafel ──
+  // Warum so: Der QR-Code steht auf dem Klassen-Display. Wer ihn abfotografiert, soll damit nichts anfangen können.
+  // 1. Fenster öffnen → neuer Einladungs-Kanal „kbp-…“ (bei jedem Öffnen ein anderer, nirgends gespeichert).
+  // 2. Das Gerät schickt darüber { t:'pair', id, code, pub } – seine zweistellige Nummer und seinen ECDH-Schlüssel.
+  // 3. Die Tafel zeigt die Nummer; die Lehrkraft vergleicht sie mit ihrem Gerät und tippt „Verbinden“.
+  // 4. Die Tafel schickt den privaten Kanal (this.link) so verschlüsselt, dass nur dieses Gerät ihn lesen kann.
+  // Über den Einladungs-Kanal wird sonst NICHTS angenommen – Fotos, Steuerbefehle usw. laufen nur über den privaten Kanal.
+  async pairStart() {
+    const c = this.client();
+    if (!c || this.pair) return;
+    const p = this.pair = { chan: KB64.rnd(12), key: KB64.rnd(32), ck: null, ch: null, state: '', reqs: [], denied: new Set() };
+    try {
+      p.ck = await crypto.subtle.importKey('raw', KB64.unurl(p.key), 'AES-GCM', false, ['encrypt', 'decrypt']);
+      const ch = c.channel('kbp-' + p.chan, { config: { broadcast: { self: false } } });
+      ch.on('broadcast', { event: 'm' }, async ({ payload }) => {
+        if (!payload || payload.f !== 'p' || this.pair !== p) return;
+        let m; try { m = await kbUnseal(p.ck, payload); } catch (e) { return; }
+        if (m && m.t === 'pair') this.pairRequest(m);
+      });
+      ch.subscribe(status => { if (this.pair !== p) return; p.state = status; this.paint(); });
+      p.ch = ch;
+    } catch (e) { if (this.pair === p) this.pair = null; }
+  },
+  pairStop() {
+    const p = this.pair;
+    if (!p) return;
+    this.pair = null;
+    if (p.ch) { try { this.client().removeChannel(p.ch); } catch (e) {} }
+  },
+  pairRequest(m) {
+    const p = this.pair;
+    const id = String(m.id || ''), code = String(m.code || ''), pub = String(m.pub || '');
+    if (!p || !/^[\w-]{6,40}$/.test(id) || !/^\d{2}$/.test(code) || pub.length < 60 || pub.length > 140) return;
+    if (p.denied.has(id) || p.reqs.some(r => r.id === id)) return;
+    if (p.reqs.length >= 3) return;                         // nicht mit Anfragen überschwemmen lassen
+    p.reqs.push({ id, code, pub });
+    this.paint();
+  },
+  async pairAnswer(id, ok) {
+    const p = this.pair;
+    if (!p) return;
+    const r = p.reqs.find(x => x.id === id);
+    if (!r) return;
+    p.reqs = p.reqs.filter(x => x.id !== id);
+    const sendP = async m => { try { await p.ch.send({ type: 'broadcast', event: 'm', payload: { f: 'b', ...(await kbSeal(p.ck, m)) } }); } catch (e) {} };
+    if (!ok) {
+      p.denied.add(id);
+      this.paint();
+      await sendP({ t: 'denied', id });
+      return;
+    }
+    this.paint();
+    try {
+      if (!(await this.connect()) || !this.link) throw new Error('offline');
+      // Privaten Kanal nur für dieses Gerät lesbar verpacken: einmaliges Schlüsselpaar der Tafel + Schlüssel des Geräts
+      const devPub = await crypto.subtle.importKey('raw', KB64.dec(r.pub), { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+      const eph = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey']);
+      const shared = await crypto.subtle.deriveKey({ name: 'ECDH', public: devPub }, eph.privateKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt']);
+      const box = await kbSeal(shared, { chan: this.link.chan, key: this.link.key });
+      const msg = { t: 'paired', id, pub: KB64.enc(await crypto.subtle.exportKey('raw', eph.publicKey)), box };
+      this.link.used = Date.now(); this.saveLink();
+      // mehrfach senden: das Gerät fragt im Takt nach, eine einzelne Nachricht kann verloren gehen
+      for (const wait of [0, 700, 1600]) { if (wait) await new Promise(z => setTimeout(z, wait)); if (this.pair !== p) break; await sendP(msg); }
+    } catch (e) {
+      toast('Verbinden hat nicht geklappt. Bitte den Code noch einmal scannen.', 5000);
+    }
   },
   async send(m) {
     if (!this.ch) return;
@@ -13392,7 +13471,7 @@ const PHONE = {
 
   // ── Fenster „Handy verbinden" ──
   toggle() {
-    if (this.panel) { this.panel.remove(); this.panel = null; return; }
+    if (this.panel) { this.panel.remove(); this.panel = null; this.pairStop(); return; }
     const p = this.panel = document.createElement('div');
     p.id = 'phone-panel';
     p.setAttribute('data-kb-keep', '');
@@ -13403,6 +13482,7 @@ const PHONE = {
       if (ok && this.link) { this.link.used = Date.now(); this.saveLink(); }
       this.paint();
     });
+    this.pairStart().then(() => this.paint());      // neue Einladung (QR-Code) – gilt nur, solange das Fenster offen ist
   },
   paint() {
     const p = this.panel; if (!p) return;
@@ -13420,6 +13500,20 @@ const PHONE = {
       p.append(again);
       return;
     }
+    // Geräte, die aufgenommen werden möchten: Nummer vergleichen und bestätigen
+    ((this.pair && this.pair.reqs) || []).forEach(r => {
+      const box = mk('div', 'pp-req');
+      box.append(mk('b', '', 'Neues Gerät verbinden?'));
+      const line = mk('p', '', 'Auf dem Gerät steht die Nummer ');
+      line.append(mk('strong', 'pp-code', r.code), document.createTextNode('. Stimmt sie mit deinem Gerät überein?'));
+      const row = mk('div', 'pp-req-row');
+      const no = mk('button', 'pp-btn sec', 'Ablehnen'), yes = mk('button', 'pp-btn', 'Verbinden');
+      no.addEventListener('click', () => this.pairAnswer(r.id, false));
+      yes.addEventListener('click', () => this.pairAnswer(r.id, true));
+      row.append(no, yes);
+      box.append(line, row);
+      p.append(box);
+    });
     const on = this.online();
     if (on) {
       const ok = mk('div', 'pp-ok'); ok.innerHTML = icon('check', 26);
@@ -13431,7 +13525,11 @@ const PHONE = {
     }
     const det = mk('div', 'pp-qr-wrap');
     const qr = mk('div', 'pp-qr');
-    try { new QRCode(qr, { text: this.url(), width: 212, height: 212, correctLevel: QRCode.CorrectLevel.M }); } catch (e) {}
+    if (this.pair && this.pair.state === 'SUBSCRIBED') {
+      try { new QRCode(qr, { text: this.url(), width: 212, height: 212, correctLevel: QRCode.CorrectLevel.M }); } catch (e) {}
+    } else {
+      qr.classList.add('wait'); qr.textContent = 'Code wird vorbereitet …';
+    }
     if (on) {
       const more = mk('button', 'pp-link', 'Weiteres Gerät verbinden');
       qr.style.display = 'none';
@@ -13439,7 +13537,7 @@ const PHONE = {
       det.append(more, qr);
     } else {
       const ol = mk('ol', 'pp-steps');
-      ['Kamera-App am iPhone, iPad oder Android-Handy öffnen', 'Auf den Code halten und den Link antippen', 'Fertig – Foto, Live-Kamera und Fernbedienung'].forEach(t => ol.append(mk('li', '', t)));
+      ['Kamera-App am iPhone, iPad oder Android-Handy öffnen', 'Auf den Code halten und den Link antippen', 'Hier die Nummer bestätigen, die das Gerät anzeigt'].forEach(t => ol.append(mk('li', '', t)));
       det.append(qr, ol);
       if (!this.drop) {
         const b = mk('button', 'pp-btn sec', 'Schüler-Abgabe starten (ohne Handy)');
@@ -13449,10 +13547,10 @@ const PHONE = {
     }
     p.append(det);
     const foot = mk('div', 'pp-foot');
-    foot.append(mk('span', '', 'Ende-zu-Ende verschlüsselt. Fotos bleiben auf diesem Gerät.'));
-    const reset = mk('button', 'pp-link', 'Neuen Code erzeugen');
-    reset.title = 'Alle bisher verbundenen Handys werden getrennt';
-    reset.addEventListener('click', () => { if (confirm('Neuen Code erzeugen? Bisher verbundene Handys müssen den neuen Code scannen.')) this.reset(); });
+    foot.append(mk('span', '', 'Ende-zu-Ende verschlüsselt. Der Code gilt nur, solange dieses Fenster offen ist.'));
+    const reset = mk('button', 'pp-link', 'Alle Geräte trennen');
+    reset.title = 'Alle bisher verbundenen Geräte werden getrennt und müssen neu verbunden werden';
+    reset.addEventListener('click', () => { if (confirm('Alle verbundenen Geräte trennen? Sie müssen danach den Code neu scannen und bestätigt werden.')) this.reset(); });
     foot.append(reset);
     p.append(foot);
   },

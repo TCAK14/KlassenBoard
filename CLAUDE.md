@@ -176,8 +176,14 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
 - `createBoard` sichert die Zeichnung der alten Tafel und lädt die (leere) der neuen; `fitLayout` behält bei Breite 0 die Vorlagenmaße
 
 ## Handy-Verbindung (`PHONE` in index.html + eigene Seite `handy.html`, seit 18.11.2026)
-- Knopf „Handy" in der unteren Leiste (`#dock-phone`) → `PHONE.toggle()` zeigt den QR-Code `…/handy.html#t.<kanal>.<schlüssel>`.
-  Kopplung bleibt (Tafel: `kb_phone_link`, Handy: `kb_link`); Tafel lauscht nach dem Start nur, wenn in den letzten 12 h benutzt
+- Knopf „Handy" in der unteren Leiste (`#dock-phone`) → `PHONE.toggle()` zeigt den QR-Code `…/handy.html#p.<kanal>.<schlüssel>`.
+  **Der QR-Code ist nur eine Einladung** (seit 23.11.2026): eigener Kanal `kbp-<kanal>`, bei jedem Öffnen des Fensters neu,
+  nirgends gespeichert (`PHONE.pair`, `pairStart/pairStop`). Das Gerät schickt `pair` (Geräte-Kennung `kb_dev`, zweistellige
+  Nummer, ECDH-Schlüssel), die Tafel zeigt die Nummer im Fenster („Neues Gerät verbinden?"), bei „Verbinden" schickt sie den
+  privaten Kanal `this.link` (`v:2`) nur für dieses Gerät lesbar (`pairAnswer`, ECDH P-256 → AES-GCM). Über den
+  Einladungs-Kanal wird sonst nichts angenommen. Wer den QR-Code abfotografiert, kann damit später nichts anfangen.
+  Kopplung bleibt danach (Tafel: `kb_phone_link`, Handy: `kb_link`); „Alle Geräte trennen" (`PHONE.reset`) erzeugt einen
+  neuen privaten Kanal. Tafel lauscht nach dem Start nur, wenn in den letzten 12 h benutzt
 - Transport: Supabase Realtime **Broadcast** (`kbl-<kanal>`, Ereignis `m`), jede Nachricht AES-GCM-verschlüsselt (`kbSeal/kbUnseal`),
   nichts wird gespeichert, keine Tabellen. Nachrichten: `hello`/`state`, `ph`+`pc` (Foto in 40-KB-Stücken, Antwort `ph-ok`), `text`,
   `nav`, `act`, `full`, `laser`, `live-start`/`rtc`/`lf`/`live-stop`, `drop-*`
@@ -294,6 +300,27 @@ Zusätzlich die Seite laden und die Konsole auf Fehler prüfen.
 - **PDF.js** wird mit `isEvalSupported:false` aufgerufen (3.11.174 ist sonst angreifbar) – beim Wechsel der Version beibehalten
 - Offen aus dem Gutachten: Handy-Kopplung ohne Geräte-Bestätigung (QR gilt dauerhaft), Supabase-Regeln aller Tabellen
   prüfen und ins Repo legen, Kostenlimit bei Google/Groq, Überwachung, PDF.js nach `vendor/`, AVV-Muster für Schulen
+
+## Betrieb und Überwachung (seit 23.11.2026)
+- `.github/workflows/wache.yml`: alle 30 Minuten Startseite, Tafel, Handy-Seite, `/api` und Supabase prüfen. Die
+  Datenbank-Abfrage hält zugleich das Supabase-Gratis-Projekt wach (pausiert sonst nach 7 Tagen). Bei Ausfall endet der
+  Lauf rot → GitHub mailt dem Besitzer
+- **Ob Cloudflare eine Version veröffentlicht hat**, sieht man ohne Dashboard über GitHub:
+  `https://api.github.com/repos/TCAK14/KlassenBoard/commits/<sha>/check-runs` → „Workers Builds: scolavis"
+- Bremse der Server-Funktionen: zusätzlich zum Zähler im Speicher zählt Cloudflare (`ratelimits` in `wrangler.jsonc`:
+  `RL_IP` 60/min je IP, `RL_ALL` 600/min gesamt; `overLimit()` in worker.js). Ungefähr, nicht exakt
+- `supabase/regeln.sql`: Zugriffsregeln (RLS) für `boards`, `polls`, `poll_votes` zum Ausführen im SQL-Editor
+  (Stand 23.11.: vom Nutzer noch nicht ausgeführt). Die Tabelle `class_boards` gibt es NICHT – der Code in `CLASSES`
+  versucht sie zu nutzen und fällt auf den lokalen Stand zurück (Klassen stecken ohnehin im Gesamtstand `boards.data`)
+
+## Testen ohne sichtbaren Browser
+- Der eingebaute Browser und Chrome hängen gelegentlich. Verlässlich: eine Testseite unter `.wrangler/` (gitignored, wird vom
+  python-Server `localhost:8935` ausgeliefert) lädt `index.html`/`handy.html` in iframes, prüft per `contentWindow.eval(...)`
+  und schreibt `ERGEBNIS {json}` nach `#out`, Titel `fertig`. Ausführen mit Node + Edge über die Fernsteuer-Schnittstelle
+  (`node tools/cdp_run.mjs <adresse> [sekunden] [bild.png]`: startet `msedge --headless=new --remote-debugging-port`, wartet auf
+  den Titel, kann ein Bildschirmfoto machen). Echtes Netz und echte Zeit – damit lässt sich auch die Handy-Kopplung
+  zwischen zwei iframes über das echte Supabase prüfen. Synthetische Zeiger-Ereignisse brauchen
+  `Element.prototype.setPointerCapture = () => {}` im iframe
 
 ## Häufige Fallstricke
 - **Bilder/Symbole ändern = neuer Dateiname:** `/icons/`, `/fonts/`, `/vendor/` kommen per Service Worker und
