@@ -5,7 +5,7 @@
 //   in einem ruhigen Moment selbst neu (siehe index.html, „Aktualisierung im Hintergrund").
 // - Schrift, Symbole, Bibliotheken (/vendor/): aus dem Speicher.
 // - Server-Funktionen, Anmeldung, Cloud und fremde Seiten werden nie angefasst.
-const CACHE = 'classpuls-v5';
+const CACHE = 'classpuls-v6';
 const PAGE = '/';
 // Unter scolavis.de/.com ist die Startadresse die Verkaufsseite – die Tafel liegt dort unter /index.html.
 // Unter klassenboard.netlify.app (Android-App, bestehende Nutzer) bleibt die Tafel die Startadresse.
@@ -17,8 +17,8 @@ const CORE = [
   '/manifest.webmanifest',
   '/fonts/atkinson-hyperlegible-next-latin.woff2',
   '/fonts/atkinson-hyperlegible-next-latin-ext.woff2',
-  '/icons/icon-192.png',
-  '/favicon.png',
+  '/icons/scolavis-192.png',
+  '/favicon.png?v=2',
   '/vendor/qrcode-1.0.0.min.js',
   '/vendor/supabase-2.119.0.js',
 ];

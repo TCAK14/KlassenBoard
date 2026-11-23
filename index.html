@@ -13,8 +13,8 @@
 <meta property="og:image" content="https://scolavis.de/og-image.png">
 <meta property="og:url" content="https://scolavis.de/">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" type="image/png" href="favicon.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="favicon.png?v=2">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1784,7 +1784,7 @@ body.fullscreen #toast, body.draw-mode #toast { bottom:24px; }
 <!-- Obere Leiste: nur Navigation (Klasse, Tafeln) und wenige Werkzeuge -->
 <div id="toolbar">
   <a id="logo" href="landing.html" title="Zur Startseite" style="text-decoration:none">
-    <span class="logo-mark"><img src="icons/icon-192.png" alt="" width="34" height="34"></span>
+    <span class="logo-mark"><img src="icons/scolavis-192.png" alt="" width="34" height="34"></span>
     <span id="logo-text">Scola<span class="logo-vis">vis</span></span>
   </a>
   <!-- Klassen-Wechsler -->
@@ -12658,7 +12658,7 @@ function openInstallHelp() {
   openModal(`
     <div class="modal inst-modal">
       <button class="modal-close" data-close>✕</button>
-      <div class="inst-head"><img src="/icons/icon-192.png" alt="" width="56" height="56"><div><h2>Scolavis als App</h2>
+      <div class="inst-head"><img src="/icons/scolavis-192.png" alt="" width="56" height="56"><div><h2>Scolavis als App</h2>
         <p>Eigenes Symbol, startet im Vollbild ohne Adressleiste und läuft auch weiter, wenn das WLAN kurz weg ist.</p></div></div>
       <ol class="inst-steps">${steps.map(s => '<li>' + s + '</li>').join('')}</ol>
       ${note ? '<p class="inst-note">' + note + '</p>' : ''}
@@ -12674,7 +12674,7 @@ function maybeShowInstallHint() {
   const h = document.createElement('div');
   h.id = 'install-hint';
   h.setAttribute('data-kb-keep', '');
-  h.innerHTML = '<img src="/icons/icon-192.png" alt="" width="44" height="44"><div class="ih-txt"><b>Scolavis als App installieren?</b><span>Eigenes Symbol, startet im Vollbild</span></div>'
+  h.innerHTML = '<img src="/icons/scolavis-192.png" alt="" width="44" height="44"><div class="ih-txt"><b>Scolavis als App installieren?</b><span>Eigenes Symbol, startet im Vollbild</span></div>'
     + '<button class="ih-go">Installieren</button><button class="ih-x" aria-label="Nicht mehr anzeigen">' + icon('x', 18) + '</button>';
   const done = () => { try { localStorage.setItem('kb_install_hint', '1'); } catch (e) {} h.remove(); };
   h.querySelector('.ih-go').addEventListener('click', () => { done(); installApp(); });
