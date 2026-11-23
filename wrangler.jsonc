@@ -16,6 +16,14 @@
     "not_found_handling": "none"
   },
 
+  // Bremse für die Server-Funktionen (/api/*), gezählt von Cloudflare pro Standort (siehe overLimit in worker.js):
+  // RL_IP = höchstens 60 Aufrufe pro Minute je IP-Adresse (eine ganze Schule surft oft unter einer Adresse),
+  // RL_ALL = höchstens 600 pro Minute insgesamt. Der eigentliche Kostendeckel gehört zusätzlich zu Google (Kontingent).
+  "ratelimits": [
+    { "name": "RL_IP",  "namespace_id": "1001", "simple": { "limit": 60,  "period": 60 } },
+    { "name": "RL_ALL", "namespace_id": "1002", "simple": { "limit": 600, "period": 60 } }
+  ],
+
   // Fehlermeldungen der Server-Funktionen im Cloudflare-Protokoll (Worker → Logs)
   "observability": { "enabled": true }
 }

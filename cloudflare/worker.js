@@ -45,8 +45,19 @@ function makeLimiter(perMinute, perDay) {
 }
 const clientIp = request => request.headers.get('CF-Connecting-IP') || 'unknown';
 
+// Zweite, härtere Bremse über Cloudflares Zähler (wrangler.jsonc → ratelimits): gilt über alle Server-Instanzen
+// eines Standorts hinweg. RL_IP = pro IP-Adresse, RL_ALL = alle zusammen (Deckel gegen verteilten Missbrauch).
+// Fehlt die Anbindung (lokal) oder fällt der Zähler aus, wird nicht gebremst – die Bremse im Speicher bleibt.
+async function overLimit(env, ip) {
+  try {
+    if (env.RL_IP && !(await env.RL_IP.limit({ key: ip })).success) return true;
+    if (env.RL_ALL && !(await env.RL_ALL.limit({ key: 'alle' })).success) return true;
+  } catch (e) { console.warn('Zähler nicht erreichbar', e && e.message); }
+  return false;
+}
+
 // Rahmen für alle Funktionen: OPTIONS, nur POST, Herkunft prüfen, JSON-Antworten mit den richtigen Kopfzeilen
-function endpoint({ allowMissingOrigin = false, run }) {
+function endpoint({ allowMissingOrigin = false, tooMany = { error: 'rate' }, run }) {
   return async (request, env, url) => {
     const cors = corsHeaders(request, url);
     const json = (status, obj) => new Response(JSON.stringify(obj), {
@@ -57,6 +68,7 @@ function endpoint({ allowMissingOrigin = false, run }) {
     // Browser senden bei POST immer einen Origin-Header – fehlt er, kommt die Anfrage von einem Skript
     const { origin, ok } = originOf(request, url);
     if (!ok && !(allowMissingOrigin && !origin)) return json(403, { error: 'forbidden' });
+    if (await overLimit(env, clientIp(request))) return json(429, tooMany);
     // Anfragen sind winzig (Frage, Suchbegriff, Adresse) – alles über 64 KB ist kein normaler Aufruf
     if (Number(request.headers.get('Content-Length') || 0) > 65536) return json(413, { error: 'invalid' });
     let body;
@@ -366,6 +378,7 @@ function isPublicHttpUrl(raw) {
 const icalLimited = makeLimiter(30, 600);
 
 const ical = endpoint({
+  tooMany: { error: 'Zu viele Abrufe. Bitte kurz warten.' },
   async run({ request, body, json, cors }) {
     if (icalLimited(clientIp(request))) return json(429, { error: 'Zu viele Abrufe. Bitte kurz warten.' });
     const target = String(body.url || '').trim();
@@ -428,6 +441,7 @@ function stripeForm(obj, prefix, out = new URLSearchParams()) {
 }
 
 const createCheckout = endpoint({
+  tooMany: { error: 'Zu viele Versuche. Bitte später erneut versuchen.' },
   async run({ request, env, body, json }) {
     const key = env.STRIPE_SECRET_KEY;
     if (!key) { console.error('STRIPE_SECRET_KEY fehlt'); return json(503, { error: 'Bezahlung ist gerade nicht verfügbar.' }); }
