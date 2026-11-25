@@ -23,7 +23,7 @@ function corsHeaders(request, url) {
   const { origin, ok } = originOf(request, url);
   return {
     'Access-Control-Allow-Origin': ok && origin ? origin : 'https://scolavis.de',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Vary': 'Origin',
   };
@@ -82,6 +82,61 @@ function endpoint({ allowMissingOrigin = false, tooMany = { error: 'rate' }, run
   };
 }
 
+// ───────────────────────── KI-Kontingent (pro Konto und Monat) ─────────────────────────
+// Die Grenzen stehen in wrangler.jsonc unter "vars" – dort ändern, pushen, fertig. Die Werte hier gelten nur,
+// falls dort etwas fehlt (bewusst knapp). Gezählt wird in Supabase (supabase/ki-kontingent.sql → ki_zaehlen),
+// angemeldet mit dem Token der Lehrkraft: ohne Anmeldung keine KI. Ist die Zählung nicht erreichbar, gibt es
+// KEINE Antwort (lieber kurz keine KI als unbegrenzte Kosten).
+const SUPABASE_URL = 'https://ubroujkwoizghiiustri.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_WbCKbSDkacYqUHxi0E6Qhg_-Lkau-i9';   // öffentlicher Schlüssel (steht auch in index.html)
+const KI_DEFAULTS = { KI_FRAGEN_EINFACH: 30, KI_FRAGEN_PRO: 500, KI_BILDER_EINFACH: 60, KI_BILDER_PRO: 600, KI_GESAMT_FRAGEN: 20000, KI_GESAMT_BILDER: 40000 };
+
+function kiLimits(env) {
+  const out = {};
+  for (const k of Object.keys(KI_DEFAULTS)) {
+    const v = Number(env[k]);
+    out[k] = env[k] !== undefined && env[k] !== '' && Number.isFinite(v) && v >= 0 ? Math.floor(v) : KI_DEFAULTS[k];
+  }
+  out.an = !/^(nein|aus|false|0|off)$/i.test(String(env.KI_AN === undefined ? 'ja' : env.KI_AN).trim());
+  return out;
+}
+
+// art: 'frage' | 'bild' zählt, 'stand' fragt nur ab. Rückgabe { quota } oder { fail: [status, body] }
+async function kiQuota(request, env, art) {
+  const L = kiLimits(env);
+  if (!L.an) return { fail: [503, { error: 'off' }] };
+  const m = /^Bearer ([\w.-]{20,4000})$/.exec(request.headers.get('Authorization') || '');
+  if (!m) return { fail: [401, { error: 'login' }] };
+  let res;
+  try {
+    res = await fetch(SUPABASE_URL + '/rest/v1/rpc/ki_zaehlen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + m[1] },
+      body: JSON.stringify({
+        p_art: art,
+        p_fragen_einfach: L.KI_FRAGEN_EINFACH, p_fragen_pro: L.KI_FRAGEN_PRO,
+        p_bilder_einfach: L.KI_BILDER_EINFACH, p_bilder_pro: L.KI_BILDER_PRO,
+        p_gesamt_fragen: L.KI_GESAMT_FRAGEN, p_gesamt_bilder: L.KI_GESAMT_BILDER,
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch (e) { console.error('KI-Zählung nicht erreichbar', e && e.message); return { fail: [503, { error: 'unavailable' }] }; }
+  if (res.status === 401 || res.status === 403) return { fail: [401, { error: 'login' }] };
+  if (!res.ok) { console.error('KI-Zählung antwortet mit', res.status); return { fail: [503, { error: 'unavailable' }] }; }
+  const d = await res.json().catch(() => null);
+  if (!d || typeof d !== 'object') return { fail: [503, { error: 'unavailable' }] };
+  const quota = {
+    plan: d.plan === 'pro' ? 'pro' : 'einfach',
+    fragen: { used: Number(d.fragen) || 0, limit: Number(d.limit_fragen) || 0 },
+    bilder: { used: Number(d.bilder) || 0, limit: Number(d.limit_bilder) || 0 },
+  };
+  if (!d.ok) {
+    if (d.grund === 'gesamt') console.warn('KI-Gesamtdeckel erreicht (' + art + ')');
+    return { fail: [429, { error: d.grund === 'gesamt' ? 'quota-all' : 'quota', quota }] };
+  }
+  return { quota };
+}
+
 // ───────────────────────── KI-Assistent (Google Gemini) ─────────────────────────
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
@@ -131,8 +186,19 @@ const aiChat = endpoint({
     if (!key) { console.error('GEMINI_API_KEY fehlt'); return json(503, { error: 'unavailable' }); }
     if (chatLimited(clientIp(request))) return json(429, { error: 'rate' });
 
+    // Nur den Stand abfragen (Anzeige „Noch … Fragen“) – zählt nicht
+    if (body.status === true) {
+      const s = await kiQuota(request, env, 'stand');
+      return s.fail ? json(s.fail[0], s.fail[1]) : json(200, { quota: s.quota });
+    }
+
     const question = body.question, history = body.history, forceWeb = body.web === true;
     if (!question || typeof question !== 'string' || question.length > 2000) return json(400, { error: 'invalid' });
+
+    // Kontingent: erst zählen, dann fragen – so lässt es sich auch mit vielen gleichzeitigen Anfragen nicht umgehen
+    const q = await kiQuota(request, env, 'frage');
+    if (q.fail) return json(q.fail[0], q.fail[1]);
+    const quota = q.quota;
 
     const contents = [];
     if (Array.isArray(history)) {
@@ -179,15 +245,15 @@ const aiChat = endpoint({
       const finish = cand && cand.finishReason;
       if ((data.promptFeedback && data.promptFeedback.blockReason)
           || ['SAFETY', 'PROHIBITED_CONTENT', 'BLOCKLIST', 'SPII'].includes(finish)) {
-        return json(200, { text: BLOCKED_TEXT, blocked: true });
+        return json(200, { text: BLOCKED_TEXT, blocked: true, quota });
       }
 
       const text = ((cand && cand.content && cand.content.parts) || [])
         .filter(p => p && typeof p.text === 'string' && !p.thought)
         .map(p => p.text).join('').trim();
-      if (!text) return json(200, { text: 'Darauf habe ich gerade keine Antwort bekommen. Bitte formuliere die Frage etwas anders.', empty: true });
+      if (!text) return json(200, { text: 'Darauf habe ich gerade keine Antwort bekommen. Bitte formuliere die Frage etwas anders.', empty: true, quota });
 
-      const out = { text, truncated: finish === 'MAX_TOKENS' };
+      const out = { text, truncated: finish === 'MAX_TOKENS', quota };
 
       // Antworten aus der Web-Suche: Quellen und die Google-Suchvorschläge mitliefern. Googles Nutzungsbedingungen
       // verlangen, dass die Suchvorschläge zusammen mit der Antwort angezeigt werden – nicht entfernen.
@@ -328,6 +394,10 @@ const imageSearch = endpoint({
       if (!query) return json(400, { url: null, error: 'invalid' });
       const type = body.type === 'illustration' ? 'illustration' : 'photo';
       const index = Math.max(0, Math.min(50, parseInt(body.index, 10) || 0));
+
+      // Jede Bildersuche ruft Gemini auf (Übersetzung + Jugendschutz) → zählt im Bilder-Kontingent des Kontos
+      const kq = await kiQuota(request, env, 'bild');
+      if (kq.fail) return json(kq.fail[0], { url: null, ...kq.fail[1] });
 
       const { q: englishQuery, checked } = await smartTranslate(query, env.GEMINI_API_KEY);
       if (/^\W*BLOCK\W*$/i.test(englishQuery)) return json(200, { url: null, blocked: true });

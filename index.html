@@ -2504,6 +2504,32 @@ function isPro() {
   return plan === 'pro' || plan === 'school';
 }
 
+// KI-Kontingent: Der Server zählt pro Konto und Monat (Grenzen in wrangler.jsonc, Tarife „Einfach“ und „Pro“).
+// Deshalb gehen KI-Anfragen nur angemeldet – das Anmelde-Token reist als Authorization-Kopfzeile mit.
+async function kiAuthHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  if (!AUTH.client || !AUTH.user) return null;
+  try {
+    const { data } = await AUTH.client.auth.getSession();
+    const t = data && data.session && data.session.access_token;
+    if (!t) return null;
+    h.Authorization = 'Bearer ' + t;
+    return h;
+  } catch (e) { return null; }
+}
+// Verständliche Meldung zu den Kürzeln des Servers (login, quota, quota-all, off, moved); null = anderer Fehler
+function kiLimitMessage(code, quota, kind) {
+  const q = quota && quota[kind === 'bild' ? 'bilder' : 'fragen'];
+  const what = kind === 'bild' ? 'Bildersuchen' : 'KI-Fragen';
+  if (code === 'login') return 'Dafür brauchst du ein kostenloses Konto – bitte melde dich an.';
+  if (code === 'quota') return 'Für diesen Monat sind deine ' + (q && q.limit ? q.limit + ' ' : '') + what + ' aufgebraucht. Am Monatsanfang geht es weiter.'
+    + (quota && quota.plan === 'pro' ? '' : ' Brauchst du mehr? Schreib uns: info@scolavis.de');
+  if (code === 'quota-all') return 'Die KI macht für diesen Monat Pause – das gemeinsame Kontingent aller Schulen ist aufgebraucht. Am Monatsanfang geht es weiter.';
+  if (code === 'off') return 'Der KI-Assistent ist gerade abgeschaltet. Bitte später nochmal versuchen.';
+  if (code === 'moved') return 'Der KI-Assistent läuft nur noch auf scolavis.de – bitte öffne die Tafel dort.';
+  return null;
+}
+
 function checkBoardLimit() {
   if (LAUNCH_PHASE || isPro()) return true;
   if (APP.state.boards.length >= FREE_LIMITS.maxBoards) {
@@ -9457,14 +9483,18 @@ function openBgModal() {
     if (!q || photoBusy || !board) return;
     photoIndex = q === photoQuery ? photoIndex + 1 : 0;
     photoQuery = q;
+    const headers = await kiAuthHeaders();
+    if (!headers) { photoMsg.textContent = 'Für die Fotosuche bitte zuerst anmelden (kostenlos).'; openLoginModal(); return; }
     photoBusy = true; photoBtn.disabled = true;
     photoMsg.textContent = 'Suche ein Foto …';
     try {
       const res = await fetch('/api/image-search', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers,
         body: JSON.stringify({ query: q, type: 'photo', index: photoIndex, inline: true, size: 'large' }),
       });
       const data = await res.json().catch(() => ({}));
+      const limitMsg = !res.ok && kiLimitMessage(data.error, data.quota, 'bild');
+      if (limitMsg) { photoMsg.textContent = limitMsg; return; }
       if (!res.ok) throw new Error(data.error || 'http');
       if (data.blocked) photoMsg.textContent = 'Dazu gibt es kein Bild. Versuch es mit einem anderen Begriff.';
       else if (!data.dataUrl) photoMsg.textContent = 'Kein passendes Foto gefunden. Versuch es mit einem einfacheren Begriff.';
@@ -11989,14 +12019,29 @@ const DRAW = {
   const foot = document.getElementById('ki-foot');
   if (!panel) return;
 
-  const TEXT_AI_KEY = 'kb_text_ai_count';
-  const MAX_FREE_TEXT = 100;                      // freie KI-Fragen pro Monat (Schutz vor ausufernden Kosten)
-  // Zähler gilt pro Kalendermonat: gespeichert als „2026-11:17“ (ältere Einträge ohne Monat zählen nicht mehr)
-  const kiMonth = () => new Date().toISOString().slice(0, 7);
-  const kiCount = () => {
-    const m = String(localStorage.getItem(TEXT_AI_KEY) || '').match(/^(\d{4}-\d{2}):(\d+)$/);
-    return m && m[1] === kiMonth() ? parseInt(m[2], 10) || 0 : 0;
-  };
+  // Kontingent: zählt der Server pro Konto und Monat (wrangler.jsonc „vars“). Hier nur der zuletzt gemeldete Stand
+  // für die Anzeige: { plan:'einfach'|'pro', fragen:{used,limit}, bilder:{used,limit} }
+  let kiQuotaState = null, kiQuotaFor = null;
+  async function loadQuota() {
+    const uid = AUTH.user ? AUTH.user.id : null;
+    if (kiQuotaFor !== uid) { kiQuotaState = null; kiQuotaFor = uid; }
+    const headers = await kiAuthHeaders();
+    if (!headers) { updateFoot(); return; }
+    try {
+      const res = await fetch('/api/ai-chat', { method: 'POST', headers, body: JSON.stringify({ status: true }) });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.quota && kiQuotaFor === uid) kiQuotaState = data.quota;
+    } catch (e) {}
+    updateFoot();
+  }
+  // Meldung mit Knopf „Anmelden“
+  function askLogin(text) {
+    const b = addBubble('ai', text);
+    const acts = document.createElement('div'); acts.className = 'ki-actions';
+    acts.appendChild(actBtn('user', 'Anmelden', () => openLoginModal(), true));
+    b.appendChild(acts);
+    scrollDown();
+  }
   const SUGGESTIONS = [
     '5 Kopfrechen-Aufgaben für Klasse 3',
     'Erkläre Photosynthese für Klasse 5',
@@ -12021,6 +12066,7 @@ const DRAW = {
     if (!open) return;
     if (!historyEl.childElementCount) renderEmpty();
     updateFoot();
+    loadQuota();
     // auf Touch-Geräten nicht automatisch ins Feld springen (Bildschirmtastatur verdeckt alles)
     if (window.matchMedia && window.matchMedia('(pointer:fine)').matches) textarea.focus();
   }
@@ -12066,9 +12112,13 @@ const DRAW = {
 
   function updateFoot() {
     const hint = 'Bitte keine Namen oder Daten von Kindern eingeben.';
-    if (isPro()) { foot.textContent = hint; return; }
-    const left = Math.max(0, MAX_FREE_TEXT - kiCount());
-    foot.textContent = left <= 20 ? 'Noch ' + left + ' Fragen in diesem Monat · ' + hint : hint;
+    if (!AUTH.user) { foot.textContent = 'Mit kostenlosem Konto nutzbar · ' + hint; return; }
+    const f = kiQuotaState && kiQuotaFor === AUTH.user.id ? kiQuotaState.fragen : null;
+    if (!f || !f.limit) { foot.textContent = hint; return; }
+    const left = Math.max(0, f.limit - f.used);
+    // Einfach: immer zeigen (30 sind schnell erreicht), Pro: erst wenn es knapp wird
+    foot.textContent = (kiQuotaState.plan !== 'pro' || left <= 50)
+      ? 'Noch ' + left + ' von ' + f.limit + ' Fragen in diesem Monat · ' + hint : hint;
   }
 
   function scrollDown() { historyEl.scrollTop = historyEl.scrollHeight; }
@@ -12292,14 +12342,16 @@ const DRAW = {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 25000);
     try {
+      const headers = await kiAuthHeaders();
+      if (!headers) { const e = new Error('login'); e.code = 'login'; throw e; }
       const res = await fetch('/api/image-search', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ query: subject, type, index, inline: true }),
         signal: controller.signal,
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || String(res.status));
+      if (!res.ok) { const e = new Error(data.error || String(res.status)); e.code = data.error; e.quota = data.quota; throw e; }
       return data;
     } finally { clearTimeout(timer); }
   }
@@ -12326,7 +12378,7 @@ const DRAW = {
         sending = true; sendBtn.disabled = true;
         acts.style.opacity = '0.5';
         try { index++; fill(await fetchImage(subject, type, index)); }
-        catch (e) { acts.style.opacity = ''; toast('Kein weiteres Bild gefunden'); }
+        catch (e) { acts.style.opacity = ''; toast(kiLimitMessage(e.code, e.quota, 'bild') || 'Kein weiteres Bild gefunden', 5000); }
         finally { sending = false; sendBtn.disabled = false; }
       }));
       img.addEventListener('load', scrollDown);
@@ -12337,7 +12389,9 @@ const DRAW = {
     catch (e) {
       console.warn('Bildsuche:', e);
       b.className = 'ki-bubble ai';
-      b.textContent = !navigator.onLine ? 'Keine Internetverbindung.'
+      const limitMsg = kiLimitMessage(e.code, e.quota, 'bild');
+      if (e.code === 'login') { b.remove(); askLogin(limitMsg); }
+      else b.textContent = limitMsg ? limitMsg : !navigator.onLine ? 'Keine Internetverbindung.'
         : (/rate/.test(e.message) ? 'Zu viele Anfragen in kurzer Zeit – bitte einen Moment warten.'
         : 'Die Bildsuche ist gerade nicht erreichbar. Bitte später nochmal versuchen.');
     } finally { sending = false; sendBtn.disabled = false; }
@@ -12356,11 +12410,8 @@ const DRAW = {
       return;
     }
 
-    const count = kiCount();
-    if (!isPro() && count >= MAX_FREE_TEXT) {
-      addBubble('ai', 'Für diesen Monat sind die ' + MAX_FREE_TEXT + ' freien KI-Fragen aufgebraucht. Am Monatsanfang geht es weiter. Brauchst du mehr? Schreib uns: info@scolavis.de');
-      return;
-    }
+    const headers = await kiAuthHeaders();
+    if (!headers) { askLogin('Für den KI-Assistenten brauchst du ein kostenloses Konto. Melde dich an, dann geht es sofort weiter.'); return; }
 
     sending = true;
     sendBtn.disabled = true;
@@ -12373,15 +12424,21 @@ const DRAW = {
       try {
         res = await fetch('/api/ai-chat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({ question: q, history: chatHistory.slice(-6), web: !!opts.web }),
           signal: controller.signal,
         });
       } finally { clearTimeout(timer); }
       const data = await res.json().catch(() => ({}));
+      if (data.quota) { kiQuotaState = data.quota; kiQuotaFor = AUTH.user ? AUTH.user.id : null; }
+      const limitMsg = !res.ok && kiLimitMessage(data.error, data.quota, 'frage');
+      if (limitMsg) {
+        thinking.remove();
+        if (data.error === 'login') askLogin(limitMsg); else addBubble('ai', limitMsg);
+        updateFoot();
+        return;
+      }
       if (!res.ok) throw new Error(data.error || 'http-' + res.status);
-
-      if (!isPro()) localStorage.setItem(TEXT_AI_KEY, kiMonth() + ':' + (count + 1));
       if (!data.blocked && !data.empty) {
         chatHistory.push({ role: 'user', content: q });
         chatHistory.push({ role: 'assistant', content: data.text });

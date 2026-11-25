@@ -223,10 +223,23 @@ supabase/functions/ai-generate/     ← KI-Tafel-Generator + Sprachbefehle (Groq
 
 ## Startphase: alles kostenlos
 - `LAUNCH_PHASE = true` (index.html, bei `FREE_LIMITS`): keine Grenzen für Tafeln/Klassen, kein „Upgrade auf Pro" –
-  es gibt keinen Kaufweg. KI: 100 Fragen pro Kalendermonat (`kb_text_ai_count` = „JJJJ-MM:Zahl", nur im Browser gezählt).
+  es gibt keinen Kaufweg. KI-Grenzen gelten trotzdem (siehe „KI-Kontingent").
   Erst auf `false` stellen, wenn Bezahlen wirklich funktioniert
 - Rechtsseiten: `impressum.html`/`datenschutz.html` im Markenlook; bei jedem neuen Dienst/Hoster die Datenschutzerklärung
   (Abschnitt + Tabelle „Übersicht der Dienste") mitziehen. Verlinkt aus Menü ⋯, Anmelde-Dialog und `handy.html`
+
+## KI-Kontingent: Tarife „Einfach" und „Pro" (seit 25.11.2026)
+- **Die Grenzen stehen an EINER Stelle: `wrangler.jsonc` → `"vars"`** (`KI_FRAGEN_EINFACH` 30, `KI_FRAGEN_PRO` 500,
+  `KI_BILDER_EINFACH` 60, `KI_BILDER_PRO` 600, Gesamt-Deckel aller Konten `KI_GESAMT_FRAGEN` 20000 / `KI_GESAMT_BILDER`
+  40000, Notschalter `KI_AN` „ja"/„nein"). Ändern = Zahl anpassen und pushen. Kostenrechnung steht als Kommentar daneben
+- Gezählt wird pro Konto und Kalendermonat in Supabase: Tabelle `ki_nutzung`, Funktion `ki_zaehlen`
+  (`supabase/ki-kontingent.sql`, am 25.11.2026 ausgeführt und getestet). `kiQuota()` in `cloudflare/worker.js` ruft sie
+  mit dem Anmelde-Token der Lehrkraft auf – **KI und Bildersuche (auch Hintergrund-Foto) gehen nur angemeldet**
+  (`kiAuthHeaders()` in index.html). Ist die Zählung nicht erreichbar, gibt es keine Antwort (Absicht: keine Kostenfalle)
+- Pro = `app_metadata.plan` „pro"/„school" (liest die SQL-Funktion aus dem Token); bis es einen Kaufweg gibt, von Hand
+  im Supabase-Dashboard setzen. Kürzel an den Browser: `login`, `quota`, `quota-all`, `off`, `moved` → `kiLimitMessage()`
+- Die Netlify-Kopien `ai-chat`/`image-search` antworten nur noch `moved` (alte Adresse hat keine KI mehr)
+- NICHT erfasst: KI-Tafel-Generator und Sprachbefehle (`supabase/functions/ai-generate`, Groq) – eigener Dienst
 
 ## Stripe / Payments
 - **Publishable Key** (im Code erlaubt): `pk_test_51TibNc9fJyerANl5...`

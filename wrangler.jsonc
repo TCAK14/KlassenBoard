@@ -24,6 +24,24 @@
     { "name": "RL_ALL", "namespace_id": "1002", "simple": { "limit": 600, "period": 60 } }
   ],
 
+  // ══════════ KI-KONTINGENT – die EINE Stelle, an der die Grenzen stehen ══════════
+  // Ändern: Zahl hier anpassen und pushen (gilt nach etwa einer Minute, für alle Konten, auch im laufenden Monat).
+  // Gezählt wird pro Konto und Kalendermonat (supabase/ki-kontingent.sql); ohne Anmeldung gibt es keine KI.
+  // Kosten (Stand Nov 2026, Gemini 2.5 Flash): eine Frage ≈ 0,12 Cent, eine Bildersuche ≈ 0,01 Cent.
+  //   Einfach voll ausgenutzt ≈ 4 Cent/Monat je Konto, Pro ≈ 65 Cent/Monat je Konto.
+  //   KI_GESAMT_* = Deckel für ALLE Konten zusammen: 20000 Fragen ≈ 24 €, 40000 Bilder ≈ 4 € → höchstens ≈ 28 €/Monat.
+  //   Dahinter steht als letzte Sicherung die Ausgabenobergrenze bei Google (AI Studio → Ausgaben).
+  // KI_AN: "nein" schaltet den KI-Assistenten und die Bildersuche sofort für alle ab (Notschalter).
+  "vars": {
+    "KI_AN": "ja",
+    "KI_FRAGEN_EINFACH": 30,
+    "KI_FRAGEN_PRO": 500,
+    "KI_BILDER_EINFACH": 60,
+    "KI_BILDER_PRO": 600,
+    "KI_GESAMT_FRAGEN": 20000,
+    "KI_GESAMT_BILDER": 40000
+  },
+
   // Fehlermeldungen der Server-Funktionen im Cloudflare-Protokoll (Worker → Logs)
   "observability": { "enabled": true }
 }
