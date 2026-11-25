@@ -610,6 +610,21 @@ body.fullscreen #board { top:0; }
 .auth-msg { font-size:12px; text-align:center; margin-top:12px; min-height:18px; }
 .auth-msg.error { color:#f87171; }
 .auth-msg.success { color:#4ade80; }
+.auth-pw { position:relative; }
+.auth-pw input { padding-right:84px !important; }
+.auth-pw-show { position:absolute; right:6px; top:50%; transform:translateY(-50%); border:none; background:transparent; color:rgba(255,255,255,0.6); font-size:12px; font-weight:600; padding:8px; cursor:pointer; }
+.auth-hint { font-size:11.5px; color:rgba(255,255,255,0.5); margin-top:5px; }
+.auth-oauth { display:flex; flex-direction:column; gap:8px; margin-bottom:4px; }
+.auth-oauth-btn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:#fff; color:#1f1f1f; font-size:14px; font-weight:600; cursor:pointer; }
+.auth-oauth-btn:hover { background:#f1f1f5; }
+.auth-oauth-btn svg { width:18px; height:18px; flex:none; }
+.auth-or { display:flex; align-items:center; gap:10px; margin:14px 0; font-size:11.5px; color:rgba(255,255,255,0.45); }
+.auth-or::before, .auth-or::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.14); }
+.auth-sent { text-align:center; font-size:13.5px; line-height:1.55; color:rgba(255,255,255,0.85); }
+.auth-sent b { color:#fff; word-break:break-all; }
+.auth-sent ol { text-align:left; margin:12px 0 14px 18px; padding:0; }
+.auth-link { background:none; border:none; color:rgba(255,255,255,0.7); text-decoration:underline; font-size:12.5px; cursor:pointer; padding:6px; }
+.auth-link:disabled { opacity:.5; cursor:default; text-decoration:none; }
 .auth-info { font-size:12px; color:rgba(255,255,255,0.55); text-align:center; margin-top:14px; line-height:1.5; }
 
 /* ── Poll Widget ── */
@@ -2141,9 +2156,38 @@ const AUTH = {
   },
 
   async register(email, password) {
-    const { data, error } = await this.client.auth.signUp({ email, password });
+    // Der Link in der Bestätigungs-Mail führt auf die Adresse zurück, auf der man sich registriert hat
+    // (scolavis.de ODER scolavis.com – Anmeldungen gelten pro Adresse getrennt)
+    const { data, error } = await this.client.auth.signUp({ email, password, options: { emailRedirectTo: this.returnUrl() } });
     if (error) throw error;
     return data;
+  },
+
+  returnUrl() { return window.location.origin + window.location.pathname; },
+
+  async resendConfirmation(email) {
+    const { error } = await this.client.auth.resend({ type: 'signup', email, options: { emailRedirectTo: this.returnUrl() } });
+    if (error) throw error;
+  },
+
+  // Anmeldung über Google/Apple/Microsoft: nur Anbieter, die im Supabase-Projekt eingeschaltet sind
+  // (Authentication → Sign In / Providers). Die Liste ist öffentlich abfragbar – kein Knopf ohne Funktion.
+  _providers: null,
+  async providers() {
+    if (this._providers) return this._providers;
+    try {
+      const res = await fetch(SUPABASE_URL + '/auth/v1/settings', { headers: { apikey: SUPABASE_ANON_KEY } });
+      const ext = (await res.json()).external || {};
+      this._providers = ['google', 'apple', 'azure'].filter(k => ext[k] === true);
+    } catch (e) { return []; }
+    return this._providers;
+  },
+  async loginWith(provider) {
+    if (APP.saveTimer) APP._persist();   // die Seite wird gleich verlassen
+    const options = { redirectTo: this.returnUrl() };
+    if (provider === 'azure') options.scopes = 'email';
+    const { error } = await this.client.auth.signInWithOAuth({ provider, options });
+    if (error) throw error;
   },
 
   async resetPassword(email) {
@@ -9644,46 +9688,68 @@ function toggleEditMode(explain) { setEditMode(!APP.state.editMode, explain === 
 // AUTH UI
 // ══════════════════════════════════════════════════════════════
 let _authMode = 'login';
+const AUTH_MIN_PW = 8;
+const OAUTH_BTNS = {
+  google: { label: 'Mit Google fortfahren', svg: '<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.5 5.5 0 0 1-2.4 3.6v3h3.9c2.300-2.100 3.500-5.200 3.500-8.700z"/><path fill="#34A853" d="M12 24c3.200 0 6-1.100 8-2.900l-3.900-3a7.200 7.200 0 0 1-10.800-3.800H1.300v3.100A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.300 14.300a7.200 7.200 0 0 1 0-4.600V6.600H1.300a12 12 0 0 0 0 10.800l4-3.100z"/><path fill="#EA4335" d="M12 4.800c1.800 0 3.300.6 4.600 1.800l3.400-3.400A12 12 0 0 0 1.300 6.600l4 3.100A7.200 7.200 0 0 1 12 4.800z"/></svg>' },
+  apple:  { label: 'Mit Apple fortfahren', svg: '<svg viewBox="0 0 24 24"><path fill="#000" d="M16.400 12.700c0-2.300 1.900-3.400 2-3.500-1.100-1.600-2.800-1.800-3.400-1.800-1.400-.1-2.800.9-3.500.9s-1.900-.8-3.100-.8c-1.600 0-3.100.9-3.900 2.400-1.700 2.900-.4 7.200 1.200 9.500.8 1.200 1.700 2.400 3 2.400 1.200 0 1.700-.8 3.100-.8s1.900.8 3.100.8c1.300 0 2.100-1.200 2.900-2.300.9-1.300 1.300-2.600 1.300-2.700 0 0-2.600-1-2.700-4.100zM14 5.800c.6-.8 1.100-1.900 1-3-.9 0-2.100.6-2.800 1.400-.6.7-1.100 1.800-1 2.900 1.100.1 2.100-.5 2.800-1.300z"/></svg>' },
+  azure:  { label: 'Mit Microsoft fortfahren', svg: '<svg viewBox="0 0 24 24"><path fill="#F25022" d="M2 2h9.500v9.500H2z"/><path fill="#7FBA00" d="M12.500 2H22v9.500h-9.500z"/><path fill="#00A4EF" d="M2 12.500h9.500V22H2z"/><path fill="#FFB900" d="M12.500 12.500H22V22h-9.500z"/></svg>' },
+};
 
-function openLoginModal() {
+function openLoginModal(mode) {
   if (!AUTH._configured) {
-    toast('⚙️ Supabase noch nicht konfiguriert (SUPABASE_URL im Code eintragen)');
+    toast('Die Anmeldung ist gerade nicht erreichbar. Bitte Seite neu laden.');
     return;
   }
   const { overlay } = openModal(`
     <div class="modal auth-modal">
-      <button class="modal-close" data-close>✕</button>
+      <button class="modal-close" data-close aria-label="Schließen">✕</button>
       <h2 style="margin-bottom:16px">Scolavis</h2>
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="tab-login"     onclick="switchAuthTab('login')">Anmelden</button>
-        <button class="auth-tab"        id="tab-register"  onclick="switchAuthTab('register')">Registrieren</button>
+      <div id="auth-form">
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tab-login"     onclick="switchAuthTab('login')">Anmelden</button>
+          <button class="auth-tab"        id="tab-register"  onclick="switchAuthTab('register')">Registrieren</button>
+        </div>
+        <div id="auth-oauth-wrap" style="display:none">
+          <div class="auth-oauth" id="auth-oauth"></div>
+          <div class="auth-or">oder mit E-Mail</div>
+        </div>
+        <div class="auth-field">
+          <label for="auth-email">E-Mail</label>
+          <input type="email" id="auth-email" placeholder="name@schule.de" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false">
+        </div>
+        <div class="auth-field">
+          <label for="auth-password">Passwort</label>
+          <div class="auth-pw">
+            <input type="password" id="auth-password" autocomplete="current-password">
+            <button type="button" class="auth-pw-show" id="auth-pw-show">Anzeigen</button>
+          </div>
+          <div class="auth-hint" id="auth-pw-hint" style="display:none">Mindestens ${AUTH_MIN_PW} Zeichen. Du bekommst danach eine E-Mail mit einem Bestätigungs-Link.</div>
+        </div>
+        <button class="auth-submit" id="auth-submit-btn" onclick="submitAuth()">Anmelden</button>
+        <div style="text-align:center;margin-top:8px" id="auth-forgot-row">
+          <button type="button" class="auth-link" id="auth-forgot">Passwort vergessen?</button>
+        </div>
+        <div class="auth-msg" id="auth-msg" role="status"></div>
       </div>
-      <div class="auth-field">
-        <label>E-Mail</label>
-        <input type="email" id="auth-email" placeholder="name@schule.de" autocomplete="email">
-      </div>
-      <div class="auth-field">
-        <label>Passwort</label>
-        <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
-      </div>
-      <button class="auth-submit" id="auth-submit-btn" onclick="submitAuth()">Anmelden</button>
-      <div style="text-align:center;margin-top:10px">
-        <a href="#" id="auth-forgot" style="font-size:12px;color:rgba(255,255,255,0.5)">Passwort vergessen?</a>
-      </div>
-      <div class="auth-msg" id="auth-msg"></div>
-      <div class="auth-info">Deine Tafeln werden automatisch in der<br>Cloud gespeichert und überall verfügbar.<br>
+      <div id="auth-sent" class="auth-sent" style="display:none"></div>
+      <div class="auth-info">Kostenlos. Mit Konto sind deine Tafeln auf jedem Gerät da,<br>und der KI-Assistent ist nutzbar.<br>
         <a href="datenschutz.html" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Datenschutzerklärung</a> ·
         <a href="impressum.html" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Impressum</a></div>
     </div>
   `);
-  _authMode = 'login';
   const emailInput = overlay.querySelector('#auth-email');
   const pwInput    = overlay.querySelector('#auth-password');
+  const msg        = overlay.querySelector('#auth-msg');
   emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') pwInput.focus(); });
   pwInput.addEventListener('keydown',    e => { if (e.key === 'Enter') submitAuth(); });
+  overlay.querySelector('#auth-pw-show').addEventListener('click', e => {
+    const show = pwInput.type === 'password';
+    pwInput.type = show ? 'text' : 'password';
+    e.currentTarget.textContent = show ? 'Verbergen' : 'Anzeigen';
+    pwInput.focus();
+  });
   overlay.querySelector('#auth-forgot').addEventListener('click', async e => {
-    e.preventDefault();
-    const msg = overlay.querySelector('#auth-msg');
+    const btn = e.currentTarget;
     const email = emailInput.value.trim();
     if (!email || !email.includes('@')) {
       msg.textContent = 'Bitte oben zuerst deine E-Mail-Adresse eintragen.';
@@ -9691,16 +9757,36 @@ function openLoginModal() {
       emailInput.focus();
       return;
     }
+    btn.disabled = true;
     try {
       await AUTH.resetPassword(email);
       // Bewusst neutral formuliert: verrät nicht, ob zu der Adresse ein Konto existiert
-      msg.textContent = '✅ Falls ein Konto mit dieser Adresse existiert, ist eine E-Mail zum Zurücksetzen unterwegs.';
+      msg.textContent = 'Falls es ein Konto mit dieser Adresse gibt, ist eine E-Mail zum Zurücksetzen unterwegs. Schau auch im Spam-Ordner nach.';
       msg.className = 'auth-msg success';
     } catch(err) {
-      msg.textContent = 'Das hat gerade nicht geklappt. Bitte in ein paar Minuten erneut versuchen.';
+      msg.textContent = authErrorText(err);
       msg.className = 'auth-msg error';
     }
+    setTimeout(() => { btn.disabled = false; }, 30000);
   });
+  // Knöpfe für Google/Apple/Microsoft – nur die, die im Projekt eingeschaltet sind
+  AUTH.providers().then(list => {
+    const box = overlay.querySelector('#auth-oauth');
+    if (!box || !list.length) return;
+    list.forEach(key => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'auth-oauth-btn';
+      b.innerHTML = OAUTH_BTNS[key].svg + '<span>' + OAUTH_BTNS[key].label + '</span>';
+      b.addEventListener('click', async () => {
+        b.disabled = true;
+        try { await AUTH.loginWith(key); }
+        catch (err) { b.disabled = false; msg.textContent = authErrorText(err); msg.className = 'auth-msg error'; }
+      });
+      box.appendChild(b);
+    });
+    overlay.querySelector('#auth-oauth-wrap').style.display = '';
+  });
+  switchAuthTab(mode === 'register' ? 'register' : 'login');
   setTimeout(() => emailInput.focus(), 50);
 }
 
@@ -9742,11 +9828,76 @@ function openNewPasswordModal() {
 
 function switchAuthTab(mode) {
   _authMode = mode;
-  document.getElementById('tab-login').classList.toggle('active', mode === 'login');
-  document.getElementById('tab-register').classList.toggle('active', mode === 'register');
-  document.getElementById('auth-submit-btn').textContent = mode === 'login' ? 'Anmelden' : 'Konto erstellen';
-  document.getElementById('auth-msg').textContent = '';
-  document.getElementById('auth-msg').className = 'auth-msg';
+  const reg = mode === 'register';
+  document.getElementById('tab-login').classList.toggle('active', !reg);
+  document.getElementById('tab-register').classList.toggle('active', reg);
+  document.getElementById('auth-submit-btn').textContent = reg ? 'Konto erstellen' : 'Anmelden';
+  document.getElementById('auth-pw-hint').style.display = reg ? '' : 'none';
+  document.getElementById('auth-forgot-row').style.display = reg ? 'none' : '';
+  // sagt dem Passwort-Manager, ob er ein neues Passwort vorschlagen oder das gespeicherte einsetzen soll
+  document.getElementById('auth-password').autocomplete = reg ? 'new-password' : 'current-password';
+  const msg = document.getElementById('auth-msg');
+  msg.textContent = ''; msg.className = 'auth-msg';
+}
+
+// Verständliche Meldung zu einem Fehler von Supabase (Kürzel in err.code, sonst der englische Text)
+function authErrorText(e) {
+  const code = (e && e.code) || '', m = (e && e.message) || '';
+  if (!navigator.onLine) return 'Keine Internetverbindung.';
+  if (code === 'invalid_credentials' || /Invalid login credentials/i.test(m)) return 'E-Mail oder Passwort stimmt nicht. Noch kein Konto? Dann oben auf „Registrieren“.';
+  if (code === 'email_not_confirmed' || /Email not confirmed/i.test(m)) return 'Deine E-Mail-Adresse ist noch nicht bestätigt. Bitte den Link in der Bestätigungs-Mail anklicken.';
+  if (code === 'user_already_exists' || code === 'email_exists' || /already registered/i.test(m)) return 'Zu dieser E-Mail gibt es schon ein Konto. Bitte oben auf „Anmelden“ – oder „Passwort vergessen?“.';
+  if (code === 'over_email_send_rate_limit' || /only request this after|email rate limit/i.test(m))
+    return 'Es ist gerade schon eine E-Mail an dich unterwegs. Bitte schau ins Postfach (auch Spam) und versuche es sonst in einigen Minuten noch einmal.';
+  if (code === 'over_request_rate_limit' || (e && e.status === 429) || /rate limit|too many/i.test(m)) return 'Zu viele Versuche – bitte ein paar Minuten warten.';
+  if (code === 'weak_password' || /password/i.test(m)) return 'Das Passwort ist zu schwach – bitte ein längeres wählen (mindestens ' + AUTH_MIN_PW + ' Zeichen).';
+  if (code === 'email_address_invalid' || code === 'validation_failed' || /invalid.*email|email.*invalid/i.test(m)) return 'Diese E-Mail-Adresse wird nicht angenommen. Bitte prüfe die Schreibweise.';
+  if (code === 'email_address_not_authorized') return 'An diese Adresse können wir gerade keine E-Mail schicken. Bitte schreib uns: info@scolavis.de';
+  if (code === 'signup_disabled') return 'Neue Konten sind gerade nicht möglich. Bitte später nochmal versuchen.';
+  if (/fetch|network/i.test(m)) return 'Der Anmelde-Dienst ist gerade nicht erreichbar. Bitte in einer Minute nochmal versuchen.';
+  return 'Das hat nicht geklappt. Bitte in einer Minute nochmal versuchen – oder schreib uns: info@scolavis.de';
+}
+
+// Nach dem Registrieren: klare Anleitung statt einer kleinen Zeile unter dem Formular
+function showAuthSent(email) {
+  const form = document.getElementById('auth-form'), box = document.getElementById('auth-sent');
+  if (!form || !box) return;
+  form.style.display = 'none';
+  box.style.display = '';
+  box.innerHTML = '<div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:8px">Fast geschafft</div>'
+    + 'Wir haben eine E-Mail geschickt an<br><b>' + safeText(email) + '</b>'
+    + '<ol><li>Postfach öffnen (auch den Spam-Ordner ansehen).</li><li>In der E-Mail auf den Bestätigungs-Link tippen.</li><li>Scolavis öffnet sich – du bist angemeldet.</li></ol>'
+    + '<button type="button" class="auth-link" id="auth-resend" disabled></button><br>'
+    + '<button type="button" class="auth-link" id="auth-back">Andere E-Mail-Adresse verwenden</button>'
+    + '<div class="auth-msg" id="auth-sent-msg" role="status"></div>';
+  const resend = box.querySelector('#auth-resend'), note = box.querySelector('#auth-sent-msg');
+  // Supabase erlaubt eine neue Mail frühestens nach 60 Sekunden – so lange zählt der Knopf herunter
+  const countdown = () => {
+    let left = 60;
+    resend.disabled = true;
+    const tick = () => {
+      if (!resend.isConnected) return;
+      if (left <= 0) { resend.disabled = false; resend.textContent = 'Keine E-Mail bekommen? Erneut senden'; return; }
+      resend.textContent = 'Erneut senden in ' + left + ' s';
+      left--; setTimeout(tick, 1000);
+    };
+    tick();
+  };
+  countdown();
+  resend.addEventListener('click', async () => {
+    resend.disabled = true;
+    try {
+      await AUTH.resendConfirmation(email);
+      note.textContent = 'Neue E-Mail ist unterwegs.'; note.className = 'auth-msg success';
+    } catch (err) { note.textContent = authErrorText(err); note.className = 'auth-msg error'; }
+    countdown();
+  });
+  box.querySelector('#auth-back').addEventListener('click', () => {
+    box.style.display = 'none'; box.innerHTML = '';
+    form.style.display = '';
+    const b = document.getElementById('auth-submit-btn');
+    b.disabled = false; b.textContent = 'Konto erstellen';
+  });
 }
 
 async function submitAuth() {
@@ -9754,50 +9905,52 @@ async function submitAuth() {
   const password = document.getElementById('auth-password')?.value;
   const btn      = document.getElementById('auth-submit-btn');
   const msg      = document.getElementById('auth-msg');
-  if (!email || !password) {
-    msg.textContent = 'Bitte E-Mail und Passwort eingeben.';
-    msg.className = 'auth-msg error'; return;
-  }
-  if (password.length < 6) {
-    msg.textContent = 'Passwort muss mindestens 6 Zeichen haben.';
-    msg.className = 'auth-msg error'; return;
-  }
+  if (!btn || btn.disabled) return;   // kein zweiter Versuch, solange der erste läuft
+  const fail = text => { msg.textContent = text; msg.className = 'auth-msg error'; };
+  if (!email || !password) return fail('Bitte E-Mail und Passwort eingeben.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return fail('Bitte prüfe die E-Mail-Adresse.');
+  if (_authMode === 'register' && password.length < AUTH_MIN_PW) return fail('Das Passwort braucht mindestens ' + AUTH_MIN_PW + ' Zeichen.');
+  const mode = _authMode;
   btn.disabled = true;
-  btn.textContent = '…';
-  msg.textContent = '';
+  btn.textContent = mode === 'login' ? 'Melde an …' : 'Erstelle Konto …';
+  msg.textContent = ''; msg.className = 'auth-msg';
   try {
-    if (_authMode === 'login') {
+    if (mode === 'login') {
       await AUTH.login(email, password);
       document.querySelector('.modal-overlay')?.remove();
-      toast('✅ Willkommen zurück!');
+      toast('Willkommen zurück!');
+      return;
+    }
+    const result = await AUTH.register(email, password);
+    if (result && result.session) {
+      // E-Mail-Bestätigung ist im Projekt ausgeschaltet → direkt angemeldet
+      document.querySelector('.modal-overlay')?.remove();
+      toast('Konto erstellt – willkommen!');
+    } else if (result && result.user && Array.isArray(result.user.identities) && result.user.identities.length === 0) {
+      // So antwortet Supabase, wenn es zu der Adresse schon ein bestätigtes Konto gibt (es wird keine Mail verschickt)
+      switchAuthTab('login');
+      fail('Zu dieser E-Mail gibt es schon ein Konto. Bitte melde dich an – oder tippe auf „Passwort vergessen?“.');
+      btn.disabled = false;
     } else {
-      const result = await AUTH.register(email, password);
-      if (result && result.session) {
-        // E-Mail-Bestätigung ist im Projekt deaktiviert → direkt angemeldet
-        document.querySelector('.modal-overlay')?.remove();
-        toast('✅ Konto erstellt — willkommen!');
-      } else {
-        msg.textContent = '✅ Fast geschafft: Bitte den Link in der Bestätigungs-E-Mail anklicken.';
-        msg.className = 'auth-msg success';
-        btn.disabled = false;
-        btn.textContent = 'Konto erstellen';
-      }
+      showAuthSent(email);
     }
   } catch(e) {
-    const known = {
-      'Invalid login credentials': 'E-Mail oder Passwort falsch.',
-      'User already registered':   'Diese E-Mail ist bereits registriert.',
-      'Email not confirmed':        'Bitte zuerst die Bestätigungsmail bestätigen.',
-    };
-    let text = known[e.message];
-    if (!text && /rate limit|too many/i.test(e.message || '')) text = 'Zu viele Versuche — bitte ein paar Minuten warten.';
-    if (!text && /password/i.test(e.message || '')) text = 'Das Passwort ist zu schwach — bitte ein längeres wählen.';
-    if (!text && !navigator.onLine) text = 'Keine Internetverbindung.';
-    msg.textContent = text || 'Das hat nicht geklappt. Bitte Eingaben prüfen und erneut versuchen.';
-    console.warn('Auth-Fehler:', e);
-    msg.className = 'auth-msg error';
+    console.warn('Auth-Fehler:', e && e.code, e && e.message);
+    // Mail ist schon unterwegs (zweiter Klick) → gleich die Anleitung zeigen statt einer Fehlermeldung
+    if (mode === 'register' && e && e.code === 'over_email_send_rate_limit') { showAuthSent(email); return; }
+    fail(authErrorText(e));
+    if (mode === 'login' && e && (e.code === 'email_not_confirmed' || /not confirmed/i.test(e.message || ''))) {
+      const again = document.createElement('button');
+      again.type = 'button'; again.className = 'auth-link'; again.textContent = 'Bestätigungs-Mail erneut senden';
+      again.addEventListener('click', async () => {
+        again.disabled = true;
+        try { await AUTH.resendConfirmation(email); msg.textContent = 'Neue E-Mail ist unterwegs. Schau auch im Spam-Ordner nach.'; msg.className = 'auth-msg success'; }
+        catch (err) { fail(authErrorText(err)); }
+      });
+      msg.appendChild(document.createElement('br')); msg.appendChild(again);
+    }
     btn.disabled = false;
-    btn.textContent = _authMode === 'login' ? 'Anmelden' : 'Konto erstellen';
+    btn.textContent = mode === 'login' ? 'Anmelden' : 'Konto erstellen';
   }
 }
 
